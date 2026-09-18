@@ -18,12 +18,21 @@ Both live behind one public `https://<random>.trycloudflare.com` URL:
 
 ## Quick start
 
+### Windows — double-click `run.bat`
+
+Just double-click **`run.bat`** in the `shipping-tracker` folder (or run it from
+PowerShell / Command Prompt). It will prompt for an admin password, then set
+everything up and open the tunnel. It uses `waitress` as the web server
+(gunicorn is Unix-only and does not run on Windows).
+
+### macOS / Linux — `run.sh`
+
 ```bash
 cd shipping-tracker
 ADMIN_PASSWORD='pick-a-strong-password' ./run.sh
 ```
 
-`run.sh` will:
+Both launchers will:
 
 1. create a local virtualenv and install `Flask` + `gunicorn`,
 2. download `cloudflared` if it isn't already installed,
