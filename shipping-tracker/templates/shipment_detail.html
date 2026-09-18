@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ shipment['tracking_number'] }}{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('admin') }}">&larr; Back to dashboard</a></p>
+
+<div class="admin-grid">
+  <section class="card">
+    <div class="ship-head">
+      <div>
+        <div class="tn">{{ shipment['tracking_number'] }}</div>
+        <div class="muted">{{ shipment['recipient'] or '—' }}</div>
+      </div>
+      <span class="badge {{ shipment['status'] | status_class }}">{{ shipment['status'] }}</span>
+    </div>
+    <div class="ship-meta">
+      <div><span class="label">From</span>{{ shipment['origin'] or '—' }}</div>
+      <div><span class="label">To</span>{{ shipment['destination'] or '—' }}</div>
+      <div><span class="label">Carrier</span>{{ shipment['carrier'] or '—' }}</div>
+      <div><span class="label">Est. delivery</span>{{ shipment['eta'] or '—' }}</div>
+    </div>
+
+    <p class="muted share">Customer link:
+      <a href="{{ url_for('track', tracking_number=shipment['tracking_number'], _external=True) }}">
+        {{ url_for('track', tracking_number=shipment['tracking_number'], _external=True) }}</a>
+    </p>
+
+    <form method="post" action="{{ url_for('delete_shipment', tracking_number=shipment['tracking_number']) }}"
+          onsubmit="return confirm('Delete this shipment permanently?');">
+      <button type="submit" class="danger">Delete shipment</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h1>Post status update</h1>
+    <form method="post" action="{{ url_for('add_event', tracking_number=shipment['tracking_number']) }}" class="stack">
+      <label>Status
+        <select name="status">
+          {% for s in statuses %}
+            <option value="{{ s }}" {% if s == shipment['status'] %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Location<input type="text" name="location" placeholder="Frankfurt, DE"></label>
+      <label>Note<input type="text" name="note" placeholder="Departed sorting facility"></label>
+      <label>Update est. delivery<input type="text" name="eta" placeholder="leave blank to keep"></label>
+      <button type="submit">Post update</button>
+    </form>
+
+    <h2>History</h2>
+    <ol class="timeline">
+      {% for e in events %}
+        <li>
+          <div class="dot {{ e['status'] | status_class }}"></div>
+          <div class="tl-body">
+            <div class="tl-status">{{ e['status'] }}</div>
+            {% if e['location'] %}<div class="tl-loc">{{ e['location'] }}</div>{% endif %}
+            {% if e['note'] %}<div class="muted">{{ e['note'] }}</div>{% endif %}
+            <div class="tl-time">{{ e['created_at'] }}</div>
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Track a Shipment{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Track your shipment</h1>
+  <p class="muted">Enter your tracking number to see the latest status.</p>
+  <form class="track-form" action="{{ url_for('track') }}" method="get">
+    <input type="text" name="tracking_number" placeholder="e.g. ST-7F3K9Q2A"
+           value="{{ query or '' }}" autocomplete="off" autofocus required>
+    <button type="submit">Track</button>
+  </form>
+</section>
+
+{% if not_found %}
+  <div class="card notfound">
+    <p>No shipment found for <strong>{{ query }}</strong>. Please check the
+       tracking number and try again.</p>
+  </div>
+{% elif shipment %}
+  <div class="card">
+    <div class="ship-head">
+      <div>
+        <div class="tn">{{ shipment['tracking_number'] }}</div>
+        <div class="muted">{{ shipment['carrier'] or 'Shipping Tracker' }}</div>
+      </div>
+      <span class="badge {{ shipment['status'] | status_class }}">
+        {{ shipment['status'] }}
+      </span>
+    </div>
+
+    <div class="ship-meta">
+      <div><span class="label">From</span>{{ shipment['origin'] or '—' }}</div>
+      <div><span class="label">To</span>{{ shipment['destination'] or '—' }}</div>
+      <div><span class="label">Recipient</span>{{ shipment['recipient'] or '—' }}</div>
+      <div><span class="label">Est. delivery</span>{{ shipment['eta'] or '—' }}</div>
+    </div>
+
+    <h2>History</h2>
+    <ol class="timeline">
+      {% for e in events %}
+        <li>
+          <div class="dot {{ e['status'] | status_class }}"></div>
+          <div class="tl-body">
+            <div class="tl-status">{{ e['status'] }}</div>
+            {% if e['location'] %}<div class="tl-loc">{{ e['location'] }}</div>{% endif %}
+            {% if e['note'] %}<div class="muted">{{ e['note'] }}</div>{% endif %}
+            <div class="tl-time">{{ e['created_at'] }}</div>
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+{% block content %}
+<div class="card login-card">
+  <h1>Admin login</h1>
+  <form method="post" action="{{ url_for('admin_login') }}{% if request.args.get('next') %}?next={{ request.args.get('next') }}{% endif %}">
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autofocus required>
+    <button type="submit">Log in</button>
+  </form>
+</div>
+{% endblock %}

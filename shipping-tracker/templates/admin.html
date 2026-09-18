@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="admin-grid">
+  <section class="card">
+    <h1>New shipment</h1>
+    <form method="post" action="{{ url_for('create_shipment') }}" class="stack">
+      <label>Recipient<input type="text" name="recipient" placeholder="Jane Doe"></label>
+      <label>Carrier<input type="text" name="carrier" placeholder="Shipping Tracker"></label>
+      <label>Origin<input type="text" name="origin" placeholder="London, UK"></label>
+      <label>Destination<input type="text" name="destination" placeholder="Lagos, NG"></label>
+      <label>Estimated delivery<input type="text" name="eta" placeholder="2026-09-25"></label>
+      <label>Initial status
+        <select name="status">
+          {% for s in statuses %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="submit">Create shipment</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h1>Shipments ({{ shipments|length }})</h1>
+    {% if shipments %}
+    <table class="ship-table">
+      <thead>
+        <tr><th>Tracking #</th><th>Recipient</th><th>Status</th><th>Updated</th></tr>
+      </thead>
+      <tbody>
+        {% for s in shipments %}
+        <tr>
+          <td><a href="{{ url_for('shipment_detail', tracking_number=s['tracking_number']) }}">{{ s['tracking_number'] }}</a></td>
+          <td>{{ s['recipient'] or '—' }}</td>
+          <td><span class="badge {{ s['status'] | status_class }}">{{ s['status'] }}</span></td>
+          <td class="muted">{{ s['updated_at'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="muted">No shipments yet. Create one on the left.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
