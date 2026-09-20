@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Analytics Dashboard</title>
+  <meta name="description" content="An interactive data analysis dashboard." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Crect x='7' y='16' width='4' height='9' rx='1' fill='white'/%3E%3Crect x='14' y='11' width='4' height='14' rx='1' fill='white'/%3E%3Crect x='21' y='7' width='4' height='18' rx='1' fill='white'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="masthead">
+      <div>
+        <h1 id="title">Dashboard</h1>
+        <p id="subtitle"></p>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme">☾ Dark</button>
+    </header>
+
+    <section class="kpis" id="kpis" aria-label="Key metrics"></section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Revenue trend</h2>
+        <p class="sub">Monthly revenue, this year vs last year</p>
+        <div class="chart-box"><canvas id="trend"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Revenue by category</h2>
+        <p class="sub">Year to date</p>
+        <div class="chart-box"><canvas id="categories"></canvas></div>
+      </div>
+    </section>
+
+    <details class="card table-card">
+      <summary>View data table</summary>
+      <table>
+        <thead>
+          <tr><th>Month</th><th>This year</th><th>Last year</th><th>Change</th></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </details>
+
+    <footer>
+      <span id="updated"></span> · Edit <code>data/data.js</code> to show your own numbers.
+    </footer>
+  </div>
+
+  <script src="vendor/chart.umd.js"></script>
+  <script src="data/data.js"></script>
+  <script src="assets/dashboard.js"></script>
+</body>
+</html>
