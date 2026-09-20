@@ -30,12 +30,12 @@ window.APP_CONFIG = {
   //    Firebase Console → Project settings → Your apps → SDK setup → Config.
   //    Leave the placeholders as-is to stay in DEMO MODE.
   firebase: {
-    apiKey:            "PASTE_YOUR_API_KEY",
-    authDomain:        "PASTE_YOUR_PROJECT.firebaseapp.com",
-    projectId:         "PASTE_YOUR_PROJECT_ID",
-    storageBucket:     "PASTE_YOUR_PROJECT.appspot.com",
-    messagingSenderId: "PASTE_SENDER_ID",
-    appId:             "PASTE_APP_ID",
+    apiKey:            "AIzaSyA44IWA-l8vqG5kDhHSn4jAWyBRfk0855A",
+    authDomain:        "ledgerline-e4476.firebaseapp.com",
+    projectId:         "ledgerline-e4476",
+    storageBucket:     "ledgerline-e4476.firebasestorage.app",
+    messagingSenderId: "126839041623",
+    appId:             "1:126839041623:web:6fa144632a525a506cfd12",
   },
 
   // Cosmetic
