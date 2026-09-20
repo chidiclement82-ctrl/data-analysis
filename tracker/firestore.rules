@@ -1,0 +1,58 @@
+rules_version = '2';
+
+// ============================================================
+// Ledgerline — Firestore security rules
+// Paste these into: Firebase Console → Firestore Database → Rules
+//
+// IMPORTANT: replace the email in adminEmails() below with the SAME
+// admin email you put in assets/config.js.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // >>> EDIT THIS LIST to match assets/config.js adminEmails <<<
+    function adminEmails() {
+      return ['you@example.com'];
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.email in adminEmails();
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    match /customers/{uid} {
+      // Admin sees everyone; a customer sees only their own profile.
+      allow read: if isAdmin() || isSelf(uid);
+
+      // Only the admin may create/update/delete accounts and balances.
+      // (This is what stops customers from editing their own balance.)
+      allow create, update, delete: if isAdmin();
+
+      // Funding / deductions: admin writes, owner reads. Immutable once written.
+      match /transactions/{txnId} {
+        allow read:   if isAdmin() || isSelf(uid);
+        allow create: if isAdmin();
+        allow update, delete: if false;
+      }
+
+      // Messages: both parties read the thread. Admin may send as 'admin';
+      // the customer may send only in their OWN thread, only as 'customer'.
+      match /messages/{msgId} {
+        allow read: if isAdmin() || isSelf(uid);
+        allow create: if isAdmin()
+          || (isSelf(uid)
+              && request.resource.data.from == 'customer'
+              && request.resource.data.senderUid == request.auth.uid);
+        allow update, delete: if false;
+      }
+    }
+  }
+}
