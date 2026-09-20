@@ -17,7 +17,7 @@ service cloud.firestore {
 
     // >>> EDIT THIS LIST to match assets/config.js adminEmails <<<
     function adminEmails() {
-      return ['you@example.com'];
+      return ['chidiclement82@gmail.com'];
     }
 
     function isAdmin() {

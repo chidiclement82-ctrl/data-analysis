@@ -23,7 +23,7 @@ window.APP_CONFIG = {
   //    page with one of these emails is the administrator.
   //    (Create this account in Firebase Console → Authentication.)
   adminEmails: [
-    "you@example.com",
+    "chidiclement82@gmail.com",
   ],
 
   // 2) Firebase web config. Copy it from:
