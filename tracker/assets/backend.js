@@ -230,32 +230,33 @@ function demoBackend() {
    LIVE backend — Firebase Auth + Firestore (loaded on demand).
    ============================================================ */
 function liveBackend() {
-  const V = "10.12.2";
-  const base = "https://www.gstatic.com/firebasejs/" + V + "/";
-  let ready = null; // memoized promise resolving to { auth, db, fns }
-
-  async function init() {
-    if (ready) return ready;
-    ready = (async () => {
-      const appMod = await import(base + "firebase-app.js");
-      const authMod = await import(base + "firebase-auth.js");
-      const fsMod = await import(base + "firebase-firestore.js");
-      const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FB);
-      const auth = authMod.getAuth(app);
-      const db = fsMod.getFirestore(app);
-      return { app, auth, db, appMod, authMod, fsMod };
-    })();
-    return ready;
+  // Uses the Firebase "compat" SDK loaded via <script> tags in the page
+  // (global `firebase`). This is more robust than dynamic ESM imports:
+  // it loads at page load and fails loudly if it can't reach the network.
+  let _svc = null;
+  function svc() {
+    if (_svc) return _svc;
+    const fb = window.firebase;
+    if (!fb || !fb.initializeApp) {
+      throw new Error("Couldn't load Firebase. Check your internet connection and reload the page.");
+    }
+    const app = fb.apps && fb.apps.length ? fb.app() : fb.initializeApp(FB);
+    _svc = { fb, app, auth: fb.auth(app), db: fb.firestore(app) };
+    return _svc;
+  }
+  function stamp() {
+    return window.firebase.firestore.FieldValue.serverTimestamp();
   }
 
   function friendly(e) {
     const c = (e && e.code) || "";
-    if (c.includes("wrong-password") || c.includes("user-not-found") || c.includes("invalid-credential"))
+    if (c.includes("wrong-password") || c.includes("user-not-found") || c.includes("invalid-credential") || c.includes("invalid-login"))
       return new Error("Wrong email or password.");
     if (c.includes("email-already-in-use")) return new Error("A customer with that email already exists.");
     if (c.includes("weak-password")) return new Error("Password must be at least 6 characters.");
     if (c.includes("invalid-email")) return new Error("That email address looks invalid.");
     if (c.includes("too-many-requests")) return new Error("Too many attempts. Please wait a moment.");
+    if (c.includes("network-request-failed")) return new Error("Network problem reaching Firebase. Check your connection.");
     return new Error((e && e.message) || "Something went wrong.");
   }
 
@@ -264,135 +265,140 @@ function liveBackend() {
 
     onAuth(cb) {
       let unsub = () => {};
-      init().then(({ auth, authMod, db, fsMod }) => {
-        unsub = authMod.onAuthStateChanged(auth, async (u) => {
+      try {
+        const { auth, db } = svc();
+        unsub = auth.onAuthStateChanged(async (u) => {
           if (!u) return cb(null);
           if (isAdminEmail(u.email)) return cb({ uid: u.uid, email: u.email, name: "Administrator", isAdmin: true });
           let name = u.email;
           try {
-            const s = await fsMod.getDoc(fsMod.doc(db, "customers", u.uid));
-            if (s.exists()) name = s.data().name || u.email;
+            const s = await db.collection("customers").doc(u.uid).get();
+            if (s.exists) name = s.data().name || u.email;
           } catch (e) {}
           cb({ uid: u.uid, email: u.email, name, isAdmin: false });
         });
-      }).catch(() => cb(null));
+      } catch (e) { cb(null); }
       return () => unsub();
     },
 
     async adminSignIn(email, password) {
-      const { auth, authMod } = await init();
+      const { auth } = svc();
       email = String(email).trim();
       if (!isAdminEmail(email)) throw new Error("That email is not registered as an administrator.");
       try {
-        await authMod.signInWithEmailAndPassword(auth, email, password);
+        await auth.signInWithEmailAndPassword(email, password);
       } catch (e) { throw friendly(e); }
     },
 
     async customerSignIn(email, password) {
-      const { auth, authMod } = await init();
+      const { auth } = svc();
       try {
-        await authMod.signInWithEmailAndPassword(auth, String(email).trim(), password);
+        await auth.signInWithEmailAndPassword(String(email).trim(), password);
       } catch (e) { throw friendly(e); }
     },
 
     async signOut() {
-      const { auth, authMod } = await init();
-      await authMod.signOut(auth);
+      const { auth } = svc();
+      await auth.signOut();
     },
 
     async createCustomer({ email, password, name, startingBalance }) {
-      const { app, appMod, authMod, db, fsMod } = await init();
+      const { fb, db } = svc();
       email = String(email).trim();
       const start = Number(startingBalance) || 0;
       // Create the auth user in a SECONDARY app so the admin stays signed in.
-      const secApp = appMod.initializeApp(FB, "secondary-" + Date.now());
+      const secApp = fb.initializeApp(FB, "secondary-" + Date.now());
       let uid;
       try {
-        const secAuth = authMod.getAuth(secApp);
-        const cred = await authMod.createUserWithEmailAndPassword(secAuth, email, password);
+        const cred = await secApp.auth().createUserWithEmailAndPassword(email, password);
         uid = cred.user.uid;
-        await authMod.signOut(secAuth);
+        await secApp.auth().signOut();
       } catch (e) {
         throw friendly(e);
       } finally {
-        try { await appMod.deleteApp(secApp); } catch (e) {}
+        try { await secApp.delete(); } catch (e) {}
       }
       // Write the profile doc as the admin (primary session).
-      await fsMod.setDoc(fsMod.doc(db, "customers", uid), {
+      await db.collection("customers").doc(uid).set({
         email, name: name || email, balance: start,
-        createdAt: fsMod.serverTimestamp(), createdBy: "admin",
+        createdAt: stamp(), createdBy: "admin",
       });
       if (start > 0) {
-        await fsMod.addDoc(fsMod.collection(db, "customers", uid, "transactions"), {
-          type: "fund", amount: start, note: "Opening balance", by: "admin", ts: fsMod.serverTimestamp(),
+        await db.collection("customers").doc(uid).collection("transactions").add({
+          type: "fund", amount: start, note: "Opening balance", by: "admin", ts: stamp(),
         });
       }
       return { uid };
     },
 
     async adjustBalance(uid, delta, note) {
-      const { db, fsMod } = await init();
-      await fsMod.runTransaction(db, async (tx) => {
-        const ref = fsMod.doc(db, "customers", uid);
+      const { db } = svc();
+      await db.runTransaction(async (tx) => {
+        const ref = db.collection("customers").doc(uid);
         const snap = await tx.get(ref);
-        if (!snap.exists()) throw new Error("Customer not found.");
+        if (!snap.exists) throw new Error("Customer not found.");
         const cur = Number(snap.data().balance) || 0;
         const next = cur + delta;
         if (next < 0) throw new Error("Balance cannot go below $0.00.");
         tx.update(ref, { balance: next });
-        const txnRef = fsMod.doc(fsMod.collection(db, "customers", uid, "transactions"));
+        const txnRef = ref.collection("transactions").doc();
         tx.set(txnRef, {
           type: delta >= 0 ? "fund" : "deduct", amount: Math.abs(delta),
-          note: note || "", by: "admin", ts: fsMod.serverTimestamp(),
+          note: note || "", by: "admin", ts: stamp(),
         });
       });
     },
 
     listCustomers(cb) {
       let unsub = () => {};
-      init().then(({ db, fsMod }) => {
-        const q = fsMod.query(fsMod.collection(db, "customers"), fsMod.orderBy("createdAt", "desc"));
-        unsub = fsMod.onSnapshot(q, (snap) => {
-          cb(snap.docs.map((d) => ({ uid: d.id, ...d.data() })));
-        }, () => cb([]));
-      });
+      try {
+        const { db } = svc();
+        unsub = db.collection("customers").orderBy("createdAt", "desc").onSnapshot(
+          (snap) => cb(snap.docs.map((d) => ({ uid: d.id, ...d.data() }))),
+          () => cb([]));
+      } catch (e) { cb([]); }
       return () => unsub();
     },
 
     watchCustomer(uid, cb) {
       let unsub = () => {};
-      init().then(({ db, fsMod }) => {
-        unsub = fsMod.onSnapshot(fsMod.doc(db, "customers", uid), (s) => {
-          cb(s.exists() ? { uid: s.id, ...s.data() } : null);
-        }, () => cb(null));
-      });
+      try {
+        const { db } = svc();
+        unsub = db.collection("customers").doc(uid).onSnapshot(
+          (s) => cb(s.exists ? { uid: s.id, ...s.data() } : null),
+          () => cb(null));
+      } catch (e) { cb(null); }
       return () => unsub();
     },
 
     watchTransactions(uid, cb) {
       let unsub = () => {};
-      init().then(({ db, fsMod }) => {
-        const q = fsMod.query(fsMod.collection(db, "customers", uid, "transactions"), fsMod.orderBy("ts", "desc"));
-        unsub = fsMod.onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), () => cb([]));
-      });
+      try {
+        const { db } = svc();
+        unsub = db.collection("customers").doc(uid).collection("transactions").orderBy("ts", "desc").onSnapshot(
+          (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+          () => cb([]));
+      } catch (e) { cb([]); }
       return () => unsub();
     },
 
     watchMessages(uid, cb) {
       let unsub = () => {};
-      init().then(({ db, fsMod }) => {
-        const q = fsMod.query(fsMod.collection(db, "customers", uid, "messages"), fsMod.orderBy("ts", "asc"));
-        unsub = fsMod.onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), () => cb([]));
-      });
+      try {
+        const { db } = svc();
+        unsub = db.collection("customers").doc(uid).collection("messages").orderBy("ts", "asc").onSnapshot(
+          (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+          () => cb([]));
+      } catch (e) { cb([]); }
       return () => unsub();
     },
 
     async sendMessage(uid, { from, text }) {
-      const { auth, db, fsMod } = await init();
+      const { auth, db } = svc();
       text = String(text || "").trim();
       if (!text) return;
-      await fsMod.addDoc(fsMod.collection(db, "customers", uid, "messages"), {
-        from, text, senderUid: (auth.currentUser && auth.currentUser.uid) || "", ts: fsMod.serverTimestamp(),
+      await db.collection("customers").doc(uid).collection("messages").add({
+        from, text, senderUid: (auth.currentUser && auth.currentUser.uid) || "", ts: stamp(),
       });
     },
   };

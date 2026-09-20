@@ -88,6 +88,9 @@
 }
 
 * { box-sizing: border-box; }
+/* The hidden attribute must always win over class-based display rules
+   (.stack, .banner, .auth-screen, …), otherwise toggling el.hidden has no effect. */
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
   margin: 0;
