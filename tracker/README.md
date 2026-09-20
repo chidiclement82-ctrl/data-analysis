@@ -45,10 +45,55 @@ To make it a **real, public, multi-device app**, connect Firebase (free):
 > Keep the admin email identical in `config.js` **and** `firestore.rules` — that
 > pairing is what grants admin powers.
 
-## Enable the public links (one-time)
+## Publish with a Cloudflare Tunnel (run from your laptop)
 
-If you haven't already: on GitHub, **Settings → Pages → Source → GitHub Actions**.
-The included workflow publishes the whole repo, so both links above go live.
+This gives you a public `https://<name>.trycloudflare.com` link with no GitHub
+username in it. The link is **temporary** (changes each run) and only works while
+the command keeps running on your laptop.
+
+> **Important:** the tunnel just exposes your local files. For customers on other
+> devices to share balances and messages, you must connect **Firebase** (above).
+> In demo mode each browser has its own separate data.
+
+**1. Install cloudflared (one time)**
+
+| OS | Command |
+|----|---------|
+| macOS | `brew install cloudflared` |
+| Windows | `winget install --id Cloudflare.cloudflared` |
+| Linux | see <https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/> |
+
+**2. Start the public link**
+
+From the repo folder:
+
+```bash
+bash serve-public-link.sh
+```
+
+On **Windows PowerShell** (no bash), run the two steps manually from the repo folder:
+
+```powershell
+# terminal 1 — serve the files
+py -m http.server 8000
+# terminal 2 — open the tunnel
+cloudflared tunnel --url http://localhost:8000
+```
+
+**3. Use the link**
+
+cloudflared prints a line like `https://random-words.trycloudflare.com`. Your apps are:
+
+- Customer: `https://random-words.trycloudflare.com/tracker/`
+- Admin: `https://random-words.trycloudflare.com/tracker/admin.html`
+
+Stop it with **Ctrl+C**.
+
+## Or publish with GitHub Pages (permanent, always-on)
+
+Merge to `main`, then on GitHub: **Settings → Pages → Source → GitHub Actions**.
+The included workflow publishes the whole repo automatically. This link stays up
+without your laptop running.
 
 ## Security notes (please read)
 

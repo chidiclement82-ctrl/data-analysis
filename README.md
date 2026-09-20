@@ -5,10 +5,25 @@ This repository publishes two things to GitHub Pages:
 1. **Ledgerline — Personal Money Tracker** (`tracker/`) — a public admin + customer
    web app: the admin creates accounts and funds/deducts balances, customers sign
    in to see their balance and message the admin. See
-   [`tracker/README.md`](tracker/README.md) for the (free) Firebase setup.
-   - Customer link: `https://chidiclement82-ctrl.github.io/data-analysis/tracker/`
-   - Admin link: `https://chidiclement82-ctrl.github.io/data-analysis/tracker/admin.html`
+   [`tracker/README.md`](tracker/README.md) for setup.
 2. **Data Analysis Dashboard** (below) — a static charts dashboard.
+
+### Get a public link
+
+Run one command from this folder to publish a Cloudflare Tunnel link:
+
+```bash
+bash serve-public-link.sh
+```
+
+It prints a `https://<name>.trycloudflare.com` URL. Then:
+- Customer app: add `/tracker/`
+- Admin app: add `/tracker/admin.html`
+
+The tunnel link is temporary and needs this command running on your laptop. For a
+permanent, always-on link, use GitHub Pages instead (see below). Either way,
+connect Firebase (`tracker/README.md`) so customers on other devices share the
+same data.
 
 ---
 
