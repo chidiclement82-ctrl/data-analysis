@@ -30,14 +30,59 @@
   }
   var TAG_CLASS = { Spicy: "tag tag-spicy", Popular: "tag tag-popular" };
 
+  // Older menu.json files had sections at the top level; treat that as one restaurant.
+  function restaurantsOf(menu) {
+    return menu.restaurants || [{ name: "", description: "", image: "", categories: menu.categories || [] }];
+  }
+
   function renderMenu(menu) {
+    var restaurants = restaurantsOf(menu).filter(function (r) { return (r.categories || []).length; });
+    var picker = document.getElementById("menu-restaurants");
+    picker.replaceChildren();
+    picker.hidden = restaurants.length < 2;
+    restaurants.forEach(function (r, i) {
+      var btn = el("button", "restaurant-card");
+      btn.type = "button";
+      btn.setAttribute("aria-pressed", "false");
+      if (r.image) {
+        var img = el("img"); img.src = r.image; img.alt = ""; img.loading = "lazy";
+        btn.appendChild(img);
+      } else {
+        btn.appendChild(el("span", "restaurant-card-ph", (r.name || "?").charAt(0)));
+      }
+      btn.appendChild(el("span", "restaurant-card-name", r.name || "Restaurant"));
+      btn.addEventListener("click", function () { showRestaurant(menu, restaurants, i); });
+      picker.appendChild(btn);
+    });
+    showRestaurant(menu, restaurants, 0);
+  }
+
+  function showRestaurant(menu, restaurants, index) {
+    var r = restaurants[index];
+    Array.prototype.forEach.call(document.querySelectorAll(".restaurant-card"), function (c, i) {
+      c.setAttribute("aria-pressed", String(i === index));
+    });
+    var info = document.getElementById("restaurant-info");
+    info.replaceChildren();
+    if (r && (r.name || r.description || r.image)) {
+      if (r.image) { var img = el("img", "restaurant-photo"); img.src = r.image; img.alt = r.name || ""; info.appendChild(img); }
+      var text = el("div");
+      if (r.name) text.appendChild(el("h3", null, r.name));
+      if (r.description) text.appendChild(el("p", null, r.description));
+      info.appendChild(text);
+    }
+    info.hidden = !info.childNodes.length;
+    renderCategories(menu, r ? r.categories : [], index);
+  }
+
+  function renderCategories(menu, categories, rIndex) {
     var tabList = document.getElementById("menu-tabs");
     var panels = document.getElementById("menu-panels");
     var cur = menu.currency || "₦";
     tabList.replaceChildren();
     panels.replaceChildren();
-    (menu.categories || []).forEach(function (cat, i) {
-      var id = "menu-" + i;
+    (categories || []).forEach(function (cat, i) {
+      var id = "menu-" + rIndex + "-" + i;
       var tab = el("button", null, cat.name);
       tab.setAttribute("role", "tab");
       tab.id = "tab-" + id;
@@ -50,18 +95,24 @@
       panel.setAttribute("aria-labelledby", tab.id);
       var ul = el("ul", "menu-list");
       (cat.items || []).forEach(function (item) {
-        var li = el("li", item.available === false ? "sold-out" : null);
+        var li = el("li", (item.available === false ? "sold-out " : "") + (item.image ? "has-img" : ""));
+        if (item.image) {
+          var img = el("img", "dish-photo"); img.src = item.image; img.alt = item.name || ""; img.loading = "lazy";
+          li.appendChild(img);
+        }
+        var body = el("div", "dish-body");
         var head = el("div", "item-head");
         head.appendChild(el("h3", null, item.name));
         head.appendChild(el("span", "price", item.available === false
           ? "Sold out" : cur + Number(item.price || 0).toLocaleString("en-NG")));
-        li.appendChild(head);
-        if (item.description) li.appendChild(el("p", null, item.description));
+        body.appendChild(head);
+        if (item.description) body.appendChild(el("p", null, item.description));
         if (item.tags && item.tags.length) {
           var tags = el("span", "tags");
           item.tags.forEach(function (t) { tags.appendChild(el("span", TAG_CLASS[t] || "tag", t)); });
-          li.appendChild(tags);
+          body.appendChild(tags);
         }
+        li.appendChild(body);
         ul.appendChild(li);
       });
       panel.appendChild(ul);

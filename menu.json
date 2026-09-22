@@ -1,61 +1,314 @@
 {
   "currency": "₦",
-  "categories": [
+  "restaurants": [
     {
-      "name": "Rice Dishes",
-      "items": [
-        { "name": "Party Jollof Rice & Chicken", "description": "Smoky firewood jollof, fried plantain and peppered chicken.", "price": 6500, "tags": ["Popular"], "available": true },
-        { "name": "Fried Rice & Turkey", "description": "Nigerian fried rice with liver, mixed veg and peppered turkey.", "price": 7500, "tags": [], "available": true },
-        { "name": "Ofada Rice & Ayamase", "description": "Local ofada rice with green pepper designer stew and assorted meat.", "price": 7000, "tags": ["Spicy"], "available": true },
-        { "name": "Coconut Rice & Fish", "description": "Creamy coconut rice with a whole fried croaker fish.", "price": 7000, "tags": [], "available": true },
-        { "name": "White Rice & Stew", "description": "Steamed rice, rich tomato stew and beef.", "price": 5000, "tags": [], "available": true }
-      ]
-    },
-    {
-      "name": "Soups & Swallow",
-      "note": "Every soup comes with one swallow: pounded yam, eba, semo, amala or fufu.",
-      "items": [
-        { "name": "Egusi Soup", "description": "Melon seed soup with spinach, assorted meat and stockfish.", "price": 6000, "tags": ["Popular"], "available": true },
-        { "name": "Afang Soup", "description": "Afang and waterleaf with periwinkle, beef and dried fish.", "price": 7000, "tags": [], "available": true },
-        { "name": "Efo Riro", "description": "Yoruba-style spinach stew with assorted meat and ponmo.", "price": 6000, "tags": ["Spicy"], "available": true },
-        { "name": "Ogbono Soup", "description": "Draw soup with okra, beef and stockfish.", "price": 5500, "tags": [], "available": true },
-        { "name": "Oha Soup", "description": "Oha leaves in a rich cocoyam broth with goat meat.", "price": 6500, "tags": [], "available": true },
-        { "name": "Banga Soup & Starch", "description": "Delta palm-fruit soup with fresh fish, served with starch.", "price": 7500, "tags": [], "available": true }
-      ]
-    },
-    {
-      "name": "Grills & Small Chops",
-      "items": [
-        { "name": "Beef Suya", "description": "Spicy grilled beef skewers with yaji, onions and tomatoes.", "price": 4000, "tags": ["Spicy", "Popular"], "available": true },
-        { "name": "Asun", "description": "Smoky peppered goat meat, fiery and tender.", "price": 5000, "tags": ["Spicy"], "available": true },
-        { "name": "Peppered Snail", "description": "Jumbo snails in hot pepper sauce.", "price": 6000, "tags": ["Spicy"], "available": true },
-        { "name": "Nkwobi", "description": "Cow foot in spicy palm-oil sauce with utazi leaves.", "price": 6500, "tags": ["Spicy"], "available": true },
-        { "name": "Goat Meat Pepper Soup", "description": "Hot, aromatic broth with goat meat and uziza.", "price": 5500, "tags": ["Spicy"], "available": true },
-        { "name": "Catfish Pepper Soup", "description": "Fresh point-and-kill catfish in spicy broth.", "price": 7000, "tags": ["Spicy"], "available": true },
-        { "name": "Small Chops Platter", "description": "Puff-puff, samosa, spring rolls and peppered gizzard.", "price": 5500, "tags": [], "available": true }
-      ]
-    },
-    {
-      "name": "Sides",
-      "items": [
-        { "name": "Fried Plantain (Dodo)", "description": "Sweet ripe plantain, fried golden.", "price": 1500, "tags": ["Vegetarian"], "available": true },
-        { "name": "Moi Moi", "description": "Steamed bean pudding with egg and fish.", "price": 1500, "tags": [], "available": true },
-        { "name": "Extra Swallow", "description": "Pounded yam, eba, semo, amala or fufu.", "price": 1000, "tags": ["Vegetarian"], "available": true },
-        { "name": "Coleslaw", "description": "Fresh creamy cabbage and carrot salad.", "price": 1000, "tags": ["Vegetarian"], "available": true }
-      ]
-    },
-    {
-      "name": "Drinks",
-      "items": [
-        { "name": "Chapman", "description": "Nigeria's favourite fruity mocktail with cucumber and orange.", "price": 2500, "tags": ["Popular"], "available": true },
-        { "name": "Zobo", "description": "Chilled hibiscus drink with ginger and pineapple.", "price": 1500, "tags": [], "available": true },
-        { "name": "Kunu", "description": "Traditional millet drink, lightly spiced.", "price": 1500, "tags": [], "available": true },
-        { "name": "Palm Wine", "description": "Fresh, sweet palm wine.", "price": 2000, "tags": [], "available": true },
-        { "name": "Fresh Fruit Juice", "description": "Pineapple, watermelon or orange, pressed daily.", "price": 2500, "tags": [], "available": true },
-        { "name": "Soft Drink", "description": "Coke, Fanta, Sprite or Pepsi.", "price": 800, "tags": [], "available": true },
-        { "name": "Malt", "description": "Maltina or Amstel Malta.", "price": 1000, "tags": [], "available": true },
-        { "name": "Beer", "description": "Star, Gulder or Heineken.", "price": 1500, "tags": [], "available": true },
-        { "name": "Bottled Water", "description": "75cl table water.", "price": 500, "tags": [], "available": true }
+      "name": "Ogarider Kitchen",
+      "description": "Home-style Nigerian food: jollof, soups and swallow, grills and cold drinks.",
+      "image": "",
+      "categories": [
+        {
+          "name": "Rice Dishes",
+          "items": [
+            {
+              "name": "Party Jollof Rice & Chicken",
+              "description": "Smoky firewood jollof, fried plantain and peppered chicken.",
+              "price": 6500,
+              "tags": [
+                "Popular"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Fried Rice & Turkey",
+              "description": "Nigerian fried rice with liver, mixed veg and peppered turkey.",
+              "price": 7500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Ofada Rice & Ayamase",
+              "description": "Local ofada rice with green pepper designer stew and assorted meat.",
+              "price": 7000,
+              "tags": [
+                "Spicy"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Coconut Rice & Fish",
+              "description": "Creamy coconut rice with a whole fried croaker fish.",
+              "price": 7000,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "White Rice & Stew",
+              "description": "Steamed rice, rich tomato stew and beef.",
+              "price": 5000,
+              "tags": [],
+              "available": true,
+              "image": ""
+            }
+          ]
+        },
+        {
+          "name": "Soups & Swallow",
+          "note": "Every soup comes with one swallow: pounded yam, eba, semo, amala or fufu.",
+          "items": [
+            {
+              "name": "Egusi Soup",
+              "description": "Melon seed soup with spinach, assorted meat and stockfish.",
+              "price": 6000,
+              "tags": [
+                "Popular"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Afang Soup",
+              "description": "Afang and waterleaf with periwinkle, beef and dried fish.",
+              "price": 7000,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Efo Riro",
+              "description": "Yoruba-style spinach stew with assorted meat and ponmo.",
+              "price": 6000,
+              "tags": [
+                "Spicy"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Ogbono Soup",
+              "description": "Draw soup with okra, beef and stockfish.",
+              "price": 5500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Oha Soup",
+              "description": "Oha leaves in a rich cocoyam broth with goat meat.",
+              "price": 6500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Banga Soup & Starch",
+              "description": "Delta palm-fruit soup with fresh fish, served with starch.",
+              "price": 7500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            }
+          ]
+        },
+        {
+          "name": "Grills & Small Chops",
+          "items": [
+            {
+              "name": "Beef Suya",
+              "description": "Spicy grilled beef skewers with yaji, onions and tomatoes.",
+              "price": 4000,
+              "tags": [
+                "Spicy",
+                "Popular"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Asun",
+              "description": "Smoky peppered goat meat, fiery and tender.",
+              "price": 5000,
+              "tags": [
+                "Spicy"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Peppered Snail",
+              "description": "Jumbo snails in hot pepper sauce.",
+              "price": 6000,
+              "tags": [
+                "Spicy"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Nkwobi",
+              "description": "Cow foot in spicy palm-oil sauce with utazi leaves.",
+              "price": 6500,
+              "tags": [
+                "Spicy"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Goat Meat Pepper Soup",
+              "description": "Hot, aromatic broth with goat meat and uziza.",
+              "price": 5500,
+              "tags": [
+                "Spicy"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Catfish Pepper Soup",
+              "description": "Fresh point-and-kill catfish in spicy broth.",
+              "price": 7000,
+              "tags": [
+                "Spicy"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Small Chops Platter",
+              "description": "Puff-puff, samosa, spring rolls and peppered gizzard.",
+              "price": 5500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            }
+          ]
+        },
+        {
+          "name": "Sides",
+          "items": [
+            {
+              "name": "Fried Plantain (Dodo)",
+              "description": "Sweet ripe plantain, fried golden.",
+              "price": 1500,
+              "tags": [
+                "Vegetarian"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Moi Moi",
+              "description": "Steamed bean pudding with egg and fish.",
+              "price": 1500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Extra Swallow",
+              "description": "Pounded yam, eba, semo, amala or fufu.",
+              "price": 1000,
+              "tags": [
+                "Vegetarian"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Coleslaw",
+              "description": "Fresh creamy cabbage and carrot salad.",
+              "price": 1000,
+              "tags": [
+                "Vegetarian"
+              ],
+              "available": true,
+              "image": ""
+            }
+          ]
+        },
+        {
+          "name": "Drinks",
+          "items": [
+            {
+              "name": "Chapman",
+              "description": "Nigeria's favourite fruity mocktail with cucumber and orange.",
+              "price": 2500,
+              "tags": [
+                "Popular"
+              ],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Zobo",
+              "description": "Chilled hibiscus drink with ginger and pineapple.",
+              "price": 1500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Kunu",
+              "description": "Traditional millet drink, lightly spiced.",
+              "price": 1500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Palm Wine",
+              "description": "Fresh, sweet palm wine.",
+              "price": 2000,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Fresh Fruit Juice",
+              "description": "Pineapple, watermelon or orange, pressed daily.",
+              "price": 2500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Soft Drink",
+              "description": "Coke, Fanta, Sprite or Pepsi.",
+              "price": 800,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Malt",
+              "description": "Maltina or Amstel Malta.",
+              "price": 1000,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Beer",
+              "description": "Star, Gulder or Heineken.",
+              "price": 1500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Bottled Water",
+              "description": "75cl table water.",
+              "price": 500,
+              "tags": [],
+              "available": true,
+              "image": ""
+            }
+          ]
+        }
       ]
     }
   ]

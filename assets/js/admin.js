@@ -14,6 +14,8 @@ let token = null;
 let menu = null;   // the menu being edited
 let sha = null;    // version of menu.json we loaded, required by GitHub to save
 let dirty = false;
+let current = 0;   // index of the restaurant being edited
+const previews = new Map(); // uploaded photo path -> local preview URL (until the site republishes)
 
 function show(name) {
   ["login", "loading", "editor"].forEach((s) => { $("state-" + s).hidden = s !== name; });
@@ -114,7 +116,12 @@ async function loadMenu() {
   const file = await res.json();
   sha = file.sha;
   menu = JSON.parse(fromBase64(file.content));
-  menu.categories = menu.categories || [];
+  // Older menu.json files had sections at the top level: wrap them in one restaurant.
+  if (!menu.restaurants) {
+    menu.restaurants = [{ name: "Ogarider Kitchen", description: "", image: "", categories: menu.categories || [] }];
+    delete menu.categories;
+  }
+  current = Math.min(current, menu.restaurants.length - 1);
   setDirty(false);
   render();
   show("editor");
@@ -134,13 +141,17 @@ function setSaveStatus(text, type) {
 }
 
 function problems() {
-  for (const cat of menu.categories) {
-    if (!(cat.name || "").trim()) return "Every menu section needs a name.";
-    for (const item of cat.items) {
+  for (const r of menu.restaurants) {
+    if (!(r.name || "").trim()) return "Every restaurant needs a name.";
+    for (const cat of r.categories || []) {
+    if (!(cat.name || "").trim()) return "Every menu section in \"" + r.name + "\" needs a name.";
+    for (const item of cat.items || []) {
       if (!(item.name || "").trim()) return "Every dish in \"" + cat.name + "\" needs a name.";
       if (!(item.price >= 0)) return "\"" + item.name + "\" needs a price (numbers only, e.g. 6500).";
     }
+    }
   }
+  if (uploading) return "Wait for the photo to finish uploading.";
   return null;
 }
 
@@ -213,6 +224,100 @@ function moveButtons(list, index, label) {
   return [up, down];
 }
 
+// Photos --------------------------------------------------------------------
+// Photos are shrunk in the browser (max 900px, JPEG) and uploaded straight into
+// assets/images/menu/ in the repository; menu.json stores the path.
+let uploading = 0;
+
+function slug(text) {
+  return (text || "photo").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "photo";
+}
+
+async function shrink(file) {
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const scale = Math.min(1, 900 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+  return blob;
+}
+
+async function uploadPhoto(file, name) {
+  const blob = await shrink(file);
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  const path = "assets/images/menu/" + slug(name) + "-" + Date.now() + ".jpg";
+  const res = await gh("/contents/" + path, {
+    method: "PUT",
+    body: JSON.stringify({ message: "Add photo for " + (name || "menu"), content: btoa(bin), branch: BRANCH })
+  });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  previews.set(path, URL.createObjectURL(blob));
+  return path;
+}
+
+function photoField(obj, label, nameOf) {
+  const wrap = el("div", "admin-photo");
+  const preview = el("div", "admin-photo-preview");
+  const status = el("span", "admin-photo-status");
+  const input = el("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.hidden = true;
+  const pick = el("button", "btn btn-small btn-outline");
+  pick.type = "button";
+  const remove = el("button", "link-btn danger", "Remove photo");
+  remove.type = "button";
+
+  function paint() {
+    preview.replaceChildren();
+    if (obj.image) {
+      const img = el("img");
+      img.src = previews.get(obj.image) || obj.image;
+      img.alt = "";
+      preview.appendChild(img);
+    } else {
+      preview.appendChild(el("span", null, "No photo"));
+    }
+    pick.textContent = obj.image ? "Change photo" : "+ Add photo";
+    remove.hidden = !obj.image;
+  }
+
+  pick.addEventListener("click", () => input.click());
+  remove.addEventListener("click", () => { obj.image = ""; changed(); paint(); });
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    input.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { status.textContent = "Please choose a photo."; return; }
+    uploading++;
+    pick.disabled = true;
+    status.textContent = "Uploading…";
+    try {
+      obj.image = await uploadPhoto(file, nameOf());
+      status.textContent = "Photo added. Tap Save & publish to show it.";
+      changed();
+    } catch (err) {
+      console.error(err);
+      status.textContent = "Couldn't upload that photo. Check your connection and try again.";
+    } finally {
+      uploading--;
+      pick.disabled = false;
+      paint();
+    }
+  });
+
+  const controls = el("div", "admin-photo-controls");
+  controls.append(el("span", "admin-photo-label", label), pick, remove, status);
+  wrap.append(preview, controls, input);
+  paint();
+  return wrap;
+}
+
+// Editor --------------------------------------------------------------------
 function itemRow(cat, item, i) {
   const row = el("li", "admin-item" + (item.available === false ? " sold-out" : ""));
 
@@ -225,13 +330,14 @@ function itemRow(cat, item, i) {
   price.addEventListener("input", () => { item.price = price.value === "" ? NaN : Number(price.value); changed(); });
 
   const top = el("div", "admin-row");
-  const name = field("Dish name", textInput(item, "name", "e.g. Jollof Rice", 80));
+  const name = field("Food name", textInput(item, "name", "e.g. Jollof Rice", 80));
   name.classList.add("grow");
   const priceField = field("Price (" + (menu.currency || "₦") + ")", price);
   priceField.classList.add("price-field");
   top.append(name, priceField);
 
   const desc = field("Description", textInput(item, "description", "What's in it?", 200));
+  const photo = photoField(item, "Food photo", () => item.name);
 
   const opts = el("div", "admin-opts");
   const avail = el("label", "admin-check");
@@ -261,22 +367,94 @@ function itemRow(cat, item, i) {
   });
 
   const actions = el("div", "admin-actions");
-  const del = el("button", "link-btn danger", "Delete dish");
+  const del = el("button", "link-btn danger", "Delete food");
   del.type = "button";
   del.addEventListener("click", () => {
-    if (!confirm("Delete \"" + (item.name || "this dish") + "\"?")) return;
+    if (!confirm("Delete \"" + (item.name || "this food") + "\"?")) return;
     cat.items.splice(i, 1); changed(); render();
   });
-  actions.append(...moveButtons(cat.items, i, item.name || "dish"), del);
+  actions.append(...moveButtons(cat.items, i, item.name || "food"), del);
 
-  row.append(top, desc, opts, actions);
+  row.append(top, desc, photo, opts, actions);
   return row;
 }
 
+function restaurantBar() {
+  const bar = $("restaurant-bar");
+  bar.replaceChildren();
+
+  const pickRow = el("div", "admin-row");
+  const select = el("select", "admin-select");
+  menu.restaurants.forEach((r, i) => select.add(new Option(r.name || "New restaurant", String(i))));
+  select.value = String(current);
+  select.addEventListener("change", () => { current = Number(select.value); render(); });
+  const pickField = field("Restaurant you're editing", select);
+  pickField.classList.add("grow");
+  const add = el("button", "btn btn-small", "+ Add restaurant");
+  add.type = "button";
+  add.addEventListener("click", () => {
+    menu.restaurants.push({ name: "", description: "", image: "", categories: [{ name: "Menu", items: [] }] });
+    current = menu.restaurants.length - 1;
+    changed(); render();
+    bar.querySelector(".restaurant-name input").focus();
+  });
+  pickRow.append(pickField, add);
+  bar.appendChild(pickRow);
+
+  const r = menu.restaurants[current];
+  if (!r) return;
+  const card = el("section", "wa-card admin-restaurant");
+  const nameField = field("Restaurant name", textInput(r, "name", "e.g. Mama Put Kitchen", 60));
+  nameField.classList.add("restaurant-name", "cat-name");
+  nameField.querySelector("input").addEventListener("input", () => {
+    select.options[current].text = r.name || "New restaurant";
+  });
+  card.appendChild(nameField);
+  card.appendChild(field("Short description (optional)", textInput(r, "description", "e.g. Home-style soups and swallow", 160)));
+  card.appendChild(photoField(r, "Restaurant photo or logo", () => r.name));
+
+  const actions = el("div", "admin-actions");
+  const del = el("button", "link-btn danger", "Delete restaurant");
+  del.type = "button";
+  del.disabled = menu.restaurants.length < 2;
+  del.title = del.disabled ? "You need at least one restaurant" : "";
+  del.addEventListener("click", () => {
+    const count = (r.categories || []).reduce((n, c) => n + (c.items || []).length, 0);
+    if (!confirm("Delete \"" + (r.name || "this restaurant") + "\" and its " + count + " foods?")) return;
+    menu.restaurants.splice(current, 1);
+    current = Math.max(0, current - 1);
+    changed(); render();
+  });
+  // Reorder restaurants, keeping the moved one selected.
+  const list = menu.restaurants;
+  const move = (delta) => {
+    const to = current + delta;
+    [list[current], list[to]] = [list[to], list[current]];
+    current = to;
+    changed(); render();
+  };
+  const up = el("button", "icon-btn", "↑");
+  const down = el("button", "icon-btn", "↓");
+  up.type = down.type = "button";
+  up.setAttribute("aria-label", "Move restaurant up");
+  down.setAttribute("aria-label", "Move restaurant down");
+  up.disabled = current === 0;
+  down.disabled = current === list.length - 1;
+  up.addEventListener("click", () => move(-1));
+  down.addEventListener("click", () => move(1));
+  actions.append(up, down, del);
+  card.appendChild(actions);
+  bar.appendChild(card);
+}
+
 function render() {
+  restaurantBar();
+  const r = menu.restaurants[current];
+  r.categories = r.categories || [];
+  $("sections-title").textContent = "Foods at " + (r.name || "this restaurant");
   const root = $("categories");
   root.replaceChildren();
-  menu.categories.forEach((cat, ci) => {
+  r.categories.forEach((cat, ci) => {
     cat.items = cat.items || [];
     const card = el("section", "wa-card admin-cat");
 
@@ -291,30 +469,30 @@ function render() {
     cat.items.forEach((item, i) => list.appendChild(itemRow(cat, item, i)));
     card.appendChild(list);
 
-    const add = el("button", "btn btn-small btn-outline", "+ Add dish");
+    const add = el("button", "btn btn-small btn-outline", "+ Add food");
     add.type = "button";
     add.addEventListener("click", () => {
-      cat.items.push({ name: "", description: "", price: 0, tags: [], available: true });
+      cat.items.push({ name: "", description: "", price: 0, tags: [], available: true, image: "" });
       changed(); render();
-      const inputs = card.ownerDocument.querySelectorAll(".admin-cat")[ci].querySelectorAll(".admin-item");
-      inputs[inputs.length - 1].querySelector("input").focus();
+      const items = document.querySelectorAll(".admin-cat")[ci].querySelectorAll(".admin-item");
+      items[items.length - 1].querySelector("input").focus();
     });
 
     const catActions = el("div", "admin-actions");
     const delCat = el("button", "link-btn danger", "Delete section");
     delCat.type = "button";
     delCat.addEventListener("click", () => {
-      if (!confirm("Delete the whole \"" + (cat.name || "section") + "\" section and its " + cat.items.length + " dishes?")) return;
-      menu.categories.splice(ci, 1); changed(); render();
+      if (!confirm("Delete the whole \"" + (cat.name || "section") + "\" section and its " + cat.items.length + " foods?")) return;
+      r.categories.splice(ci, 1); changed(); render();
     });
-    catActions.append(add, ...moveButtons(menu.categories, ci, cat.name || "section"), delCat);
+    catActions.append(add, ...moveButtons(r.categories, ci, cat.name || "section"), delCat);
     card.appendChild(catActions);
     root.appendChild(card);
   });
 }
 
 $("add-category").addEventListener("click", () => {
-  menu.categories.push({ name: "", items: [] });
+  menu.restaurants[current].categories.push({ name: "", items: [] });
   changed(); render();
   const cats = document.querySelectorAll(".admin-cat");
   cats[cats.length - 1].querySelector("input").focus();
