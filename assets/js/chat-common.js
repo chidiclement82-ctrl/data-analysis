@@ -15,7 +15,11 @@ export let auth = null;
 export let db = null;
 
 if (configured) {
-  const app = initializeApp(useEmulators ? { apiKey: "demo-key", projectId: "demo-restaurant" } : firebaseConfig);
+  // Only apiKey and projectId are required; authDomain follows from the project ID.
+  const config = useEmulators
+    ? { apiKey: "demo-key", projectId: "demo-restaurant" }
+    : { ...firebaseConfig, authDomain: firebaseConfig.authDomain || firebaseConfig.projectId + ".firebaseapp.com" };
+  const app = initializeApp(config);
   auth = getAuth(app);
   db = getFirestore(app);
   if (useEmulators) {
