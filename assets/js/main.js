@@ -1,19 +1,6 @@
-/* Food Is Ready — site behaviour */
+/* Ogarider — site behaviour */
 (function () {
   "use strict";
-
-  // ---------------------------------------------------------------------
-  // SETTINGS — the only things you normally need to change in this file.
-  // ---------------------------------------------------------------------
-  // WhatsApp number that receives booking requests, with country code.
-  // The guest's WhatsApp opens with the booking written out; they press send.
-  var BOOKING_WHATSAPP = "+234 705 994 6531";
-  // Optional: paste a Formspree (formspree.io) form URL here, e.g.
-  // "https://formspree.io/f/abcdwxyz", to receive bookings by email instead.
-  var FORM_ENDPOINT = "";
-  // Opening hours are read from the hours table in index.html.
-  var LAST_SEATING_MINUTES_BEFORE_CLOSE = 90;
-  var SLOT_MINUTES = 30;
 
   // Header background on scroll -----------------------------------------
   var header = document.querySelector(".site-header");
@@ -132,9 +119,7 @@
     var h12 = h % 12 || 12;
     return h12 + ":" + (m < 10 ? "0" : "") + m + suffix;
   }
-  function isoDate(d) {
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  }
+
 
   // Opening hours, read from the table in index.html -----------------------
   // HOURS[day] = [open, close] in "HH:MM", or null when closed (0 = Sunday).
@@ -166,127 +151,6 @@
     (!!yesterday && closeMinutes(yesterday) > 24 * 60 && nowMins < closeMinutes(yesterday) - 24 * 60);
   badge.textContent = open ? "Open now" : "Closed now";
   badge.classList.add(open ? "is-open" : "is-closed");
-
-  // Reservation form ----------------------------------------------------
-  var form = document.getElementById("reserve-form");
-  var dateInput = form.elements.date;
-  var timeSelect = form.elements.time;
-  var status = form.querySelector(".form-status");
-
-  var maxDate = new Date(now);
-  maxDate.setDate(maxDate.getDate() + 60);
-  dateInput.min = isoDate(now);
-  dateInput.max = isoDate(maxDate);
-
-  function fillTimes() {
-    timeSelect.innerHTML = "";
-    var placeholder = new Option("Choose…", "");
-    timeSelect.add(placeholder);
-    if (!dateInput.value) return;
-
-    var day = new Date(dateInput.value + "T12:00").getDay();
-    var hours = HOURS[day];
-    if (!hours) {
-      placeholder.text = "Closed this day";
-      timeSelect.disabled = true;
-      return;
-    }
-    timeSelect.disabled = false;
-    var isToday = dateInput.value === isoDate(new Date());
-    var earliest = isToday ? new Date().getHours() * 60 + new Date().getMinutes() + 60 : 0;
-    var last = closeMinutes(hours) - LAST_SEATING_MINUTES_BEFORE_CLOSE;
-    var count = 0;
-    for (var t = toMinutes(hours[0]); t <= last; t += SLOT_MINUTES) {
-      if (t < earliest) continue;
-      timeSelect.add(new Option(formatTime(t), formatTime(t)));
-      count++;
-    }
-    if (!count) {
-      placeholder.text = "No times left today";
-      timeSelect.disabled = true;
-    }
-  }
-  dateInput.addEventListener("change", fillTimes);
-
-  function setStatus(msg, type) {
-    status.textContent = msg;
-    status.className = "form-status" + (type ? " " + type : "");
-  }
-
-  form.addEventListener("input", function (e) {
-    if (e.target.getAttribute("aria-invalid") === "true" && e.target.checkValidity()) {
-      e.target.removeAttribute("aria-invalid");
-    }
-  });
-
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var firstInvalid = null;
-    Array.prototype.forEach.call(form.elements, function (el) {
-      if (!el.willValidate) return;
-      var ok = el.checkValidity() && !(el.required && !String(el.value).trim());
-      if (ok) el.removeAttribute("aria-invalid");
-      else { el.setAttribute("aria-invalid", "true"); if (!firstInvalid) firstInvalid = el; }
-    });
-    if (timeSelect.disabled) {
-      setStatus("We're closed or fully booked for that day — please choose another date.", "error");
-      dateInput.focus();
-      return;
-    }
-    if (firstInvalid) {
-      setStatus("Please fill in the highlighted fields.", "error");
-      firstInvalid.focus();
-      return;
-    }
-
-    var d = form.elements;
-    var prettyDate = new Date(d.date.value + "T12:00").toLocaleDateString(undefined, {
-      weekday: "long", month: "long", day: "numeric", year: "numeric"
-    });
-    var subject = "Table request: " + d.guests.value + " guests, " + prettyDate + " at " + d.time.value;
-    var body = [
-      "Name: " + d.name.value.trim(),
-      "Phone: " + d.phone.value.trim(),
-      "Email: " + d.email.value.trim(),
-      "Date: " + prettyDate,
-      "Time: " + d.time.value,
-      "Guests: " + d.guests.value,
-      "",
-      "Notes: " + (d.notes.value.trim() || "—")
-    ].join("\n");
-
-    var firstName = d.name.value.trim().split(" ")[0];
-
-    if (FORM_ENDPOINT) {
-      if (d._gotcha.value) return; // a bot filled the hidden field
-      var button = form.querySelector('button[type="submit"]');
-      button.disabled = true;
-      setStatus("Sending your request…");
-      var data = new FormData(form);
-      data.append("_subject", subject);
-      fetch(FORM_ENDPOINT, { method: "POST", body: data, headers: { Accept: "application/json" } })
-        .then(function (res) {
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          form.reset();
-          fillTimes();
-          setStatus("Thanks, " + firstName + "! We've got your request and will confirm shortly.", "success");
-        })
-        .catch(function () {
-          setStatus("Sorry, something went wrong. Please call us to book.", "error");
-        })
-        .then(function () { button.disabled = false; });
-      return;
-    }
-
-    // No form service set up: open WhatsApp with the request written out.
-    var url = "https://wa.me/" + BOOKING_WHATSAPP.replace(/\D/g, "") +
-      "?text=" + encodeURIComponent(subject + "\n\n" + body);
-    var win = window.open(url, "_blank");
-    if (win) win.opener = null;
-    else window.location.href = url; // pop-up blocked: open in this tab
-
-    setStatus("Thanks, " + firstName + "! WhatsApp is opening with your booking request. Just press send, and we'll confirm shortly.", "success");
-  });
 
   // Footer year -----------------------------------------------------------
   document.getElementById("year").textContent = now.getFullYear();

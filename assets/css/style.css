@@ -120,7 +120,7 @@ p { margin: 0 0 1em; }
 }
 .brand:hover { color: var(--cream); }
 .brand em { color: var(--gold); font-weight: 500; }
-.brand-mark { width: 26px; height: 26px; color: var(--ember); }
+.brand-mark { width: 34px; height: 34px; flex: none; }
 
 .site-nav { display: flex; align-items: center; gap: 28px; }
 .site-nav a:not(.btn) {

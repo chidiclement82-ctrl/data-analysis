@@ -6,7 +6,7 @@
 // While it's empty, the page shows "Online ordering is coming soon".
 // ---------------------------------------------------------------------------
 const WHATSAPP_NUMBER = "+234 705 994 6531";
-const RESTAURANT_NAME = "Food Is Ready";
+const RESTAURANT_NAME = "Ogarider";
 
 const $ = (id) => document.getElementById(id);
 const digits = WHATSAPP_NUMBER.replace(/\D/g, "");
