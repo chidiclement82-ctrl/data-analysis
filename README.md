@@ -53,7 +53,7 @@ Run `npx firebase-tools emulators:start --project demo-restaurant` (needs Java),
 
 ## Where to change things
 
-Everything you'd normally change is in three files. Look for comments marked `EDIT` in each one.
+Everything you'd normally change is in the files below. Look for comments marked `EDIT` in each one.
 
 ### `index.html`: all the words, menu and details
 
