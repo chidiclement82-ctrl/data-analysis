@@ -57,7 +57,8 @@
 
     <section class="app-state" id="state-denied" hidden>
       <div class="app-card">
-        <h1>This account isn't a staff account</h1>
+        <h1 id="denied-title">This account isn't a staff account</h1>
+        <p id="denied-rules" hidden>Firebase refused to check staff access. In the Firebase console, make sure the Firestore database is created (Build → Firestore Database → Create database) and the security rules from <code>firestore.rules</code> are published (Firestore Database → Rules → Publish).</p>
         <p>To give it access, add a document in Firestore at <code>admins/<span id="denied-uid"></span></code> (see README.md, "Order chat", step 5).</p>
         <button class="btn" type="button" id="denied-signout">Sign out</button>
       </div>

@@ -37,7 +37,11 @@ The chat runs on **Firebase**, Google's hosted database. It's free for a restaur
    2. **Firestore Database → Data → Start collection** (or open `admins` if it already exists). Set the collection ID to `admins`, set the **Document ID** to the UID you copied, and add one field, e.g. `name` = `Owner`. Save.
 
    Only people listed in `admins` can open the inbox. Anyone else who signs in is refused.
-6. **Connect the website.** Open **Project settings** (the gear icon) → **General → Your apps**, click the **Web** icon (`</>`), register the app (leave "Firebase Hosting" unticked), and copy the values from `firebaseConfig` into [`assets/js/firebase-config.js`](assets/js/firebase-config.js). These values are meant to be public; the security rules are what protect your data.
+6. **Connect the website.** Open **Project settings** (the gear icon next to "Project Overview"). At the top of the **General** tab, copy two values into [`assets/js/firebase-config.js`](assets/js/firebase-config.js):
+   - **Project ID** → `projectId`
+   - **Web API Key** → `apiKey`. If it says there's no key, finish step 2 first; the key appears once Authentication is set up.
+
+   The other values can stay empty. These values are meant to be public; the security rules are what protect your data.
 7. Push to `main`. Open `admin.html`, sign in, then open `order.html` on your phone and send a test order.
 
 **Using the inbox**

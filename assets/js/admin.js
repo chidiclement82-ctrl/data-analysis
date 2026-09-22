@@ -41,6 +41,8 @@ else {
     } catch (err) {
       console.error(err);
       $("denied-uid").textContent = user.uid;
+      $("denied-title").textContent = "Couldn't check staff access";
+      $("denied-rules").hidden = false;
       show("denied");
       return;
     }
@@ -73,9 +75,15 @@ loginForm.addEventListener("submit", async (e) => {
     loginMessage("");
   } catch (err) {
     console.error(err);
-    loginMessage(err.code === "auth/too-many-requests"
-      ? "Too many attempts. Please wait a few minutes and try again."
-      : "That email and password don't match a staff account.", "error");
+    const messages = {
+      "auth/too-many-requests": "Too many attempts. Please wait a few minutes and try again.",
+      "auth/network-request-failed": "Can't reach the server. Check your internet connection and try again.",
+      "auth/operation-not-allowed": "Email/Password sign-in is switched off. In Firebase, open Authentication → Sign-in method and enable Email/Password.",
+      "auth/configuration-not-found": "Sign-in isn't set up yet. In Firebase, open Authentication and click Get started, then enable Email/Password.",
+      "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "The apiKey in assets/js/firebase-config.js is wrong. Copy the Web API Key again from Firebase Project settings.",
+      "auth/invalid-api-key": "The apiKey in assets/js/firebase-config.js is wrong. Copy the Web API Key again from Firebase Project settings."
+    };
+    loginMessage(messages[err.code] || "That email and password don't match a staff account.", "error");
   } finally {
     btn.disabled = false;
   }
