@@ -41,63 +41,84 @@ if (digits.length < 8) {
 }
 
 // Reads the menu from menu.json (edited on admin.html). Sold-out dishes are
-// shown but can't be added.
+// shown but can't be added. Older files had sections at the top level.
 async function loadMenu() {
   const res = await fetch("menu.json?v=" + Date.now());
   if (!res.ok) throw new Error("HTTP " + res.status);
   const menu = await res.json();
   currency = menu.currency || currency;
-  return (menu.categories || []).map((c) => ({
-    category: c.name,
-    items: (c.items || []).filter((it) => it.name).map((it) => ({
-      name: it.name, desc: it.description || "", price: Number(it.price) || 0, soldOut: it.available === false
-    }))
-  })).filter((c) => c.items.length);
+  const restaurants = menu.restaurants || [{ name: "", categories: menu.categories || [] }];
+  return restaurants.map((r) => ({
+    name: r.name || "",
+    image: r.image || "",
+    categories: (r.categories || []).map((c) => ({
+      name: c.name,
+      items: (c.items || []).filter((it) => it.name).map((it) => ({
+        name: it.name, desc: it.description || "", price: Number(it.price) || 0,
+        image: it.image || "", soldOut: it.available === false
+      }))
+    })).filter((c) => c.items.length)
+  })).filter((r) => r.categories.length);
 }
 
-function renderMenu(menu) {
+function renderMenu(restaurants) {
   const picker = $("menu-picker");
   picker.replaceChildren();
-  menu.forEach((section) => {
-    picker.appendChild(el("h3", "picker-cat", section.category));
-    const ul = el("ul", "picker-list");
-    section.items.forEach((item) => {
-      const li = el("li", "picker-item");
-      const info = el("div", "picker-info");
-      const head = el("p", "picker-name");
-      head.append(el("span", null, item.name), el("span", "picker-price", money(item.price)));
-      info.appendChild(head);
-      if (item.desc) info.appendChild(el("p", "picker-desc", item.desc));
-
-      const stepper = el("div", "stepper");
-      const minus = el("button", "icon-btn", "−");
-      const qty = el("span", "stepper-qty", "0");
-      const plus = el("button", "icon-btn", "+");
-      minus.type = plus.type = "button";
-      minus.setAttribute("aria-label", "Remove one " + item.name);
-      plus.setAttribute("aria-label", "Add one " + item.name);
-      const change = (delta) => {
-        const next = Math.max(0, Math.min(20, (cart.get(item.name)?.qty || 0) + delta));
-        if (next) cart.set(item.name, { name: item.name, price: item.price, qty: next });
-        else cart.delete(item.name);
-        qty.textContent = next;
-        li.classList.toggle("in-cart", next > 0);
-        updateSummary();
-      };
-      minus.addEventListener("click", () => change(-1));
-      plus.addEventListener("click", () => change(1));
-      stepper.append(minus, qty, plus);
-      if (item.soldOut) {
-        li.classList.add("sold-out");
-        li.append(info, el("span", "sold-out-label", "Sold out"));
-        ul.appendChild(li);
-        return;
-      }
-      li.append(info, stepper);
-      ul.appendChild(li);
+  const many = restaurants.length > 1;
+  restaurants.forEach((r) => {
+    if (many || r.name) {
+      const head = el("div", "picker-restaurant");
+      if (r.image) { const img = el("img"); img.src = r.image; img.alt = ""; img.loading = "lazy"; head.appendChild(img); }
+      head.appendChild(el("h3", null, r.name || "Restaurant"));
+      picker.appendChild(head);
+    }
+    r.categories.forEach((section) => {
+      picker.appendChild(el("h4", "picker-cat", section.name));
+      const ul = el("ul", "picker-list");
+      section.items.forEach((item) => ul.appendChild(pickerItem(r.name, item)));
+      picker.appendChild(ul);
     });
-    picker.appendChild(ul);
   });
+}
+
+function pickerItem(restaurant, item) {
+  const key = restaurant + "\u0000" + item.name;
+  const li = el("li", "picker-item");
+  if (item.image) {
+    const img = el("img", "picker-photo"); img.src = item.image; img.alt = ""; img.loading = "lazy";
+    li.appendChild(img);
+  }
+  const info = el("div", "picker-info");
+  const head = el("p", "picker-name");
+  head.append(el("span", null, item.name), el("span", "picker-price", money(item.price)));
+  info.appendChild(head);
+  if (item.desc) info.appendChild(el("p", "picker-desc", item.desc));
+  if (item.soldOut) {
+    li.classList.add("sold-out");
+    li.append(info, el("span", "sold-out-label", "Sold out"));
+    return li;
+  }
+
+  const stepper = el("div", "stepper");
+  const minus = el("button", "icon-btn", "−");
+  const qty = el("span", "stepper-qty", "0");
+  const plus = el("button", "icon-btn", "+");
+  minus.type = plus.type = "button";
+  minus.setAttribute("aria-label", "Remove one " + item.name);
+  plus.setAttribute("aria-label", "Add one " + item.name);
+  const change = (delta) => {
+    const next = Math.max(0, Math.min(20, (cart.get(key)?.qty || 0) + delta));
+    if (next) cart.set(key, { restaurant, name: item.name, price: item.price, qty: next });
+    else cart.delete(key);
+    qty.textContent = next;
+    li.classList.toggle("in-cart", next > 0);
+    updateSummary();
+  };
+  minus.addEventListener("click", () => change(-1));
+  plus.addEventListener("click", () => change(1));
+  stepper.append(minus, qty, plus);
+  li.append(info, stepper);
+  return li;
 }
 
 function totals() {
@@ -170,8 +191,19 @@ form.addEventListener("submit", (e) => {
     return;
   }
 
-  const lines = ["Hello " + RESTAURANT_NAME + "! I'd like to order:", ""];
-  items.forEach((i) => lines.push("• " + i.qty + "× " + i.name + " — " + money(i.qty * i.price)));
+  const lines = ["Hello " + RESTAURANT_NAME + "! I'd like to order:"];
+  // Group dishes by restaurant so the kitchen knows where each one comes from.
+  const byRestaurant = new Map();
+  items.forEach((i) => {
+    if (!byRestaurant.has(i.restaurant)) byRestaurant.set(i.restaurant, []);
+    byRestaurant.get(i.restaurant).push(i);
+  });
+  const named = byRestaurant.size > 1 || (items[0] && items[0].restaurant);
+  byRestaurant.forEach((list, restaurant) => {
+    lines.push("");
+    if (named && restaurant) lines.push("*" + restaurant + "*");
+    list.forEach((i) => lines.push("• " + i.qty + "× " + i.name + " — " + money(i.qty * i.price)));
+  });
   if (count) lines.push("", "Total: " + money(total));
   lines.push("", "Name: " + f.name.value.trim());
   lines.push(delivery ? "Delivery to: " + f.address.value.trim() : "Pickup");

@@ -32,7 +32,7 @@
       <form class="app-card start-form" id="login-form" novalidate>
         <p class="eyebrow">Admin</p>
         <h1>Menu editor</h1>
-        <p class="muted">Sign in with your GitHub access token to change dishes and prices. You only need to do this once on each phone or computer.</p>
+        <p class="muted">Sign in with your GitHub access token to change restaurants, foods, photos and prices. You only need to do this once on each phone or computer.</p>
         <label>Access token
           <input name="token" type="password" autocomplete="current-password" placeholder="ghp_… or github_pat_…" required>
         </label>
@@ -61,8 +61,11 @@
           <header class="wa-intro">
             <p class="eyebrow">Admin</p>
             <h1>Menu editor</h1>
-            <p class="muted">Change names, prices and descriptions, mark dishes sold out, or add and remove dishes. Then tap <strong>Save &amp; publish</strong>. The website updates in about a minute.</p>
+            <p class="muted">Add restaurants and their foods, upload photos, change prices, or mark foods sold out. Then tap <strong>Save &amp; publish</strong>. The website updates in about a minute.</p>
+            <p class="muted">Customer chats: reply in the <a href="https://dashboard.tawk.to" target="_blank" rel="noopener">Tawk.to dashboard</a> or the Tawk.to app on your phone.</p>
           </header>
+          <div id="restaurant-bar"></div>
+          <h2 class="admin-sections-title" id="sections-title">Foods</h2>
           <div id="categories"></div>
           <button class="btn btn-outline btn-block" type="button" id="add-category">+ Add a menu section</button>
         </div>
