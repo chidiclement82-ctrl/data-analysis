@@ -33,18 +33,6 @@ On `admin.html` you can:
 
 Tap **Save & publish** when you're done. The website updates in about a minute. Orders that include foods from several restaurants arrive on WhatsApp grouped by restaurant.
 
-## Live chat with customers (Tawk.to)
-
-Customers can chat with you live from a chat bubble on the website, and you reply from the free **Tawk.to** app on your phone (or at [dashboard.tawk.to](https://dashboard.tawk.to)).
-
-**Switch it on (once, about 5 minutes):**
-1. Sign up free at [tawk.to](https://www.tawk.to) and create a property, e.g. "Ogarider".
-2. In the dashboard, go to **Administration → Channels → Chat Widget** and copy the **Direct Chat Link**. It looks like `https://tawk.to/chat/…/…`.
-3. Paste it into `TAWK_LINK` at the top of [`assets/js/chat-widget.js`](assets/js/chat-widget.js), or send it to whoever maintains the site.
-4. Install the **tawk.to** app on your phone and sign in, so new chats ping you.
-
-The chat bubble sits bottom-left so it doesn't cover the green "Order on WhatsApp" button.
-
 **Signing in (once per phone or computer):** the admin page signs in with a GitHub access token, and saving writes `menu.json` straight into this repository.
 1. Open [this link](https://github.com/settings/tokens/new?scopes=public_repo&description=Food%20Is%20Ready%20menu%20editor).
 2. Choose an expiration and click **Generate token**.
@@ -131,7 +119,6 @@ assets/js/main.js     menu tabs, opening hours
 assets/js/order.js    order page and your WhatsApp number
 admin.html            menu editor (admin)
 assets/js/admin.js    menu editor code
-assets/js/chat-widget.js  live chat (paste your Tawk.to link here)
 assets/images/menu/   food and restaurant photos uploaded from the admin page
 menu.json             the menu: dishes, prices, sections
 assets/images/        photos and share image
