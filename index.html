@@ -7,19 +7,34 @@
   <meta name="description" content="Ember & Vine is a neighbourhood wood-fired kitchen and wine bar serving seasonal plates, hand-made pasta and natural wines. Book a table online.">
   <meta name="theme-color" content="#1c1512">
 
-  <!-- Social sharing -->
+  <!-- EDIT: if you move to your own domain, replace every
+       https://chidiclement82-ctrl.github.io/data-analysis/ in this file,
+       robots.txt and sitemap.xml with it. -->
+  <link rel="canonical" href="https://chidiclement82-ctrl.github.io/data-analysis/">
+
+  <!-- Social sharing (link previews on WhatsApp, Facebook, X, iMessage…) -->
   <meta property="og:type" content="restaurant">
+  <meta property="og:site_name" content="Ember & Vine">
   <meta property="og:title" content="Ember & Vine — Wood-Fired Kitchen & Wine Bar">
   <meta property="og:description" content="Seasonal plates cooked over fire, hand-made pasta and natural wines.">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:url" content="https://chidiclement82-ctrl.github.io/data-analysis/">
+  <meta property="og:image" content="https://chidiclement82-ctrl.github.io/data-analysis/assets/images/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Ember & Vine — Cooked over fire. Shared at the table.">
+  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
 
-  <!-- Structured data helps Google show hours, address and menu in search -->
+  <!-- Structured data helps Google show hours, address and menu in search.
+       EDIT: keep name, phone, address and hours here in step with the page. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -42,7 +57,8 @@
       { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday", "opens": "11:30", "closes": "21:00" }
     ],
     "acceptsReservations": "True",
-    "hasMenu": "#menu"
+    "url": "https://chidiclement82-ctrl.github.io/data-analysis/",
+    "hasMenu": "https://chidiclement82-ctrl.github.io/data-analysis/#menu"
   }
   </script>
 </head>
@@ -100,7 +116,7 @@
           <p class="eyebrow">Our Story</p>
           <h2>A small room built around one big fire</h2>
           <p>Ember &amp; Vine started with a simple idea: cook the best produce we can find over live oak and cherry wood, and pour wines made by people, not factories.</p>
-          <p>Chef Maya Okafor and sommelier Luca Ferri opened the doors in 2019. Six years on, the menu still changes with whatever the farmers bring through the back door each week.</p>
+          <p>Chef Maya Okafor and sommelier Luca Ferri opened the doors in 2019. The menu still changes with whatever the farmers bring through the back door each week.</p>
           <dl class="stats">
             <div><dt>14</dt><dd>Local farms &amp; growers</dd></div>
             <div><dt>120+</dt><dd>Wines by the bottle</dd></div>
@@ -276,6 +292,8 @@
           <label>Notes <span class="optional">(optional)</span>
             <textarea name="notes" rows="3" placeholder="Allergies, occasion, seating preference…"></textarea>
           </label>
+          <!-- Hidden from people; spam bots fill it in and get ignored -->
+          <input type="text" name="_gotcha" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <button class="btn btn-block" type="submit">Request Booking</button>
           <p class="form-status" role="status" aria-live="polite"></p>
         </form>
@@ -296,19 +314,23 @@
              <a href="mailto:hello@emberandvine.com">hello@emberandvine.com</a></p>
 
           <h3 class="hours-title">Opening Hours <span class="open-now" id="open-now"></span></h3>
+          <!-- EDIT HOURS HERE ONLY: use 24-hour times in data-open / data-close,
+               or data-closed for days off. The booking times, the "Open now"
+               badge and the text shown are all worked out from these. -->
           <table class="hours">
             <tbody>
-              <tr data-day="1"><th scope="row">Monday</th><td>Closed</td></tr>
-              <tr data-day="2"><th scope="row">Tuesday</th><td>5:00 – 10:00pm</td></tr>
-              <tr data-day="3"><th scope="row">Wednesday</th><td>5:00 – 10:00pm</td></tr>
-              <tr data-day="4"><th scope="row">Thursday</th><td>5:00 – 10:00pm</td></tr>
-              <tr data-day="5"><th scope="row">Friday</th><td>5:00 – 11:00pm</td></tr>
-              <tr data-day="6"><th scope="row">Saturday</th><td>5:00 – 11:00pm</td></tr>
-              <tr data-day="0"><th scope="row">Sunday</th><td>11:30am – 9:00pm</td></tr>
+              <tr data-day="1" data-closed><th scope="row">Monday</th><td>Closed</td></tr>
+              <tr data-day="2" data-open="17:00" data-close="22:00"><th scope="row">Tuesday</th><td>5:00 – 10:00pm</td></tr>
+              <tr data-day="3" data-open="17:00" data-close="22:00"><th scope="row">Wednesday</th><td>5:00 – 10:00pm</td></tr>
+              <tr data-day="4" data-open="17:00" data-close="22:00"><th scope="row">Thursday</th><td>5:00 – 10:00pm</td></tr>
+              <tr data-day="5" data-open="17:00" data-close="23:00"><th scope="row">Friday</th><td>5:00 – 11:00pm</td></tr>
+              <tr data-day="6" data-open="17:00" data-close="23:00"><th scope="row">Saturday</th><td>5:00 – 11:00pm</td></tr>
+              <tr data-day="0" data-open="11:30" data-close="21:00"><th scope="row">Sunday</th><td>11:30am – 9:00pm</td></tr>
             </tbody>
           </table>
         </div>
         <div class="map-wrap">
+          <!-- EDIT MAP: replace "Times+Square,New+York" with your address, using + for spaces -->
           <iframe
             title="Map showing Ember & Vine's location"
             src="https://www.google.com/maps?q=Times+Square,New+York&output=embed"

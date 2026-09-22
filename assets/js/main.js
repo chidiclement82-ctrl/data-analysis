@@ -2,18 +2,16 @@
 (function () {
   "use strict";
 
-  // Restaurant settings — keep in sync with the hours table in index.html.
-  // Day numbers follow JavaScript: 0 = Sunday … 6 = Saturday. Times are 24h "HH:MM".
-  var HOURS = {
-    0: ["11:30", "21:00"],
-    1: null,
-    2: ["17:00", "22:00"],
-    3: ["17:00", "22:00"],
-    4: ["17:00", "22:00"],
-    5: ["17:00", "23:00"],
-    6: ["17:00", "23:00"]
-  };
+  // ---------------------------------------------------------------------
+  // SETTINGS — the only things you normally need to change in this file.
+  // ---------------------------------------------------------------------
+  // Where booking requests go. Guests' email apps open addressed to this.
   var BOOKING_EMAIL = "hello@emberandvine.com";
+  // Optional: paste a Formspree (formspree.io) form URL here, e.g.
+  // "https://formspree.io/f/abcdwxyz", to receive bookings straight to your
+  // inbox without the guest needing an email app. Leave "" to use email.
+  var FORM_ENDPOINT = "";
+  // Opening hours are read from the hours table in index.html.
   var LAST_SEATING_MINUTES_BEFORE_CLOSE = 90;
   var SLOT_MINUTES = 30;
 
@@ -60,8 +58,13 @@
 
   // Helpers ---------------------------------------------------------------
   function toMinutes(hhmm) { var p = hhmm.split(":"); return +p[0] * 60 + +p[1]; }
+  // Closing times past midnight (e.g. "01:00") count as the next day.
+  function closeMinutes(hours) {
+    var open = toMinutes(hours[0]), close = toMinutes(hours[1]);
+    return close <= open ? close + 24 * 60 : close;
+  }
   function formatTime(mins) {
-    var h = Math.floor(mins / 60), m = mins % 60;
+    var h = Math.floor(mins / 60) % 24, m = mins % 60;
     var suffix = h >= 12 ? "pm" : "am";
     var h12 = h % 12 || 12;
     return h12 + ":" + (m < 10 ? "0" : "") + m + suffix;
@@ -69,6 +72,21 @@
   function isoDate(d) {
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
+
+  // Opening hours, read from the table in index.html -----------------------
+  // HOURS[day] = [open, close] in "HH:MM", or null when closed (0 = Sunday).
+  var HOURS = {};
+  Array.prototype.forEach.call(document.querySelectorAll(".hours tr[data-day]"), function (row) {
+    var day = +row.dataset.day;
+    var cell = row.querySelector("td");
+    if (row.hasAttribute("data-closed") || !row.dataset.open || !row.dataset.close) {
+      HOURS[day] = null;
+      cell.textContent = "Closed";
+    } else {
+      HOURS[day] = [row.dataset.open, row.dataset.close];
+      cell.textContent = formatTime(toMinutes(row.dataset.open)) + " – " + formatTime(toMinutes(row.dataset.close));
+    }
+  });
 
   // Open-now badge + highlight today ------------------------------------
   var now = new Date();
@@ -79,7 +97,10 @@
   var badge = document.getElementById("open-now");
   var hoursToday = HOURS[today];
   var nowMins = now.getHours() * 60 + now.getMinutes();
-  var open = !!hoursToday && nowMins >= toMinutes(hoursToday[0]) && nowMins < toMinutes(hoursToday[1]);
+  var yesterday = HOURS[(today + 6) % 7];
+  var open = (!!hoursToday && nowMins >= toMinutes(hoursToday[0]) && nowMins < closeMinutes(hoursToday)) ||
+    // still open from a late night that started yesterday
+    (!!yesterday && closeMinutes(yesterday) > 24 * 60 && nowMins < closeMinutes(yesterday) - 24 * 60);
   badge.textContent = open ? "Open now" : "Closed now";
   badge.classList.add(open ? "is-open" : "is-closed");
 
@@ -110,7 +131,7 @@
     timeSelect.disabled = false;
     var isToday = dateInput.value === isoDate(new Date());
     var earliest = isToday ? new Date().getHours() * 60 + new Date().getMinutes() + 60 : 0;
-    var last = toMinutes(hours[1]) - LAST_SEATING_MINUTES_BEFORE_CLOSE;
+    var last = closeMinutes(hours) - LAST_SEATING_MINUTES_BEFORE_CLOSE;
     var count = 0;
     for (var t = toMinutes(hours[0]); t <= last; t += SLOT_MINUTES) {
       if (t < earliest) continue;
@@ -171,13 +192,35 @@
       "Notes: " + (d.notes.value.trim() || "—")
     ].join("\n");
 
-    // Opens the guest's email app with the request filled in.
-    // To receive bookings without email apps, see "Reservations" in README.md.
+    var firstName = d.name.value.trim().split(" ")[0];
+
+    if (FORM_ENDPOINT) {
+      if (d._gotcha.value) return; // a bot filled the hidden field
+      var button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      setStatus("Sending your request…");
+      var data = new FormData(form);
+      data.append("_subject", subject);
+      fetch(FORM_ENDPOINT, { method: "POST", body: data, headers: { Accept: "application/json" } })
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          form.reset();
+          fillTimes();
+          setStatus("Thanks, " + firstName + "! We've got your request and will confirm shortly.", "success");
+        })
+        .catch(function () {
+          setStatus("Sorry, something went wrong. Please call us to book.", "error");
+        })
+        .then(function () { button.disabled = false; });
+      return;
+    }
+
+    // No form service set up: open the guest's email app with the request filled in.
     window.location.href = "mailto:" + BOOKING_EMAIL +
       "?subject=" + encodeURIComponent(subject) +
       "&body=" + encodeURIComponent(body);
 
-    setStatus("Thanks, " + d.name.value.trim().split(" ")[0] + "! Your email app should open with your request. Just press send, and we'll confirm shortly.", "success");
+    setStatus("Thanks, " + firstName + "! Your email app should open with your request. Just press send, and we'll confirm shortly.", "success");
   });
 
   // Footer year -----------------------------------------------------------
