@@ -421,7 +421,7 @@ address { font-style: normal; font-size: 1.15rem; margin-bottom: 1em; }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
-/* Floating "Order by chat" button on the main site ----------------------- */
+/* Floating "Order on WhatsApp" button on the main site ----------------------- */
 .chat-fab {
   position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 40;
   display: inline-flex; align-items: center; gap: 10px;
@@ -434,4 +434,3 @@ address { font-style: normal; font-size: 1.15rem; margin-bottom: 1em; }
 .chat-fab:hover { background: var(--ember-dark); color: #fff; transform: translateY(-2px); }
 .chat-fab svg { width: 20px; height: 20px; }
 @media (max-width: 520px) { .chat-fab span { display: none; } .chat-fab { padding: 16px; } }
-.site-footer .staff-link { font-size: 0.85rem; opacity: 0.7; }
