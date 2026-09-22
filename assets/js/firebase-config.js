@@ -7,7 +7,7 @@
 // These values are safe to publish: access is controlled by firestore.rules.
 // ---------------------------------------------------------------------------
 export const firebaseConfig = {
-  apiKey: "",
+  apiKey: "AIzaSyBD81agffWSR-ooe2sSUNKRDfIdXFzXSEk",
   authDomain: "",
   projectId: "food-is-ready-7655c",
   storageBucket: "",
