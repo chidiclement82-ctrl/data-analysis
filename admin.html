@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Staff Inbox — Ember &amp; Vine</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#1c1512">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/chat.css">
+</head>
+<body class="app-page admin-page">
+  <header class="app-header">
+    <a class="brand" href="./">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c3 5 8 8 8 15a8 8 0 0 1-16 0c0-4 2-6 4-8 0 3 1 5 3 5-1-5 0-9 1-12z" fill="currentColor"/></svg>
+      <span>Ember <em>&amp;</em> Vine</span>
+    </a>
+    <div class="app-header-actions">
+      <button class="app-header-link" type="button" id="alerts-btn" hidden>Turn on alerts</button>
+      <button class="app-header-link" type="button" id="signout-btn" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main class="app-main" id="main">
+    <section class="app-state" id="state-loading">
+      <p class="muted">Loading…</p>
+    </section>
+
+    <section class="app-state" id="state-unavailable" hidden>
+      <div class="app-card">
+        <h1>Chat isn't set up yet</h1>
+        <p>Add your Firebase settings to <code>assets/js/firebase-config.js</code>. The "Order chat" section of README.md walks through it step by step.</p>
+      </div>
+    </section>
+
+    <section class="app-state" id="state-login" hidden>
+      <form class="app-card start-form" id="login-form" novalidate>
+        <p class="eyebrow">Staff only</p>
+        <h1>Sign in</h1>
+        <label>Email
+          <input name="email" type="email" autocomplete="username" required>
+        </label>
+        <label>Password
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="btn btn-block" type="submit">Sign in</button>
+        <button class="link-btn" type="button" id="reset-btn">Forgot password?</button>
+        <p class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="app-state" id="state-denied" hidden>
+      <div class="app-card">
+        <h1>This account isn't a staff account</h1>
+        <p>To give it access, add a document in Firestore at <code>admins/<span id="denied-uid"></span></code> (see README.md, "Order chat", step 5).</p>
+        <button class="btn" type="button" id="denied-signout">Sign out</button>
+      </div>
+    </section>
+
+    <section class="inbox" id="state-inbox" hidden>
+      <aside class="inbox-list" aria-label="Conversations">
+        <div class="inbox-list-head">
+          <h1>Orders</h1>
+          <label class="sr-only" for="filter">Show</label>
+          <select id="filter">
+            <option value="active">Active</option>
+            <option value="all">All</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <ul class="convo-list" id="convo-list"></ul>
+        <p class="muted empty-note" id="list-empty" hidden>No conversations yet. They'll appear here as customers message you.</p>
+      </aside>
+
+      <section class="chat inbox-thread" id="thread" aria-label="Conversation">
+        <div class="thread-empty" id="thread-empty">
+          <p class="muted">Pick a conversation to reply.</p>
+        </div>
+
+        <div class="chat-top" id="thread-top" hidden>
+          <button class="icon-btn back-btn" type="button" id="back-btn" aria-label="Back to list">←</button>
+          <div class="thread-who">
+            <p class="chat-title" id="t-name"></p>
+            <p class="chat-sub">
+              <a id="t-phone"></a>
+              <span id="t-fulfilment"></span>
+            </p>
+            <p class="chat-sub" id="t-address"></p>
+          </div>
+          <label class="sr-only" for="t-status">Order status</label>
+          <select id="t-status" class="status-select"></select>
+        </div>
+
+        <ol class="messages" id="t-messages" aria-live="polite" hidden></ol>
+
+        <div class="quick-replies" id="quick-replies" hidden>
+          <!-- EDIT: one-tap replies for staff -->
+          <button type="button">Thanks! Your order is confirmed. It'll be ready in about 25 minutes.</button>
+          <button type="button">Your order is ready for pickup. See you soon!</button>
+          <button type="button">Your order is on its way.</button>
+          <button type="button">Sorry, that dish is sold out today. Would you like something else?</button>
+        </div>
+
+        <form class="composer" id="t-composer" hidden>
+          <label class="sr-only" for="t-text">Reply</label>
+          <textarea id="t-text" rows="1" maxlength="2000" placeholder="Reply to customer…"></textarea>
+          <button class="send-btn" type="submit" aria-label="Send">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 21 3l-8.5 18-2.2-7.3L3 11.5z" fill="currentColor"/></svg>
+          </button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/admin.js"></script>
+</body>
+</html>
