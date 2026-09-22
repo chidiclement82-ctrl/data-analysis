@@ -141,6 +141,7 @@
 @media (max-width: 420px) {
   .app-header { padding: 0 12px; }
   .app-header .brand { font-size: 1.15rem; gap: 6px; }
+  .app-header .brand-mark { width: 28px; height: 28px; }
   .app-header-actions { gap: 6px; }
   .app-header-link { padding: 6px 10px; font-size: 0.8rem; }
 }
