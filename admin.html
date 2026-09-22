@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Menu Admin — Food Is Ready</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#1c1512">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/chat.css">
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <a class="brand" href="./">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c3 5 8 8 8 15a8 8 0 0 1-16 0c0-4 2-6 4-8 0 3 1 5 3 5-1-5 0-9 1-12z" fill="currentColor"/></svg>
+      <span>Food <em>Is</em> Ready</span>
+    </a>
+    <div class="app-header-actions">
+      <a class="app-header-link" href="./#menu" target="_blank" rel="noopener">View site</a>
+      <button class="app-header-link" type="button" id="signout-btn" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main class="app-main" id="main">
+    <section class="app-state" id="state-login" hidden>
+      <form class="app-card start-form" id="login-form" novalidate>
+        <p class="eyebrow">Admin</p>
+        <h1>Menu editor</h1>
+        <p class="muted">Sign in with your GitHub access token to change dishes and prices. You only need to do this once on each phone or computer.</p>
+        <label>Access token
+          <input name="token" type="password" autocomplete="current-password" placeholder="ghp_… or github_pat_…" required>
+        </label>
+        <button class="btn btn-block" type="submit">Sign in</button>
+        <p class="form-status" role="status" aria-live="polite"></p>
+        <details class="token-help">
+          <summary>Don't have a token yet? (2 minutes)</summary>
+          <ol>
+            <li>Open <a href="https://github.com/settings/tokens/new?scopes=public_repo&amp;description=Food%20Is%20Ready%20menu%20editor" target="_blank" rel="noopener">this GitHub page</a> and sign in to GitHub if asked.</li>
+            <li>Under <strong>Expiration</strong>, choose <strong>No expiration</strong> (or a date you prefer).</li>
+            <li>Leave the ticked box (<strong>public_repo</strong>) as it is, scroll down and click <strong>Generate token</strong>.</li>
+            <li>Copy the token (it starts with <code>ghp_</code>) and paste it above.</li>
+          </ol>
+          <p class="muted">Keep it private, like a password. Anyone with it can change your website.</p>
+        </details>
+      </form>
+    </section>
+
+    <section class="app-state" id="state-loading">
+      <p class="muted" id="loading-text">Loading…</p>
+    </section>
+
+    <div class="wa-order" id="state-editor" hidden>
+      <div class="wa-scroll">
+        <div class="wa-inner admin-inner">
+          <header class="wa-intro">
+            <p class="eyebrow">Admin</p>
+            <h1>Menu editor</h1>
+            <p class="muted">Change names, prices and descriptions, mark dishes sold out, or add and remove dishes. Then tap <strong>Save &amp; publish</strong>. The website updates in about a minute.</p>
+          </header>
+          <div id="categories"></div>
+          <button class="btn btn-outline btn-block" type="button" id="add-category">+ Add a menu section</button>
+        </div>
+      </div>
+      <div class="wa-bar">
+        <p class="wa-summary" id="save-state">All changes saved</p>
+        <p class="form-status" id="save-status" role="status" aria-live="polite"></p>
+        <button class="btn btn-block" type="button" id="save-btn" disabled>Save &amp; publish</button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="assets/js/admin.js"></script>
+</body>
+</html>

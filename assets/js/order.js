@@ -13,8 +13,9 @@ const digits = WHATSAPP_NUMBER.replace(/\D/g, "");
 const form = $("order-form");
 const cart = new Map(); // name -> { name, price, qty }
 
+let currency = "₦";
 function money(n) {
-  return "$" + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, "");
+  return currency + Math.round(n).toLocaleString("en-NG");
 }
 
 function el(tag, className, text) {
@@ -39,23 +40,19 @@ if (digits.length < 8) {
   });
 }
 
-// Reads the menu straight from index.html so it only has to be edited in one place.
-// Items whose price isn't a single amount (e.g. "$12–18") are left out of the picker.
+// Reads the menu from menu.json (edited on admin.html). Sold-out dishes are
+// shown but can't be added.
 async function loadMenu() {
-  const res = await fetch("index.html", { cache: "no-cache" });
-  const doc = new DOMParser().parseFromString(await res.text(), "text/html");
-  return Array.from(doc.querySelectorAll('[role="tabpanel"]')).map((panel) => {
-    const tab = doc.getElementById(panel.getAttribute("aria-labelledby"));
-    const items = Array.from(panel.querySelectorAll(".menu-list > li")).map((li) => {
-      const match = (li.querySelector(".price")?.textContent || "").trim().match(/^\$(\d+(?:\.\d{1,2})?)$/);
-      return {
-        name: li.querySelector("h3")?.textContent.trim() || "",
-        desc: li.querySelector("p")?.textContent.trim() || "",
-        price: match ? parseFloat(match[1]) : null
-      };
-    }).filter((it) => it.name && it.price != null);
-    return { category: tab ? tab.textContent.trim() : "Menu", items };
-  }).filter((c) => c.items.length);
+  const res = await fetch("menu.json?v=" + Date.now());
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const menu = await res.json();
+  currency = menu.currency || currency;
+  return (menu.categories || []).map((c) => ({
+    category: c.name,
+    items: (c.items || []).filter((it) => it.name).map((it) => ({
+      name: it.name, desc: it.description || "", price: Number(it.price) || 0, soldOut: it.available === false
+    }))
+  })).filter((c) => c.items.length);
 }
 
 function renderMenu(menu) {
@@ -90,6 +87,12 @@ function renderMenu(menu) {
       minus.addEventListener("click", () => change(-1));
       plus.addEventListener("click", () => change(1));
       stepper.append(minus, qty, plus);
+      if (item.soldOut) {
+        li.classList.add("sold-out");
+        li.append(info, el("span", "sold-out-label", "Sold out"));
+        ul.appendChild(li);
+        return;
+      }
       li.append(info, stepper);
       ul.appendChild(li);
     });

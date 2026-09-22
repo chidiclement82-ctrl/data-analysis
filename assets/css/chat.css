@@ -107,3 +107,40 @@
 .wa-send { background: #1fa855; border-color: #1fa855; font-size: 1rem; }
 .wa-send:hover { background: #178a45; border-color: #178a45; }
 .wa-send svg { width: 20px; height: 20px; }
+.picker-item.sold-out { opacity: 0.55; }
+.sold-out-label { font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); white-space: nowrap; }
+
+/* Menu admin (admin.html) ------------------------------------------------ */
+.admin-inner { width: min(760px, 100%); }
+.admin-cat { display: grid; gap: 12px; }
+.admin-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.admin-row .grow { flex: 1 1 220px; }
+.admin-field { display: grid; gap: 4px; font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); }
+.admin-field input {
+  font: 400 1rem var(--font-body); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: #fff; width: 100%;
+}
+.admin-field input:focus { outline: none; border-color: var(--ember); box-shadow: 0 0 0 3px rgba(196, 80, 42, 0.18); }
+.cat-name input { font: 600 1.4rem var(--font-display); }
+.price-field { flex: 0 0 130px; }
+.admin-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.admin-item { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.admin-item.sold-out { background: var(--sand); }
+.admin-opts { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; }
+.admin-check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.admin-check input { width: 18px; height: 18px; accent-color: var(--ember); }
+.admin-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.admin-actions .danger { margin-left: auto; color: #b3261e; }
+.icon-btn:disabled { opacity: 0.35; cursor: default; }
+.token-help { font-size: 0.9rem; }
+.token-help summary { cursor: pointer; font-weight: 500; color: var(--ember-dark); }
+.token-help ol { padding-left: 20px; margin: 10px 0; display: grid; gap: 6px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.app-header .brand span { white-space: nowrap; }
+.app-header-link { white-space: nowrap; }
+@media (max-width: 420px) {
+  .app-header { padding: 0 12px; }
+  .app-header .brand { font-size: 1.15rem; gap: 6px; }
+  .app-header-actions { gap: 6px; }
+  .app-header-link { padding: 6px 10px; font-size: 0.8rem; }
+}

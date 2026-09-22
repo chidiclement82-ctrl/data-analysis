@@ -434,3 +434,7 @@ address { font-style: normal; font-size: 1.15rem; margin-bottom: 1em; }
 .chat-fab:hover { background: var(--ember-dark); color: #fff; transform: translateY(-2px); }
 .chat-fab svg { width: 20px; height: 20px; }
 @media (max-width: 520px) { .chat-fab span { display: none; } .chat-fab { padding: 16px; } }
+.tag-spicy { background: #f7ddd2; color: #8c3413; }
+.tag-popular { background: #fdecc8; color: #7a4b00; }
+.menu-list li.sold-out { opacity: 0.55; }
+.menu-list li.sold-out .price { color: var(--ink-soft); font-weight: 500; }

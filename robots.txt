@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /data-analysis/admin.html
+Disallow: /admin.html
 
 Sitemap: https://chidiclement82-ctrl.github.io/data-analysis/sitemap.xml

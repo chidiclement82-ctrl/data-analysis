@@ -18,6 +18,30 @@ After that, every change pushed to `main` goes live automatically.
 |---|---|---|
 | Everyone | `https://chidiclement82-ctrl.github.io/data-analysis/` | The main website |
 | Customers | `https://chidiclement82-ctrl.github.io/data-analysis/order.html` | Order food on WhatsApp. Linked from the "Order on WhatsApp" buttons on the homepage |
+| Admin | `https://chidiclement82-ctrl.github.io/data-analysis/admin.html` | Edit dishes and prices. Linked as "Admin" in the footer |
+
+## Editing the menu (admin page)
+
+All dishes, prices and sections live in [`menu.json`](menu.json). The homepage menu and the order page both read it, and the admin page edits it.
+
+On `admin.html` you can:
+- Change dish names, prices (in naira) and descriptions.
+- Mark a dish **sold out**. It stays on the menu but can't be ordered.
+- Tag dishes **Spicy**, **Popular** or **Vegetarian**.
+- Add, delete and reorder dishes and whole menu sections.
+
+Tap **Save & publish** when you're done. The website updates in about a minute.
+
+**Signing in (once per phone or computer):** the admin page signs in with a GitHub access token, and saving writes `menu.json` straight into this repository.
+1. Open [this link](https://github.com/settings/tokens/new?scopes=public_repo&description=Food%20Is%20Ready%20menu%20editor).
+2. Choose an expiration and click **Generate token**.
+3. Paste the token (it starts with `ghp_`) into the admin page.
+
+Keep the token private, like a password.
+
+For tighter security, use a [fine-grained token](https://github.com/settings/personal-access-tokens/new) instead:
+- **Repository access:** Only select repositories → `data-analysis`.
+- **Permissions:** Contents → **Read and write**.
 
 ## Order on WhatsApp
 
@@ -27,7 +51,7 @@ There's no database, no login and no monthly cost.
 
 **Switch it on:** open [`assets/js/order.js`](assets/js/order.js) and put your WhatsApp number, with country code, in `WHATSAPP_NUMBER` at the top, e.g. `"+234 801 234 5678"`. Until then, the order page says "Online ordering is coming soon" and shows your phone number.
 
-Items with a price range (like "$12–18") can't be picked from the menu, but customers can write them in the note.
+Dishes marked sold out on the admin page show on the order page but can't be picked.
 
 ## Where to change things
 
@@ -40,8 +64,7 @@ Everything you'd normally change is in the files below. Look for comments marked
 | Restaurant name | `Food <em>Is</em> Ready` in the header, footer, `<title>` and share tags at the top |
 | Headline and intro | the `HERO` section |
 | Your story | the `ABOUT` section |
-| Menu items and prices | the `MENU` section. Each dish is one `<li>`: copy a line to add a dish, delete a line to remove one. Tags: `V` vegetarian, `VG` vegan, `GF` gluten-free |
-| Menu categories | the tab buttons (`role="tab"`) and their matching `menu-panel` blocks |
+| Menu items, prices and sections | the admin page (`admin.html`), or edit `menu.json` directly |
 | Reviews / quotes | the `QUOTES` section |
 | Events | the `EVENTS` section |
 | Phone, email, address | the `RESERVE`, `VISIT` and footer sections |
@@ -105,6 +128,9 @@ assets/css/style.css  design
 assets/css/chat.css   design for the order page
 assets/js/main.js     menu tabs, booking form, opening hours
 assets/js/order.js    order page and your WhatsApp number
+admin.html            menu editor (admin)
+assets/js/admin.js    menu editor code
+menu.json             the menu: dishes, prices, sections
 assets/images/        photos and share image
 robots.txt, sitemap.xml, site.webmanifest   for search engines and phones
 .github/workflows/pages.yml                 publishes to GitHub Pages

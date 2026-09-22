@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Food Is Ready — Fresh Food, Order on WhatsApp</title>
-  <meta name="description" content="Food Is Ready is a neighbourhood wood-fired kitchen and wine bar serving seasonal plates, hand-made pasta and natural wines. Book a table online.">
+  <meta name="description" content="Food Is Ready serves authentic Nigerian food: jollof rice, soups and swallow, suya, pepper soup and cold drinks. Order on WhatsApp for pickup or delivery.">
   <meta name="theme-color" content="#1c1512">
 
   <!-- EDIT: if you move to your own domain, replace every
@@ -40,8 +40,8 @@
     "@context": "https://schema.org",
     "@type": "Restaurant",
     "name": "Food Is Ready",
-    "servesCuisine": ["Mediterranean", "Wood-fired", "Wine bar"],
-    "priceRange": "$$",
+    "servesCuisine": ["Nigerian", "African"],
+    "priceRange": "₦₦",
     "telephone": "+234-705-994-6531",
     "address": {
       "@type": "PostalAddress",
@@ -90,9 +90,9 @@
     <section class="hero">
       <div class="hero-glow" aria-hidden="true"></div>
       <div class="container hero-inner">
-        <p class="eyebrow">Wood-fired kitchen &amp; wine bar · Est. 2019</p>
+        <p class="eyebrow">Authentic Nigerian kitchen</p>
         <h1>FOOD IS READY<br><em>Cooked fresh. Served hot.</em></h1>
-        <p class="lede">Seasonal plates from local farms, pasta rolled by hand every morning, and a cellar of small-producer wines. Come hungry, stay late.</p>
+        <p class="lede">Smoky party jollof, rich soups with swallow, hot suya and pepper soup, and ice-cold Chapman and zobo. Order on WhatsApp for pickup or delivery.</p>
         <div class="hero-actions">
           <a class="btn" href="#reserve">Reserve a Table</a>
           <a class="btn btn-ghost" href="order.html">Order on WhatsApp</a>
@@ -101,7 +101,7 @@
         <ul class="hero-facts">
           <li><strong>Tue–Sun</strong><span>Dinner from 5pm</span></li>
           <li><strong>Sunday</strong><span>Brunch 11:30–3</span></li>
-          <li><strong>Walk-ins</strong><span>Bar seats always held</span></li>
+          <li><strong>Delivery</strong><span>Order on WhatsApp</span></li>
         </ul>
       </div>
     </section>
@@ -109,19 +109,19 @@
     <!-- ABOUT -->
     <section class="section" id="about">
       <div class="container split">
-        <div class="art-panel art-fire" role="img" aria-label="Glowing embers in the wood-fired oven">
+        <div class="art-panel art-fire" role="img" aria-label="Pots cooking on the fire">
           <!-- Replace with a photo: <img src="assets/images/kitchen.jpg" alt="..."> -->
-          <span class="art-caption">The hearth · 450°C</span>
+          <span class="art-caption">Our kitchen</span>
         </div>
         <div>
           <p class="eyebrow">Our Story</p>
-          <h2>A small room built around one big fire</h2>
-          <p>Food Is Ready started with a simple idea: cook the best produce we can find over live oak and cherry wood, and pour wines made by people, not factories.</p>
-          <p>Chef Maya Okafor and sommelier Luca Ferri opened the doors in 2019. The menu still changes with whatever the farmers bring through the back door each week.</p>
+          <h2>Home-style Nigerian food, cooked fresh</h2>
+          <p>Food Is Ready started with a simple idea: cook Nigerian food the way it tastes at home, with fresh ingredients from the market every morning and no shortcuts.</p>
+          <p>From party jollof to egusi, afang and banga, every pot is made fresh daily. Come and eat with us, or order on WhatsApp and we'll have it ready.</p>
           <dl class="stats">
-            <div><dt>14</dt><dd>Local farms &amp; growers</dd></div>
-            <div><dt>120+</dt><dd>Wines by the bottle</dd></div>
-            <div><dt>0</dt><dd>Gas burners on the line</dd></div>
+            <div><dt>20+</dt><dd>Dishes on the menu</dd></div>
+            <div><dt>6</dt><dd>Soups every day</dd></div>
+            <div><dt>100%</dt><dd>Cooked fresh daily</dd></div>
           </dl>
         </div>
       </div>
@@ -132,68 +132,15 @@
       <div class="container">
         <div class="section-head">
           <p class="eyebrow">The Menu</p>
-          <h2>What's cooking this season</h2>
-          <p>Our menu changes often. Please tell your server about any allergies.</p>
+          <h2>What's cooking today</h2>
+          <p>Prices in naira. Please tell us about any allergies when you order.</p>
         </div>
 
-        <div class="tabs" role="tablist" aria-label="Menu sections">
-          <button role="tab" id="tab-starters" aria-controls="panel-starters" aria-selected="true">Starters</button>
-          <button role="tab" id="tab-mains" aria-controls="panel-mains" aria-selected="false" tabindex="-1">From the Fire</button>
-          <button role="tab" id="tab-pasta" aria-controls="panel-pasta" aria-selected="false" tabindex="-1">Pasta</button>
-          <button role="tab" id="tab-dessert" aria-controls="panel-dessert" aria-selected="false" tabindex="-1">Dessert</button>
-          <button role="tab" id="tab-drinks" aria-controls="panel-drinks" aria-selected="false" tabindex="-1">Drinks</button>
-        </div>
+        <!-- The menu is loaded from menu.json. Edit it on admin.html (see README). -->
+        <div class="tabs" role="tablist" aria-label="Menu sections" id="menu-tabs"></div>
+        <div id="menu-panels"><p class="menu-note">Loading menu…</p></div>
 
-        <div class="menu-panel" role="tabpanel" id="panel-starters" aria-labelledby="tab-starters">
-          <ul class="menu-list">
-            <li><div class="item-head"><h3>Hearth Bread</h3><span class="price">$8</span></div><p>Sourdough baked in the oven, cultured butter, smoked sea salt.</p><span class="tags"><span class="tag">V</span></span></li>
-            <li><div class="item-head"><h3>Burrata &amp; Charred Peaches</h3><span class="price">$16</span></div><p>Basil oil, toasted hazelnuts, aged balsamic.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
-            <li><div class="item-head"><h3>Ember-Roasted Beets</h3><span class="price">$13</span></div><p>Whipped goat's cheese, orange, pistachio dukkah.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
-            <li><div class="item-head"><h3>Grilled Octopus</h3><span class="price">$19</span></div><p>Smoked potato, salsa verde, lemon.</p><span class="tags"><span class="tag">GF</span></span></li>
-            <li><div class="item-head"><h3>Beef Tartare</h3><span class="price">$18</span></div><p>Cured yolk, capers, shallot, fire-toasted crisps.</p></li>
-            <li><div class="item-head"><h3>Wood-Fired Mushrooms</h3><span class="price">$14</span></div><p>Miso butter, thyme, crispy shallots.</p><span class="tags"><span class="tag">VG</span><span class="tag">GF</span></span></li>
-          </ul>
-        </div>
-
-        <div class="menu-panel" role="tabpanel" id="panel-mains" aria-labelledby="tab-mains" hidden>
-          <ul class="menu-list">
-            <li><div class="item-head"><h3>Half Chicken</h3><span class="price">$29</span></div><p>Brined 24 hours, spit-roasted, charred lemon, herb jus.</p><span class="tags"><span class="tag">GF</span></span></li>
-            <li><div class="item-head"><h3>Dry-Aged Ribeye, 14oz</h3><span class="price">$54</span></div><p>Bone marrow butter, blistered tomatoes, watercress.</p><span class="tags"><span class="tag">GF</span></span></li>
-            <li><div class="item-head"><h3>Whole Grilled Sea Bream</h3><span class="price">$36</span></div><p>Fennel, capers, brown butter, fresh herbs.</p><span class="tags"><span class="tag">GF</span></span></li>
-            <li><div class="item-head"><h3>Lamb Shoulder for Two</h3><span class="price">$68</span></div><p>Slow-cooked in the embers, flatbreads, yoghurt, pickles.</p></li>
-            <li><div class="item-head"><h3>Charred Cauliflower Steak</h3><span class="price">$24</span></div><p>Tahini, pomegranate, chilli crunch, green herbs.</p><span class="tags"><span class="tag">VG</span><span class="tag">GF</span></span></li>
-          </ul>
-        </div>
-
-        <div class="menu-panel" role="tabpanel" id="panel-pasta" aria-labelledby="tab-pasta" hidden>
-          <ul class="menu-list">
-            <li><div class="item-head"><h3>Tagliatelle al Ragù</h3><span class="price">$24</span></div><p>Slow-braised beef and pork, parmigiano.</p></li>
-            <li><div class="item-head"><h3>Cacio e Pepe</h3><span class="price">$20</span></div><p>Hand-rolled pici, pecorino, toasted black pepper.</p><span class="tags"><span class="tag">V</span></span></li>
-            <li><div class="item-head"><h3>Smoked Tomato Rigatoni</h3><span class="price">$21</span></div><p>Fire-roasted tomatoes, chilli, basil, olive oil.</p><span class="tags"><span class="tag">VG</span></span></li>
-            <li><div class="item-head"><h3>Crab Linguine</h3><span class="price">$28</span></div><p>Brown butter, lemon, garlic, chilli, breadcrumbs.</p></li>
-          </ul>
-          <p class="menu-note">Gluten-free pasta available for any dish, +$3.</p>
-        </div>
-
-        <div class="menu-panel" role="tabpanel" id="panel-dessert" aria-labelledby="tab-dessert" hidden>
-          <ul class="menu-list">
-            <li><div class="item-head"><h3>Burnt Basque Cheesecake</h3><span class="price">$12</span></div><p>Macerated seasonal berries.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
-            <li><div class="item-head"><h3>Dark Chocolate Tart</h3><span class="price">$12</span></div><p>Olive oil, sea salt, crème fraîche.</p><span class="tags"><span class="tag">V</span></span></li>
-            <li><div class="item-head"><h3>Oven-Roasted Figs</h3><span class="price">$11</span></div><p>Honey, mascarpone, thyme.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
-            <li><div class="item-head"><h3>Affogato</h3><span class="price">$8</span></div><p>Vanilla gelato, espresso. Add amaro for $6.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
-          </ul>
-        </div>
-
-        <div class="menu-panel" role="tabpanel" id="panel-drinks" aria-labelledby="tab-drinks" hidden>
-          <ul class="menu-list">
-            <li><div class="item-head"><h3>Smoked Negroni</h3><span class="price">$15</span></div><p>Gin, Campari, vermouth, oak smoke.</p></li>
-            <li><div class="item-head"><h3>Vine Spritz</h3><span class="price">$13</span></div><p>Orange wine, aperitivo, soda, olive.</p></li>
-            <li><div class="item-head"><h3>Wine by the Glass</h3><span class="price">$12–18</span></div><p>Ask about today's eight open bottles.</p></li>
-            <li><div class="item-head"><h3>Garden Tonic</h3><span class="price">$8</span></div><p>Alcohol-free: cucumber, basil, lime, tonic.</p></li>
-          </ul>
-        </div>
-
-        <p class="legend"><span class="tag">V</span> Vegetarian <span class="tag">VG</span> Vegan <span class="tag">GF</span> Gluten-free</p>
+        <p class="legend"><span class="tag tag-spicy">Spicy</span> Hot and peppery <span class="tag tag-popular">Popular</span> Customer favourite <span class="tag">Vegetarian</span> No meat or fish</p>
       </div>
     </section>
 
@@ -201,11 +148,11 @@
     <section class="section quotes">
       <div class="container quote-grid">
         <figure>
-          <blockquote>"The best roast chicken in the city, and possibly the best bread too."</blockquote>
+          <blockquote>"The best jollof in town, smoky like a real party jollof."</blockquote>
           <figcaption>— City Food Guide</figcaption>
         </figure>
         <figure>
-          <blockquote>"A warm, buzzy room with a wine list full of surprises."</blockquote>
+          <blockquote>"The egusi and pounded yam took me straight back home."</blockquote>
           <figcaption>— The Weekend Table</figcaption>
         </figure>
         <figure>
@@ -226,25 +173,25 @@
           <article class="card">
             <div class="card-art art-wine" aria-hidden="true"></div>
             <div class="card-body">
-              <p class="card-meta">Every Wednesday</p>
-              <h3>Winemaker Wednesdays</h3>
-              <p>Half-price bottles from one featured producer, with tasting notes from Luca.</p>
+              <p class="card-meta">Every Friday</p>
+              <h3>Suya Fridays</h3>
+              <p>Fresh suya off the grill all evening, with cold drinks and good music.</p>
             </div>
           </article>
           <article class="card">
             <div class="card-art art-table" aria-hidden="true"></div>
             <div class="card-body">
-              <p class="card-meta">First Sunday of the month</p>
-              <h3>Chef's Long Table</h3>
-              <p>A six-course set menu served family-style to 20 guests. $85 per person.</p>
+              <p class="card-meta">Every Sunday</p>
+              <h3>Sunday Rice Special</h3>
+              <p>Jollof, fried rice and ofada with your choice of protein, all day every Sunday.</p>
             </div>
           </article>
           <article class="card">
             <div class="card-art art-room" aria-hidden="true"></div>
             <div class="card-body">
               <p class="card-meta">Up to 40 guests</p>
-              <h3>Private Dining</h3>
-              <p>Birthdays, rehearsal dinners, team nights. Book the back room or the whole restaurant.</p>
+              <h3>Parties &amp; Events</h3>
+              <p>Birthdays, office parties and owambe. We cook jollof, small chops and more for your guests.</p>
             </div>
           </article>
         </div>
@@ -366,7 +313,7 @@
     </div>
     <div class="container footer-base">
       <p class="muted">© <span id="year">2026</span> Food Is Ready. All rights reserved.</p>
-      <a class="muted" href="#top">Back to top ↑</a>
+      <span><a class="muted" href="admin.html" rel="nofollow">Admin</a> · <a class="muted" href="#top">Back to top ↑</a></span>
     </div>
   </footer>
 
