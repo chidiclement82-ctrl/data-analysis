@@ -69,7 +69,6 @@ Everything you'd normally change is in the files below. Look for comments marked
 | Events | the `EVENTS` section |
 | Phone and address | the `VISIT` section and footer; the WhatsApp number is in `assets/js/order.js` |
 | **Opening hours** | the hours table in `VISIT`. Only change `data-open` / `data-close` (24-hour time, e.g. `17:00`), or write `data-closed` for a day off. The displayed times and the "Open now" badge both update from this automatically. Late closing such as `data-close="01:00"` works too |
-| Map | the `iframe` in `VISIT`. Replace `Times+Square,New+York` with your address |
 | Social links | the `Follow` list in the footer |
 | Google search info | the `application/ld+json` block at the top. Keep name, phone, address and hours in step with the page |
 
