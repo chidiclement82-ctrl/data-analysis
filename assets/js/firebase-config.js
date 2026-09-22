@@ -11,6 +11,6 @@ export const firebaseConfig = {
   authDomain: "",
   projectId: "food-is-ready-7655c",
   storageBucket: "",
-  messagingSenderId: "",
+  messagingSenderId: "267789061883",
   appId: ""
 };
