@@ -9,7 +9,7 @@
 export const firebaseConfig = {
   apiKey: "",
   authDomain: "",
-  projectId: "",
+  projectId: "food-is-ready-7655c",
   storageBucket: "",
   messagingSenderId: "",
   appId: ""
