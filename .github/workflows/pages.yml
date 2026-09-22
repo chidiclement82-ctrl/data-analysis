@@ -25,7 +25,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir _site
-          cp -r index.html order.html 404.html robots.txt sitemap.xml site.webmanifest .nojekyll assets _site/
+          cp -r index.html order.html admin.html menu.json 404.html robots.txt sitemap.xml site.webmanifest .nojekyll assets _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
