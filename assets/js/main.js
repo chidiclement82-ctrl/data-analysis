@@ -1,15 +1,15 @@
-/* Ember & Vine — site behaviour */
+/* Food Is Ready — site behaviour */
 (function () {
   "use strict";
 
   // ---------------------------------------------------------------------
   // SETTINGS — the only things you normally need to change in this file.
   // ---------------------------------------------------------------------
-  // Where booking requests go. Guests' email apps open addressed to this.
-  var BOOKING_EMAIL = "hello@emberandvine.com";
+  // WhatsApp number that receives booking requests, with country code.
+  // The guest's WhatsApp opens with the booking written out; they press send.
+  var BOOKING_WHATSAPP = "+234 705 994 6531";
   // Optional: paste a Formspree (formspree.io) form URL here, e.g.
-  // "https://formspree.io/f/abcdwxyz", to receive bookings straight to your
-  // inbox without the guest needing an email app. Leave "" to use email.
+  // "https://formspree.io/f/abcdwxyz", to receive bookings by email instead.
   var FORM_ENDPOINT = "";
   // Opening hours are read from the hours table in index.html.
   var LAST_SEATING_MINUTES_BEFORE_CLOSE = 90;
@@ -215,12 +215,14 @@
       return;
     }
 
-    // No form service set up: open the guest's email app with the request filled in.
-    window.location.href = "mailto:" + BOOKING_EMAIL +
-      "?subject=" + encodeURIComponent(subject) +
-      "&body=" + encodeURIComponent(body);
+    // No form service set up: open WhatsApp with the request written out.
+    var url = "https://wa.me/" + BOOKING_WHATSAPP.replace(/\D/g, "") +
+      "?text=" + encodeURIComponent(subject + "\n\n" + body);
+    var win = window.open(url, "_blank");
+    if (win) win.opener = null;
+    else window.location.href = url; // pop-up blocked: open in this tab
 
-    setStatus("Thanks, " + firstName + "! Your email app should open with your request. Just press send, and we'll confirm shortly.", "success");
+    setStatus("Thanks, " + firstName + "! WhatsApp is opening with your booking request. Just press send, and we'll confirm shortly.", "success");
   });
 
   // Footer year -----------------------------------------------------------

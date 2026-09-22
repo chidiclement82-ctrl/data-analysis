@@ -1,4 +1,4 @@
-# Ember & Vine — Restaurant Website
+# Food Is Ready — Restaurant Website
 
 A fast, mobile-friendly restaurant website built with plain HTML, CSS and JavaScript. It has no build step and no framework. Edit the files, push, and the site updates.
 
@@ -37,7 +37,7 @@ Everything you'd normally change is in the files below. Look for comments marked
 
 | To change… | Find… |
 |---|---|
-| Restaurant name | `Ember` / `Vine` in the header, footer, `<title>` and share tags at the top |
+| Restaurant name | `Food <em>Is</em> Ready` in the header, footer, `<title>` and share tags at the top |
 | Headline and intro | the `HERO` section |
 | Your story | the `ABOUT` section |
 | Menu items and prices | the `MENU` section. Each dish is one `<li>`: copy a line to add a dish, delete a line to remove one. Tags: `V` vegetarian, `VG` vegan, `GF` gluten-free |
@@ -58,8 +58,8 @@ Everything you'd normally change is in the files below. Look for comments marked
 
 The `SETTINGS` block at the top:
 
-- `BOOKING_EMAIL`: where booking requests go.
-- `FORM_ENDPOINT`: optional, but recommended. By default, "Request Booking" opens the guest's email app with the booking already written, and they press send. To receive bookings straight to your inbox instead:
+- `BOOKING_WHATSAPP`: the WhatsApp number that receives booking requests. "Request Booking" opens the guest's WhatsApp with the booking already written, and they press send.
+- `FORM_ENDPOINT`: optional. To receive bookings by email instead:
   1. Make a free form at [formspree.io](https://formspree.io).
   2. Paste its URL here, e.g. `"https://formspree.io/f/abcdwxyz"`.
   3. Bookings then arrive by email with no action from the guest. Spam protection is built in.

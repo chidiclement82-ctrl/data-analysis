@@ -5,8 +5,8 @@
 // e.g. "+234 801 234 5678". Spaces and dashes are fine.
 // While it's empty, the page shows "Online ordering is coming soon".
 // ---------------------------------------------------------------------------
-const WHATSAPP_NUMBER = "";
-const RESTAURANT_NAME = "Ember & Vine";
+const WHATSAPP_NUMBER = "+234 705 994 6531";
+const RESTAURANT_NAME = "Food Is Ready";
 
 const $ = (id) => document.getElementById(id);
 const digits = WHATSAPP_NUMBER.replace(/\D/g, "");
