@@ -1,281 +1,186 @@
-/* Customer order chat (order.html) */
-import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import {
-  doc, collection, query, orderBy, limitToLast, onSnapshot, getDoc, setDoc,
-  updateDoc, writeBatch, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { auth, db, configured, STATUSES, money, el, messageNode, loadMenu, scrolledToBottom } from "./chat-common.js";
+/* Order on WhatsApp (order.html) */
+
+// ---------------------------------------------------------------------------
+// EDIT: the WhatsApp number that receives orders, with country code,
+// e.g. "+234 801 234 5678". Spaces and dashes are fine.
+// While it's empty, the page shows "Online ordering is coming soon".
+// ---------------------------------------------------------------------------
+const WHATSAPP_NUMBER = "+234 705 994 6531";
+const RESTAURANT_NAME = "Food Is Ready";
 
 const $ = (id) => document.getElementById(id);
-const states = ["loading", "unavailable", "start", "chat"];
-function show(name) {
-  states.forEach((s) => { $("state-" + s).hidden = s !== name; });
+const digits = WHATSAPP_NUMBER.replace(/\D/g, "");
+const form = $("order-form");
+const cart = new Map(); // name -> { name, price, qty }
+
+function money(n) {
+  return "$" + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, "");
 }
 
-const GREETING = "Hi! Welcome to Ember & Vine. Tap Menu to pick dishes, or just type your order. We'll confirm it and let you know when it's ready.";
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text != null) node.textContent = text;
+  return node;
+}
 
-let uid = null;
-let chat = null;          // latest chat document data
-let unsubChat = null;
-let unsubMessages = null;
-const cart = new Map();   // name -> { name, price, qty }
-let unseen = 0;
-const baseTitle = document.title;
+function waLink(text) {
+  return "https://wa.me/" + digits + (text ? "?text=" + encodeURIComponent(text) : "");
+}
 
-if (!configured) {
-  show("unavailable");
+if (digits.length < 8) {
+  $("state-unavailable").hidden = false;
 } else {
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      try { await signInAnonymously(auth); }
-      catch (err) { console.error(err); show("unavailable"); }
-      return;
-    }
-    uid = user.uid;
-    try {
-      const snap = await getDoc(doc(db, "chats", uid));
-      if (snap.exists()) openChat();
-      else show("start");
-    } catch (err) {
-      console.error(err);
-      show("unavailable");
-    }
+  form.hidden = false;
+  $("wa-chat-link").href = waLink("Hi " + RESTAURANT_NAME + "! I have a question:");
+  loadMenu().then(renderMenu).catch((err) => {
+    console.error(err);
+    $("menu-picker").replaceChildren(el("p", "muted", "Couldn't load the menu. Write what you'd like in the note below instead."));
   });
 }
 
-// Start form ---------------------------------------------------------------
-const startForm = $("start-form");
-const addressField = startForm.querySelector(".address-field");
-startForm.addEventListener("change", () => {
-  const delivery = startForm.elements.fulfilment.value === "delivery";
+// Reads the menu straight from index.html so it only has to be edited in one place.
+// Items whose price isn't a single amount (e.g. "$12–18") are left out of the picker.
+async function loadMenu() {
+  const res = await fetch("index.html", { cache: "no-cache" });
+  const doc = new DOMParser().parseFromString(await res.text(), "text/html");
+  return Array.from(doc.querySelectorAll('[role="tabpanel"]')).map((panel) => {
+    const tab = doc.getElementById(panel.getAttribute("aria-labelledby"));
+    const items = Array.from(panel.querySelectorAll(".menu-list > li")).map((li) => {
+      const match = (li.querySelector(".price")?.textContent || "").trim().match(/^\$(\d+(?:\.\d{1,2})?)$/);
+      return {
+        name: li.querySelector("h3")?.textContent.trim() || "",
+        desc: li.querySelector("p")?.textContent.trim() || "",
+        price: match ? parseFloat(match[1]) : null
+      };
+    }).filter((it) => it.name && it.price != null);
+    return { category: tab ? tab.textContent.trim() : "Menu", items };
+  }).filter((c) => c.items.length);
+}
+
+function renderMenu(menu) {
+  const picker = $("menu-picker");
+  picker.replaceChildren();
+  menu.forEach((section) => {
+    picker.appendChild(el("h3", "picker-cat", section.category));
+    const ul = el("ul", "picker-list");
+    section.items.forEach((item) => {
+      const li = el("li", "picker-item");
+      const info = el("div", "picker-info");
+      const head = el("p", "picker-name");
+      head.append(el("span", null, item.name), el("span", "picker-price", money(item.price)));
+      info.appendChild(head);
+      if (item.desc) info.appendChild(el("p", "picker-desc", item.desc));
+
+      const stepper = el("div", "stepper");
+      const minus = el("button", "icon-btn", "−");
+      const qty = el("span", "stepper-qty", "0");
+      const plus = el("button", "icon-btn", "+");
+      minus.type = plus.type = "button";
+      minus.setAttribute("aria-label", "Remove one " + item.name);
+      plus.setAttribute("aria-label", "Add one " + item.name);
+      const change = (delta) => {
+        const next = Math.max(0, Math.min(20, (cart.get(item.name)?.qty || 0) + delta));
+        if (next) cart.set(item.name, { name: item.name, price: item.price, qty: next });
+        else cart.delete(item.name);
+        qty.textContent = next;
+        li.classList.toggle("in-cart", next > 0);
+        updateSummary();
+      };
+      minus.addEventListener("click", () => change(-1));
+      plus.addEventListener("click", () => change(1));
+      stepper.append(minus, qty, plus);
+      li.append(info, stepper);
+      ul.appendChild(li);
+    });
+    picker.appendChild(ul);
+  });
+}
+
+function totals() {
+  const items = Array.from(cart.values());
+  return {
+    items,
+    count: items.reduce((n, i) => n + i.qty, 0),
+    total: items.reduce((n, i) => n + i.qty * i.price, 0)
+  };
+}
+
+function updateSummary() {
+  const { count, total } = totals();
+  $("summary").textContent = count
+    ? count + " item" + (count > 1 ? "s" : "") + " · " + money(total)
+    : "No dishes picked yet";
+  if (count) setStatus("");
+}
+
+function setStatus(msg, type) {
+  const s = $("order-status");
+  s.textContent = msg;
+  s.className = "form-status" + (type ? " " + type : "");
+}
+
+// Details ------------------------------------------------------------------
+const addressField = form.querySelector(".address-field");
+form.addEventListener("change", (e) => {
+  if (e.target.name !== "fulfilment") return;
+  const delivery = form.elements.fulfilment.value === "delivery";
   addressField.hidden = !delivery;
-  startForm.elements.address.required = delivery;
+  form.elements.address.required = delivery;
 });
 
-startForm.addEventListener("submit", async (e) => {
+// Clear a field's error highlight (and the message) as soon as it's fixed.
+form.addEventListener("input", (e) => {
+  if (e.target.hasAttribute("aria-invalid") && e.target.value.trim()) {
+    e.target.removeAttribute("aria-invalid");
+    if (!form.querySelector("[aria-invalid]")) setStatus("");
+  }
+  if (e.target.name === "note" && e.target.value.trim()) setStatus("");
+});
+
+try {
+  const saved = JSON.parse(localStorage.getItem("order-details") || "{}");
+  if (saved.name) form.elements.name.value = saved.name;
+  if (saved.address) form.elements.address.value = saved.address;
+} catch (_) { /* storage unavailable */ }
+
+form.addEventListener("submit", (e) => {
   e.preventDefault();
-  const f = startForm.elements;
-  const status = startForm.querySelector(".form-status");
+  const f = form.elements;
+  const { items, count, total } = totals();
+  const note = f.note.value.trim();
+  const delivery = f.fulfilment.value === "delivery";
+
   let firstInvalid = null;
-  ["name", "phone", "address"].forEach((n) => {
+  ["name", "address"].forEach((n) => {
     const bad = f[n].required && !f[n].value.trim();
     f[n].toggleAttribute("aria-invalid", bad);
     if (bad && !firstInvalid) firstInvalid = f[n];
   });
+  if (!count && !note) {
+    setStatus("Pick at least one dish, or write your order in the note.", "error");
+    return;
+  }
   if (firstInvalid) {
-    status.textContent = "Please fill in the highlighted fields.";
-    status.className = "form-status error";
+    setStatus("Please fill in the highlighted fields.", "error");
     firstInvalid.focus();
     return;
   }
-  const button = startForm.querySelector("button[type=submit]");
-  button.disabled = true;
+
+  const lines = ["Hello " + RESTAURANT_NAME + "! I'd like to order:", ""];
+  items.forEach((i) => lines.push("• " + i.qty + "× " + i.name + " — " + money(i.qty * i.price)));
+  if (count) lines.push("", "Total: " + money(total));
+  lines.push("", "Name: " + f.name.value.trim());
+  lines.push(delivery ? "Delivery to: " + f.address.value.trim() : "Pickup");
+  if (note) lines.push("Note: " + note);
+
   try {
-    await setDoc(doc(db, "chats", uid), {
-      name: f.name.value.trim(),
-      phone: f.phone.value.trim(),
-      fulfilment: f.fulfilment.value,
-      address: f.fulfilment.value === "delivery" ? f.address.value.trim() : "",
-      status: "new",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastMessage: "",
-      lastSender: "customer",
-      unreadForStaff: false,
-      unreadForCustomer: false
-    });
-    openChat();
-  } catch (err) {
-    console.error(err);
-    status.textContent = "Sorry, we couldn't start the chat. Please try again or call us.";
-    status.className = "form-status error";
-  } finally {
-    button.disabled = false;
-  }
-});
+    localStorage.setItem("order-details", JSON.stringify({ name: f.name.value.trim(), address: f.address.value.trim() }));
+  } catch (_) { /* storage unavailable */ }
 
-// Chat ---------------------------------------------------------------------
-const list = $("messages");
-
-function openChat() {
-  show("chat");
-  if (unsubChat) return;
-
-  unsubChat = onSnapshot(doc(db, "chats", uid), (snap) => {
-    if (!snap.exists()) {
-      // Staff removed the conversation: start fresh.
-      unsubChat(); unsubMessages && unsubMessages();
-      unsubChat = unsubMessages = null;
-      show("start");
-      return;
-    }
-    chat = snap.data();
-    const pill = $("status-pill");
-    pill.textContent = STATUSES[chat.status] || "";
-    pill.dataset.status = chat.status;
-    $("chat-sub").textContent = (chat.fulfilment === "delivery" ? "Delivery" : "Pickup") + " · " + chat.name;
-    if (chat.unreadForCustomer && !document.hidden) markRead();
-  });
-
-  const q = query(collection(db, "chats", uid, "messages"), orderBy("createdAt"), limitToLast(300));
-  let first = true;
-  unsubMessages = onSnapshot(q, (snap) => {
-    const stick = first || scrolledToBottom(list);
-    list.replaceChildren(messageNode({ text: GREETING }, false));
-    snap.forEach((d) => {
-      const m = d.data({ serverTimestamps: "estimate" });
-      list.appendChild(messageNode(m, m.sender === "customer"));
-    });
-    if (!first && document.hidden) {
-      const incoming = snap.docChanges().filter((c) => c.type === "added" && c.doc.data().sender === "staff").length;
-      if (incoming) { unseen += incoming; document.title = "(" + unseen + ") " + baseTitle; }
-    }
-    if (stick) list.scrollTop = list.scrollHeight;
-    first = false;
-  });
-}
-
-function markRead() {
-  updateDoc(doc(db, "chats", uid), { unreadForCustomer: false }).catch(console.error);
-}
-
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
-    unseen = 0;
-    document.title = baseTitle;
-    if (chat && chat.unreadForCustomer) markRead();
-  }
-});
-
-async function send(text, items) {
-  const msgRef = doc(collection(db, "chats", uid, "messages"));
-  const message = { sender: "customer", text, createdAt: serverTimestamp() };
-  const chatUpdate = {
-    lastMessage: items ? "🧾 Order: " + items.map((i) => i.qty + "× " + i.name).join(", ") : text,
-    lastSender: "customer",
-    unreadForStaff: true,
-    updatedAt: serverTimestamp()
-  };
-  if (items) {
-    message.items = items;
-    message.total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-    chatUpdate.status = "new";
-  }
-  chatUpdate.lastMessage = chatUpdate.lastMessage.slice(0, 500);
-  const batch = writeBatch(db);
-  batch.set(msgRef, message);
-  batch.update(doc(db, "chats", uid), chatUpdate);
-  await batch.commit();
-}
-
-const composer = $("composer");
-const input = $("composer-text");
-composer.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = "";
-  autosize();
-  try { await send(text); }
-  catch (err) {
-    console.error(err);
-    input.value = text;
-    alert("Your message didn't send. Please check your connection and try again.");
-  }
-});
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); composer.requestSubmit(); }
-});
-function autosize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 140) + "px"; }
-input.addEventListener("input", autosize);
-
-// Menu picker ----------------------------------------------------------------
-const dialog = $("menu-dialog");
-const picker = $("menu-picker");
-let menuLoaded = false;
-
-async function openMenu() {
-  dialog.showModal();
-  if (menuLoaded) return;
-  try {
-    const menu = await loadMenu();
-    picker.replaceChildren();
-    menu.forEach((section) => {
-      picker.appendChild(el("h3", "picker-cat", section.category));
-      const ul = el("ul", "picker-list");
-      section.items.forEach((item) => {
-        const li = el("li", "picker-item");
-        const info = el("div", "picker-info");
-        const head = el("p", "picker-name");
-        head.appendChild(el("span", null, item.name));
-        head.appendChild(el("span", "picker-price", money(item.price)));
-        info.appendChild(head);
-        if (item.desc) info.appendChild(el("p", "picker-desc", item.desc));
-        const stepper = el("div", "stepper");
-        const minus = el("button", "icon-btn", "−");
-        const qty = el("span", "stepper-qty", "0");
-        const plus = el("button", "icon-btn", "+");
-        minus.type = plus.type = "button";
-        minus.setAttribute("aria-label", "Remove one " + item.name);
-        plus.setAttribute("aria-label", "Add one " + item.name);
-        qty.setAttribute("aria-live", "polite");
-        const change = (delta) => {
-          const current = cart.get(item.name)?.qty || 0;
-          const next = Math.max(0, Math.min(20, current + delta));
-          if (next) cart.set(item.name, { name: item.name, price: item.price, qty: next });
-          else cart.delete(item.name);
-          qty.textContent = next;
-          li.classList.toggle("in-cart", next > 0);
-          updateCart();
-        };
-        minus.addEventListener("click", () => change(-1));
-        plus.addEventListener("click", () => change(1));
-        stepper.append(minus, qty, plus);
-        li.append(info, stepper);
-        ul.appendChild(li);
-      });
-      picker.appendChild(ul);
-    });
-    menuLoaded = true;
-  } catch (err) {
-    console.error(err);
-    picker.replaceChildren(el("p", "muted", "Couldn't load the menu. You can type your order in the chat instead."));
-  }
-}
-
-function updateCart() {
-  const items = Array.from(cart.values());
-  const count = items.reduce((n, i) => n + i.qty, 0);
-  const total = items.reduce((n, i) => n + i.qty * i.price, 0);
-  const sendBtn = $("send-order");
-  sendBtn.disabled = !count;
-  sendBtn.textContent = count ? "Send order · " + count + " item" + (count > 1 ? "s" : "") + " · " + money(total) : "Send order";
-  $("cart-bar").hidden = !count;
-  $("cart-summary").textContent = count + " item" + (count > 1 ? "s" : "") + " · " + money(total);
-}
-
-$("open-menu").addEventListener("click", openMenu);
-$("cart-review").addEventListener("click", openMenu);
-dialog.addEventListener("click", (e) => {
-  if (e.target === dialog || e.target.closest("[data-close]")) dialog.close();
-});
-
-$("send-order").addEventListener("click", async () => {
-  const items = Array.from(cart.values());
-  if (!items.length) return;
-  const btn = $("send-order");
-  btn.disabled = true;
-  try {
-    await send($("order-note").value.trim(), items);
-    cart.clear();
-    $("order-note").value = "";
-    picker.querySelectorAll(".stepper-qty").forEach((q) => { q.textContent = "0"; });
-    picker.querySelectorAll(".in-cart").forEach((li) => li.classList.remove("in-cart"));
-    updateCart();
-    dialog.close();
-  } catch (err) {
-    console.error(err);
-    alert("Your order didn't send. Please check your connection and try again.");
-    btn.disabled = false;
-  }
+  const url = waLink(lines.join("\n"));
+  const win = window.open(url, "_blank");
+  if (win) win.opener = null;
+  else window.location.href = url; // pop-up blocked: open in this tab
+  setStatus("WhatsApp is opening with your order. Just press send!", "success");
 });
