@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ember &amp; Vine — Wood-Fired Kitchen &amp; Wine Bar</title>
+  <meta name="description" content="Ember & Vine is a neighbourhood wood-fired kitchen and wine bar serving seasonal plates, hand-made pasta and natural wines. Book a table online.">
+  <meta name="theme-color" content="#1c1512">
+
+  <!-- Social sharing -->
+  <meta property="og:type" content="restaurant">
+  <meta property="og:title" content="Ember & Vine — Wood-Fired Kitchen & Wine Bar">
+  <meta property="og:description" content="Seasonal plates cooked over fire, hand-made pasta and natural wines.">
+  <meta name="twitter:card" content="summary">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <!-- Structured data helps Google show hours, address and menu in search -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "name": "Ember & Vine",
+    "servesCuisine": ["Mediterranean", "Wood-fired", "Wine bar"],
+    "priceRange": "$$",
+    "telephone": "+1-555-012-3456",
+    "email": "hello@emberandvine.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "128 Harbour Street",
+      "addressLocality": "Springfield",
+      "postalCode": "00000",
+      "addressCountry": "US"
+    },
+    "openingHoursSpecification": [
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Tuesday","Wednesday","Thursday"], "opens": "17:00", "closes": "22:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Friday","Saturday"], "opens": "17:00", "closes": "23:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday", "opens": "11:30", "closes": "21:00" }
+    ],
+    "acceptsReservations": "True",
+    "hasMenu": "#menu"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a class="brand" href="#top" aria-label="Ember & Vine home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c3 5 8 8 8 15a8 8 0 0 1-16 0c0-4 2-6 4-8 0 3 1 5 3 5-1-5 0-9 1-12z" fill="currentColor"/></svg>
+        <span>Ember <em>&amp;</em> Vine</span>
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">
+        <span class="sr-only">Menu</span>
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Main">
+        <a href="#about">Our Story</a>
+        <a href="#menu">Menu</a>
+        <a href="#events">Events</a>
+        <a href="#visit">Visit</a>
+        <a class="btn btn-small" href="#reserve">Book a Table</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <p class="eyebrow">Wood-fired kitchen &amp; wine bar · Est. 2019</p>
+        <h1>Cooked over fire.<br><em>Shared at the table.</em></h1>
+        <p class="lede">Seasonal plates from local farms, pasta rolled by hand every morning, and a cellar of small-producer wines. Come hungry, stay late.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#reserve">Reserve a Table</a>
+          <a class="btn btn-ghost" href="#menu">View the Menu</a>
+        </div>
+        <ul class="hero-facts">
+          <li><strong>Tue–Sun</strong><span>Dinner from 5pm</span></li>
+          <li><strong>Sunday</strong><span>Brunch 11:30–3</span></li>
+          <li><strong>Walk-ins</strong><span>Bar seats always held</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section" id="about">
+      <div class="container split">
+        <div class="art-panel art-fire" role="img" aria-label="Glowing embers in the wood-fired oven">
+          <!-- Replace with a photo: <img src="assets/images/kitchen.jpg" alt="..."> -->
+          <span class="art-caption">The hearth · 450°C</span>
+        </div>
+        <div>
+          <p class="eyebrow">Our Story</p>
+          <h2>A small room built around one big fire</h2>
+          <p>Ember &amp; Vine started with a simple idea: cook the best produce we can find over live oak and cherry wood, and pour wines made by people, not factories.</p>
+          <p>Chef Maya Okafor and sommelier Luca Ferri opened the doors in 2019. Six years on, the menu still changes with whatever the farmers bring through the back door each week.</p>
+          <dl class="stats">
+            <div><dt>14</dt><dd>Local farms &amp; growers</dd></div>
+            <div><dt>120+</dt><dd>Wines by the bottle</dd></div>
+            <div><dt>0</dt><dd>Gas burners on the line</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- MENU -->
+    <section class="section section-alt" id="menu">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">The Menu</p>
+          <h2>What's cooking this season</h2>
+          <p>Our menu changes often. Please tell your server about any allergies.</p>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Menu sections">
+          <button role="tab" id="tab-starters" aria-controls="panel-starters" aria-selected="true">Starters</button>
+          <button role="tab" id="tab-mains" aria-controls="panel-mains" aria-selected="false" tabindex="-1">From the Fire</button>
+          <button role="tab" id="tab-pasta" aria-controls="panel-pasta" aria-selected="false" tabindex="-1">Pasta</button>
+          <button role="tab" id="tab-dessert" aria-controls="panel-dessert" aria-selected="false" tabindex="-1">Dessert</button>
+          <button role="tab" id="tab-drinks" aria-controls="panel-drinks" aria-selected="false" tabindex="-1">Drinks</button>
+        </div>
+
+        <div class="menu-panel" role="tabpanel" id="panel-starters" aria-labelledby="tab-starters">
+          <ul class="menu-list">
+            <li><div class="item-head"><h3>Hearth Bread</h3><span class="price">$8</span></div><p>Sourdough baked in the oven, cultured butter, smoked sea salt.</p><span class="tags"><span class="tag">V</span></span></li>
+            <li><div class="item-head"><h3>Burrata &amp; Charred Peaches</h3><span class="price">$16</span></div><p>Basil oil, toasted hazelnuts, aged balsamic.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
+            <li><div class="item-head"><h3>Ember-Roasted Beets</h3><span class="price">$13</span></div><p>Whipped goat's cheese, orange, pistachio dukkah.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
+            <li><div class="item-head"><h3>Grilled Octopus</h3><span class="price">$19</span></div><p>Smoked potato, salsa verde, lemon.</p><span class="tags"><span class="tag">GF</span></span></li>
+            <li><div class="item-head"><h3>Beef Tartare</h3><span class="price">$18</span></div><p>Cured yolk, capers, shallot, fire-toasted crisps.</p></li>
+            <li><div class="item-head"><h3>Wood-Fired Mushrooms</h3><span class="price">$14</span></div><p>Miso butter, thyme, crispy shallots.</p><span class="tags"><span class="tag">VG</span><span class="tag">GF</span></span></li>
+          </ul>
+        </div>
+
+        <div class="menu-panel" role="tabpanel" id="panel-mains" aria-labelledby="tab-mains" hidden>
+          <ul class="menu-list">
+            <li><div class="item-head"><h3>Half Chicken</h3><span class="price">$29</span></div><p>Brined 24 hours, spit-roasted, charred lemon, herb jus.</p><span class="tags"><span class="tag">GF</span></span></li>
+            <li><div class="item-head"><h3>Dry-Aged Ribeye, 14oz</h3><span class="price">$54</span></div><p>Bone marrow butter, blistered tomatoes, watercress.</p><span class="tags"><span class="tag">GF</span></span></li>
+            <li><div class="item-head"><h3>Whole Grilled Sea Bream</h3><span class="price">$36</span></div><p>Fennel, capers, brown butter, fresh herbs.</p><span class="tags"><span class="tag">GF</span></span></li>
+            <li><div class="item-head"><h3>Lamb Shoulder for Two</h3><span class="price">$68</span></div><p>Slow-cooked in the embers, flatbreads, yoghurt, pickles.</p></li>
+            <li><div class="item-head"><h3>Charred Cauliflower Steak</h3><span class="price">$24</span></div><p>Tahini, pomegranate, chilli crunch, green herbs.</p><span class="tags"><span class="tag">VG</span><span class="tag">GF</span></span></li>
+          </ul>
+        </div>
+
+        <div class="menu-panel" role="tabpanel" id="panel-pasta" aria-labelledby="tab-pasta" hidden>
+          <ul class="menu-list">
+            <li><div class="item-head"><h3>Tagliatelle al Ragù</h3><span class="price">$24</span></div><p>Slow-braised beef and pork, parmigiano.</p></li>
+            <li><div class="item-head"><h3>Cacio e Pepe</h3><span class="price">$20</span></div><p>Hand-rolled pici, pecorino, toasted black pepper.</p><span class="tags"><span class="tag">V</span></span></li>
+            <li><div class="item-head"><h3>Smoked Tomato Rigatoni</h3><span class="price">$21</span></div><p>Fire-roasted tomatoes, chilli, basil, olive oil.</p><span class="tags"><span class="tag">VG</span></span></li>
+            <li><div class="item-head"><h3>Crab Linguine</h3><span class="price">$28</span></div><p>Brown butter, lemon, garlic, chilli, breadcrumbs.</p></li>
+          </ul>
+          <p class="menu-note">Gluten-free pasta available for any dish, +$3.</p>
+        </div>
+
+        <div class="menu-panel" role="tabpanel" id="panel-dessert" aria-labelledby="tab-dessert" hidden>
+          <ul class="menu-list">
+            <li><div class="item-head"><h3>Burnt Basque Cheesecake</h3><span class="price">$12</span></div><p>Macerated seasonal berries.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
+            <li><div class="item-head"><h3>Dark Chocolate Tart</h3><span class="price">$12</span></div><p>Olive oil, sea salt, crème fraîche.</p><span class="tags"><span class="tag">V</span></span></li>
+            <li><div class="item-head"><h3>Oven-Roasted Figs</h3><span class="price">$11</span></div><p>Honey, mascarpone, thyme.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
+            <li><div class="item-head"><h3>Affogato</h3><span class="price">$8</span></div><p>Vanilla gelato, espresso. Add amaro for $6.</p><span class="tags"><span class="tag">V</span><span class="tag">GF</span></span></li>
+          </ul>
+        </div>
+
+        <div class="menu-panel" role="tabpanel" id="panel-drinks" aria-labelledby="tab-drinks" hidden>
+          <ul class="menu-list">
+            <li><div class="item-head"><h3>Smoked Negroni</h3><span class="price">$15</span></div><p>Gin, Campari, vermouth, oak smoke.</p></li>
+            <li><div class="item-head"><h3>Vine Spritz</h3><span class="price">$13</span></div><p>Orange wine, aperitivo, soda, olive.</p></li>
+            <li><div class="item-head"><h3>Wine by the Glass</h3><span class="price">$12–18</span></div><p>Ask about today's eight open bottles.</p></li>
+            <li><div class="item-head"><h3>Garden Tonic</h3><span class="price">$8</span></div><p>Alcohol-free: cucumber, basil, lime, tonic.</p></li>
+          </ul>
+        </div>
+
+        <p class="legend"><span class="tag">V</span> Vegetarian <span class="tag">VG</span> Vegan <span class="tag">GF</span> Gluten-free</p>
+      </div>
+    </section>
+
+    <!-- QUOTES -->
+    <section class="section quotes">
+      <div class="container quote-grid">
+        <figure>
+          <blockquote>"The best roast chicken in the city, and possibly the best bread too."</blockquote>
+          <figcaption>— City Food Guide</figcaption>
+        </figure>
+        <figure>
+          <blockquote>"A warm, buzzy room with a wine list full of surprises."</blockquote>
+          <figcaption>— The Weekend Table</figcaption>
+        </figure>
+        <figure>
+          <blockquote>"We've been back every month since it opened."</blockquote>
+          <figcaption>— A happy regular</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- EVENTS -->
+    <section class="section" id="events">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Happenings</p>
+          <h2>More than dinner</h2>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <div class="card-art art-wine" aria-hidden="true"></div>
+            <div class="card-body">
+              <p class="card-meta">Every Wednesday</p>
+              <h3>Winemaker Wednesdays</h3>
+              <p>Half-price bottles from one featured producer, with tasting notes from Luca.</p>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card-art art-table" aria-hidden="true"></div>
+            <div class="card-body">
+              <p class="card-meta">First Sunday of the month</p>
+              <h3>Chef's Long Table</h3>
+              <p>A six-course set menu served family-style to 20 guests. $85 per person.</p>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card-art art-room" aria-hidden="true"></div>
+            <div class="card-body">
+              <p class="card-meta">Up to 40 guests</p>
+              <h3>Private Dining</h3>
+              <p>Birthdays, rehearsal dinners, team nights. Book the back room or the whole restaurant.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESERVE -->
+    <section class="section section-dark" id="reserve">
+      <div class="container split split-top">
+        <div>
+          <p class="eyebrow">Reservations</p>
+          <h2>Book a table</h2>
+          <p>Send us your request and we'll confirm by email or phone within a few hours. For groups larger than 8, or for same-day bookings, please call us.</p>
+          <p class="big-contact"><a href="tel:+15550123456">(555) 012-3456</a></p>
+          <p class="muted">We hold a few bar seats every night for walk-ins.</p>
+        </div>
+
+        <form class="reserve-form" id="reserve-form" novalidate>
+          <div class="field-row">
+            <label>Name
+              <input type="text" name="name" autocomplete="name" required>
+            </label>
+            <label>Phone
+              <input type="tel" name="phone" autocomplete="tel" required>
+            </label>
+          </div>
+          <label>Email
+            <input type="email" name="email" autocomplete="email" required>
+          </label>
+          <div class="field-row field-row-3">
+            <label>Date
+              <input type="date" name="date" required>
+            </label>
+            <label>Time
+              <select name="time" required>
+                <option value="">Choose…</option>
+              </select>
+            </label>
+            <label>Guests
+              <select name="guests" required>
+                <option>1</option><option selected>2</option><option>3</option><option>4</option>
+                <option>5</option><option>6</option><option>7</option><option>8</option>
+              </select>
+            </label>
+          </div>
+          <label>Notes <span class="optional">(optional)</span>
+            <textarea name="notes" rows="3" placeholder="Allergies, occasion, seating preference…"></textarea>
+          </label>
+          <button class="btn btn-block" type="submit">Request Booking</button>
+          <p class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- VISIT -->
+    <section class="section" id="visit">
+      <div class="container split split-top">
+        <div>
+          <p class="eyebrow">Visit Us</p>
+          <h2>Find us by the harbour</h2>
+          <address>
+            128 Harbour Street<br>
+            Springfield, 00000
+          </address>
+          <p><a href="tel:+15550123456">(555) 012-3456</a><br>
+             <a href="mailto:hello@emberandvine.com">hello@emberandvine.com</a></p>
+
+          <h3 class="hours-title">Opening Hours <span class="open-now" id="open-now"></span></h3>
+          <table class="hours">
+            <tbody>
+              <tr data-day="1"><th scope="row">Monday</th><td>Closed</td></tr>
+              <tr data-day="2"><th scope="row">Tuesday</th><td>5:00 – 10:00pm</td></tr>
+              <tr data-day="3"><th scope="row">Wednesday</th><td>5:00 – 10:00pm</td></tr>
+              <tr data-day="4"><th scope="row">Thursday</th><td>5:00 – 10:00pm</td></tr>
+              <tr data-day="5"><th scope="row">Friday</th><td>5:00 – 11:00pm</td></tr>
+              <tr data-day="6"><th scope="row">Saturday</th><td>5:00 – 11:00pm</td></tr>
+              <tr data-day="0"><th scope="row">Sunday</th><td>11:30am – 9:00pm</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="map-wrap">
+          <iframe
+            title="Map showing Ember & Vine's location"
+            src="https://www.google.com/maps?q=Times+Square,New+York&output=embed"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand" href="#top">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c3 5 8 8 8 15a8 8 0 0 1-16 0c0-4 2-6 4-8 0 3 1 5 3 5-1-5 0-9 1-12z" fill="currentColor"/></svg>
+          <span>Ember <em>&amp;</em> Vine</span>
+        </a>
+        <p class="muted">Wood-fired kitchen &amp; wine bar.</p>
+      </div>
+      <div>
+        <h4>Visit</h4>
+        <p class="muted">128 Harbour Street<br>Springfield, 00000</p>
+      </div>
+      <div>
+        <h4>Follow</h4>
+        <ul class="social">
+          <li><a href="https://instagram.com/" rel="noopener" target="_blank">Instagram</a></li>
+          <li><a href="https://facebook.com/" rel="noopener" target="_blank">Facebook</a></li>
+          <li><a href="https://tiktok.com/" rel="noopener" target="_blank">TikTok</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-base">
+      <p class="muted">© <span id="year">2026</span> Ember &amp; Vine. All rights reserved.</p>
+      <a class="muted" href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>
