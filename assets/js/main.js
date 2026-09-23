@@ -163,10 +163,27 @@
     img.src = src;
   }
 
+  // "Our kitchen" photo in the Our Story section (set on the admin page).
+  function showKitchenPhoto(menu) {
+    var src = menu.site && menu.site.kitchenImage;
+    if (!src) return;
+    var panel = document.getElementById("kitchen-photo");
+    var img = new Image();
+    img.alt = "Our kitchen";
+    img.onload = function () {
+      panel.classList.remove("art-fire");
+      panel.classList.add("has-photo");
+      panel.removeAttribute("role");
+      panel.removeAttribute("aria-label");
+      panel.insertBefore(img, panel.firstChild);
+    };
+    img.src = src;
+  }
+
   // The timestamp skips the browser/CDN cache so price changes show right away.
   fetch("menu.json?v=" + Date.now())
     .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-    .then(function (menu) { showHeroPhoto(menu); renderMenu(menu); })
+    .then(function (menu) { showHeroPhoto(menu); showKitchenPhoto(menu); renderMenu(menu); })
     .catch(function (err) {
       console.error(err);
       document.getElementById("menu-panels").replaceChildren(
