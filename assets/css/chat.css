@@ -178,3 +178,11 @@ h4.picker-cat { font-family: var(--font-display); font-weight: 600; }
 .admin-site > p { margin: 0 0 4px; font-size: 0.9rem; }
 .admin-site .admin-photo-preview { width: 120px; height: 72px; }
 #site-settings { margin-bottom: 4px; }
+
+/* Admin: sign in on another phone */
+.phone-signin summary { cursor: pointer; font-weight: 600; }
+.phone-signin[open] summary { margin-bottom: 8px; }
+.phone-qr { display: flex; justify-content: center; margin: 12px 0; }
+.phone-qr img { width: 220px; max-width: 100%; height: auto; image-rendering: pixelated; background: #fff; border-radius: 8px; }
+.phone-qr:empty { display: none; }
+.small-print { font-size: 0.82rem; margin-top: 10px; }
