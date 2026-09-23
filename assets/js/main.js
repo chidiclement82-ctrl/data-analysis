@@ -28,6 +28,12 @@
     if (text != null) node.textContent = text;
     return node;
   }
+  // Empties a node, optionally leaving one child. (replaceChildren() is
+  // missing on older phone browsers.)
+  function clear(node, child) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+    if (child) node.appendChild(child);
+  }
   var TAG_CLASS = { Spicy: "tag tag-spicy", Popular: "tag tag-popular" };
 
   // Older menu.json files had sections at the top level; treat that as one restaurant.
@@ -38,7 +44,7 @@
   function renderMenu(menu) {
     var restaurants = restaurantsOf(menu).filter(function (r) { return (r.categories || []).length; });
     var picker = document.getElementById("menu-restaurants");
-    picker.replaceChildren();
+    clear(picker);
     picker.hidden = restaurants.length < 2;
     restaurants.forEach(function (r, i) {
       var btn = el("button", "restaurant-card");
@@ -63,7 +69,7 @@
       c.setAttribute("aria-pressed", String(i === index));
     });
     var info = document.getElementById("restaurant-info");
-    info.replaceChildren();
+    clear(info);
     if (r && (r.name || r.description || r.image)) {
       if (r.image) { var img = el("img", "restaurant-photo"); img.src = r.image; img.alt = r.name || ""; info.appendChild(img); }
       var text = el("div");
@@ -79,8 +85,8 @@
     var tabList = document.getElementById("menu-tabs");
     var panels = document.getElementById("menu-panels");
     var cur = menu.currency || "₦";
-    tabList.replaceChildren();
-    panels.replaceChildren();
+    clear(tabList);
+    clear(panels);
     (categories || []).forEach(function (cat, i) {
       var id = "menu-" + rIndex + "-" + i;
       var tab = el("button", null, cat.name);
@@ -181,14 +187,23 @@
   }
 
   // The timestamp skips the browser/CDN cache so price changes show right away.
-  fetch("menu.json?v=" + Date.now())
-    .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-    .then(function (menu) { showHeroPhoto(menu); showKitchenPhoto(menu); renderMenu(menu); })
-    .catch(function (err) {
-      console.error(err);
-      document.getElementById("menu-panels").replaceChildren(
-        el("p", "menu-note", "Sorry, the menu couldn't load. Please refresh the page."));
-    });
+  // XMLHttpRequest rather than fetch() so older phone browsers load it too.
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "menu.json?v=" + Date.now());
+  xhr.onload = function () {
+    try {
+      if (xhr.status !== 200) throw new Error("HTTP " + xhr.status);
+      var menu = JSON.parse(xhr.responseText);
+      showHeroPhoto(menu); showKitchenPhoto(menu); renderMenu(menu);
+    } catch (err) { menuFailed(err); }
+  };
+  xhr.onerror = menuFailed;
+  xhr.send();
+  function menuFailed(err) {
+    if (window.console) console.error(err);
+    clear(document.getElementById("menu-panels"),
+      el("p", "menu-note", "Sorry, the menu couldn't load. Please refresh the page."));
+  }
 
   // Helpers ---------------------------------------------------------------
   function toMinutes(hhmm) { var p = hhmm.split(":"); return +p[0] * 60 + +p[1]; }
