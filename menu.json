@@ -1,5 +1,8 @@
 {
   "currency": "₦",
+  "site": {
+    "image": ""
+  },
   "restaurants": [
     {
       "name": "Ogarider Kitchen",

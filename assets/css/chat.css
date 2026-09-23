@@ -173,3 +173,8 @@ h4.picker-cat { font-family: var(--font-display); font-weight: 600; }
 .admin-photo-status { width: 100%; font-size: 0.82rem; color: var(--ink-soft); }
 .admin-photo-status:empty { display: none; }
 .admin-photo .link-btn[hidden] { display: none; }
+.admin-site { display: grid; gap: 8px; }
+.admin-site h2 { margin: 0; }
+.admin-site > p { margin: 0 0 4px; font-size: 0.9rem; }
+.admin-site .admin-photo-preview { width: 120px; height: 72px; }
+#site-settings { margin-bottom: 4px; }

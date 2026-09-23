@@ -25,6 +25,7 @@ After that, every change pushed to `main` goes live automatically.
 All restaurants, foods, photos and prices live in [`menu.json`](menu.json). The homepage menu and the order page both read it, and the admin page edits it.
 
 On `admin.html` you can:
+- Set the **homepage photo** shown at the top of the site behind "FOOD IS READY".
 - **Add restaurants**, each with a name, a short description and a photo or logo. When there's more than one, customers pick a restaurant on the homepage.
 - **Add foods under each restaurant**, grouped in sections, with a name, price (in naira), description and **photo**. Photos are shrunk automatically so the site stays fast.
 - Mark a food **sold out**. It stays on the menu but can't be ordered.
@@ -70,7 +71,6 @@ Everything you'd normally change is in the files below. Look for comments marked
 | Events | the `EVENTS` section |
 | Phone and address | the `VISIT` section and footer; the WhatsApp number is in `assets/js/order.js` |
 | **Opening hours** | the hours table in `VISIT`. Only change `data-open` / `data-close` (24-hour time, e.g. `17:00`), or write `data-closed` for a day off. The displayed times and the "Open now" badge both update from this automatically. Late closing such as `data-close="01:00"` works too |
-| Social links | the `Follow` list in the footer |
 | Google search info | the `application/ld+json` block at the top. Keep name, phone, address and hours in step with the page |
 
 ### `assets/js/order.js`: WhatsApp orders

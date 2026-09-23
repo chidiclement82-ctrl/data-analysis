@@ -121,6 +121,7 @@ async function loadMenu() {
     menu.restaurants = [{ name: "Ogarider Kitchen", description: "", image: "", categories: menu.categories || [] }];
     delete menu.categories;
   }
+  menu.site = menu.site || { image: "" };
   current = Math.min(current, menu.restaurants.length - 1);
   setDirty(false);
   render();
@@ -447,7 +448,18 @@ function restaurantBar() {
   bar.appendChild(card);
 }
 
+function siteSettings() {
+  const box = $("site-settings");
+  box.replaceChildren();
+  const card = el("section", "wa-card admin-site");
+  card.appendChild(el("h2", null, "Homepage photo"));
+  card.appendChild(el("p", "muted", "Shown at the top of your website, behind \"FOOD IS READY\". A wide photo of your food or restaurant works best."));
+  card.appendChild(photoField(menu.site, "Top-of-page photo", () => "homepage"));
+  box.appendChild(card);
+}
+
 function render() {
+  siteSettings();
   restaurantBar();
   const r = menu.restaurants[current];
   r.categories = r.categories || [];

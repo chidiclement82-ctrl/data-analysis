@@ -147,10 +147,26 @@
     if (tabs.length) selectTab(tabs[0]);
   }
 
+  // Homepage photo (set on the admin page). Shown once it has loaded, so the
+  // top of the page never flashes an empty background.
+  function showHeroPhoto(menu) {
+    var src = menu.site && menu.site.image;
+    if (!src) return;
+    var hero = document.querySelector(".hero");
+    var img = new Image();
+    img.onload = function () {
+      // Use the full address: a relative url() inside a CSS variable would be
+      // resolved against the stylesheet's folder, not the page.
+      hero.style.setProperty("--hero-photo", 'url("' + img.src + '")');
+      hero.classList.add("has-photo");
+    };
+    img.src = src;
+  }
+
   // The timestamp skips the browser/CDN cache so price changes show right away.
   fetch("menu.json?v=" + Date.now())
     .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-    .then(renderMenu)
+    .then(function (menu) { showHeroPhoto(menu); renderMenu(menu); })
     .catch(function (err) {
       console.error(err);
       document.getElementById("menu-panels").replaceChildren(
