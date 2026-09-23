@@ -41,6 +41,8 @@ Tap **Save & publish** when you're done. The website updates in about a minute. 
 
 Keep the token private, like a password.
 
+**Signing in on your phone (or another device):** on a phone or computer that's already signed in, open the admin page and tap **📱 Sign in on your phone or another device**. Scan the QR code with your phone's camera, or tap **Copy sign-in link** and open the link on your phone. The admin page opens already signed in. The code and link contain your token, so keep them private.
+
 For tighter security, use a [fine-grained token](https://github.com/settings/personal-access-tokens/new) instead:
 - **Repository access:** Only select repositories → `data-analysis`.
 - **Permissions:** Contents → **Read and write**.

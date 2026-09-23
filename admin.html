@@ -37,6 +37,7 @@
           <input name="token" type="password" autocomplete="current-password" placeholder="ghp_… or github_pat_…" required>
         </label>
         <button class="btn btn-block" type="submit">Sign in</button>
+        <p class="muted small-print">Already signed in on another phone or computer? Open the admin page there, tap <strong>📱 Sign in on your phone</strong> and scan the code with this phone. No token needed.</p>
         <p class="form-status" role="status" aria-live="polite"></p>
         <details class="token-help">
           <summary>Don't have a token yet? (2 minutes)</summary>
@@ -63,6 +64,14 @@
             <h1>Menu editor</h1>
             <p class="muted">Add restaurants and their foods, upload photos, change prices, or mark foods sold out. Then tap <strong>Save &amp; publish</strong>. The website updates in about a minute.</p>
           </header>
+          <details class="wa-card phone-signin" id="phone-signin">
+            <summary>📱 Sign in on your phone or another device</summary>
+            <p class="muted">Scan this code with your phone's camera, or send yourself the link. The admin page opens already signed in. No token needed.</p>
+            <div class="phone-qr" id="phone-qr"></div>
+            <button class="btn btn-outline btn-block" type="button" id="copy-signin">Copy sign-in link</button>
+            <p class="form-status" id="phone-status" role="status" aria-live="polite"></p>
+            <p class="muted small-print">Keep this code and link private, like a password: anyone who opens them can change your website. If one gets out, make a new token on GitHub and delete the old one.</p>
+          </details>
           <div id="site-settings"></div>
           <div id="restaurant-bar"></div>
           <h2 class="admin-sections-title" id="sections-title">Foods</h2>
@@ -78,6 +87,7 @@
     </div>
   </main>
 
+  <script src="assets/js/vendor/qrcode.js" defer></script>
   <script type="module" src="assets/js/admin.js"></script>
 </body>
 </html>

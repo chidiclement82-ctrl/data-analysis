@@ -83,6 +83,8 @@ async function signIn(candidate, silent) {
         err.message === "bad-token" ? "That token isn't valid. Check you copied all of it, or make a new one." :
         err.message === "no-access" ? "That token can't change this website. Make a new one with the public_repo box ticked." :
         "Couldn't connect to GitHub. Check your internet connection and try again.", "error");
+      // Keep a token from a sign-in link so "Sign in" can simply be tapped again.
+      if (err.message !== "bad-token" && err.message !== "no-access") loginForm.elements.token.value = candidate;
     } else {
       loginMessage("Please sign in again.", "error");
       try { loginForm.elements.token.value = localStorage.getItem(TOKEN_KEY) || ""; } catch (_) { /* storage unavailable */ }
@@ -511,8 +513,45 @@ $("add-category").addEventListener("click", () => {
   cats[cats.length - 1].querySelector("input").focus();
 });
 
+// Sign in on another phone -----------------------------------------------------
+// The link carries the token after "#", which browsers never send to a server.
+function signInLink() {
+  return location.origin + location.pathname + "#signin=" + encodeURIComponent(token);
+}
+function phoneMessage(text, type) { $("phone-status").textContent = text; $("phone-status").className = "form-status " + (type || ""); }
+
+$("phone-signin").addEventListener("toggle", () => {
+  const box = $("phone-qr");
+  if (!$("phone-signin").open) { box.replaceChildren(); phoneMessage(""); return; }
+  if (!token || typeof window.qrcode !== "function") return;
+  const qr = window.qrcode(0, "M");
+  qr.addData(signInLink());
+  qr.make();
+  const img = new Image();
+  img.src = qr.createDataURL(6, 4);
+  img.alt = "Sign-in code for the admin page";
+  box.replaceChildren(img);
+});
+
+$("copy-signin").addEventListener("click", async () => {
+  const link = signInLink();
+  try {
+    await navigator.clipboard.writeText(link);
+    phoneMessage("Link copied. Open it on your phone, then delete the message you sent it in.", "success");
+  } catch (_) {
+    prompt("Copy this link and open it on your phone:", link);
+  }
+});
+
 // Start -----------------------------------------------------------------------
 let saved = null;
-try { saved = localStorage.getItem(TOKEN_KEY); } catch (_) { /* storage unavailable */ }
-if (saved) signIn(saved, true);
+// Opened from a sign-in link: take the token and remove it from the address bar.
+const fromLink = /^#signin=(.+)$/.exec(location.hash);
+if (fromLink) {
+  history.replaceState(null, "", location.pathname + location.search);
+  saved = decodeURIComponent(fromLink[1]);
+} else {
+  try { saved = localStorage.getItem(TOKEN_KEY); } catch (_) { /* storage unavailable */ }
+}
+if (saved) signIn(saved, !fromLink);
 else show("login");
