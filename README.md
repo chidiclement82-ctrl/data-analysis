@@ -2,7 +2,7 @@
 
 A fast, mobile-friendly restaurant website built with plain HTML, CSS and JavaScript. It has no build step and no framework. Edit the files, push, and the site updates.
 
-Live address, once GitHub Pages is switched on: **https://chidiclement82-ctrl.github.io/data-analysis/**
+Live address, once GitHub Pages is switched on: **https://ogarider.name.ng/**
 
 ## Put it online (one-time setup)
 
@@ -16,9 +16,9 @@ After that, every change pushed to `main` goes live automatically.
 
 | Who | Link | What it's for |
 |---|---|---|
-| Everyone | `https://chidiclement82-ctrl.github.io/data-analysis/` | The main website |
-| Customers | `https://chidiclement82-ctrl.github.io/data-analysis/order.html` | Order food on WhatsApp. Linked from the "Order on WhatsApp" buttons on the homepage |
-| Admin | `https://chidiclement82-ctrl.github.io/data-analysis/admin.html` | Edit dishes and prices. Linked as "Admin" in the footer |
+| Everyone | `https://ogarider.name.ng/` | The main website |
+| Customers | `https://ogarider.name.ng/order.html` | Order food on WhatsApp. Linked from the "Order on WhatsApp" buttons on the homepage |
+| Admin | `https://ogarider.name.ng/admin.html` | Edit dishes and prices. Linked as "Admin" in the footer |
 
 ## Editing the menu (admin page)
 
@@ -94,10 +94,23 @@ Put photos in `assets/images/`; `.jpg` files around 1600px wide work well. The c
 - `assets/images/og-image.png` (1200×630) is the preview shown when the link is shared on WhatsApp, Facebook, X and similar. Replace it with your own image of the same size.
 - `assets/logo-mark.svg` is the Ogarider logo (a steaming pot badge). `assets/favicon.svg` is the same logo for the browser tab; the PNG icons next to it are for phones' home screens.
 
-## Using your own domain
+## Your domain: ogarider.name.ng
 
-1. Add the domain under **Settings → Pages → Custom domain** and follow GitHub's DNS instructions.
-2. Replace `https://chidiclement82-ctrl.github.io/data-analysis/` with your domain in `index.html`, `robots.txt` and `sitemap.xml`.
+The site uses the custom domain **ogarider.name.ng**, bought from WhoGoHost. The old address `chidiclement82-ctrl.github.io/data-analysis` forwards to it automatically.
+
+**WhoGoHost DNS records** (Client Area → Domains → My Domains → Manage → DNS Management):
+
+| Type | Host | Value |
+|---|---|---|
+| A | @ | 185.199.108.153 |
+| A | @ | 185.199.109.153 |
+| A | @ | 185.199.110.153 |
+| A | @ | 185.199.111.153 |
+| CNAME | www | chidiclement82-ctrl.github.io |
+
+**GitHub:** Settings → Pages → Custom domain = `ogarider.name.ng`, with **Enforce HTTPS** ticked.
+
+Renew the domain on WhoGoHost before it expires, or the site stops loading at this address.
 
 ## Preview on your computer
 
