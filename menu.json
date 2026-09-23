@@ -1,7 +1,8 @@
 {
   "currency": "₦",
   "site": {
-    "image": "assets/images/menu/homepage-1790122160387.jpg"
+    "image": "assets/images/menu/homepage-1790122160387.jpg",
+    "kitchenImage": "assets/images/menu/kitchen-1790123220921.jpg"
   },
   "restaurants": [
     {
