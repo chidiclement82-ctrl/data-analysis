@@ -314,6 +314,17 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Kilimanjaro Restaurant",
+      "description": "Fast food & local dishes. Rice, chicken, shawarma, pastries. Best for quick office lunch.",
+      "image": "assets/images/menu/kilimanjaro-restaurant-1790123879158.jpg",
+      "categories": [
+        {
+          "name": "Menu",
+          "items": []
+        }
+      ]
     }
   ]
 }
