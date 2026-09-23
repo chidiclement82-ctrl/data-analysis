@@ -121,7 +121,7 @@ async function loadMenu() {
     menu.restaurants = [{ name: "Ogarider Kitchen", description: "", image: "", categories: menu.categories || [] }];
     delete menu.categories;
   }
-  menu.site = menu.site || { image: "" };
+  menu.site = Object.assign({ image: "", kitchenImage: "" }, menu.site);
   current = Math.min(current, menu.restaurants.length - 1);
   setDirty(false);
   render();
@@ -260,7 +260,7 @@ async function uploadPhoto(file, name) {
   return path;
 }
 
-function photoField(obj, label, nameOf) {
+function photoField(obj, label, nameOf, key = "image") {
   const wrap = el("div", "admin-photo");
   const preview = el("div", "admin-photo-preview");
   const status = el("span", "admin-photo-status");
@@ -275,20 +275,20 @@ function photoField(obj, label, nameOf) {
 
   function paint() {
     preview.replaceChildren();
-    if (obj.image) {
+    if (obj[key]) {
       const img = el("img");
-      img.src = previews.get(obj.image) || obj.image;
+      img.src = previews.get(obj[key]) || obj[key];
       img.alt = "";
       preview.appendChild(img);
     } else {
       preview.appendChild(el("span", null, "No photo"));
     }
-    pick.textContent = obj.image ? "Change photo" : "+ Add photo";
-    remove.hidden = !obj.image;
+    pick.textContent = obj[key] ? "Change photo" : "+ Add photo";
+    remove.hidden = !obj[key];
   }
 
   pick.addEventListener("click", () => input.click());
-  remove.addEventListener("click", () => { obj.image = ""; changed(); paint(); });
+  remove.addEventListener("click", () => { obj[key] = ""; changed(); paint(); });
   input.addEventListener("change", async () => {
     const file = input.files[0];
     input.value = "";
@@ -298,7 +298,7 @@ function photoField(obj, label, nameOf) {
     pick.disabled = true;
     status.textContent = "Uploading…";
     try {
-      obj.image = await uploadPhoto(file, nameOf());
+      obj[key] = await uploadPhoto(file, nameOf());
       status.textContent = "Photo added. Tap Save & publish to show it.";
       changed();
     } catch (err) {
@@ -452,9 +452,10 @@ function siteSettings() {
   const box = $("site-settings");
   box.replaceChildren();
   const card = el("section", "wa-card admin-site");
-  card.appendChild(el("h2", null, "Homepage photo"));
-  card.appendChild(el("p", "muted", "Shown at the top of your website, behind \"FOOD IS READY\". A wide photo of your food or restaurant works best."));
-  card.appendChild(photoField(menu.site, "Top-of-page photo", () => "homepage"));
+  card.appendChild(el("h2", null, "Homepage photos"));
+  card.appendChild(el("p", "muted", "The top photo sits behind \"FOOD IS READY\"; a wide photo works best. The kitchen photo shows next to \"Our Story\"."));
+  card.appendChild(photoField(menu.site, "Top of the homepage", () => "homepage"));
+  card.appendChild(photoField(menu.site, "\"Our kitchen\" photo", () => "kitchen", "kitchenImage"));
   box.appendChild(card);
 }
 
