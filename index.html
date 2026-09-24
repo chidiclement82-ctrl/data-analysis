@@ -66,7 +66,7 @@
       </button>
       <nav id="site-nav" class="site-nav" aria-label="Main">
         <a href="#about">Our Story</a>
-        <a href="#menu">Menu</a>
+        <a href="#menu">Restaurants</a>
         <a href="#visit">Contact</a>
         <a class="btn btn-small" href="order.html">Order Now</a>
       </nav>
@@ -83,7 +83,7 @@
         <p class="lede">Smoky party jollof, rich soups with swallow, hot suya and pepper soup, and ice-cold Chapman and zobo. Order on WhatsApp for pickup or delivery.</p>
         <div class="hero-actions">
           <a class="btn" href="order.html">Order on WhatsApp</a>
-          <a class="btn btn-ghost" href="#menu">View the Menu</a>
+          <a class="btn btn-ghost" href="#menu">See Restaurants</a>
         </div>
         <ul class="hero-facts">
           <li><strong>Every day</strong><span>8:00am – 7:00pm</span></li>
@@ -118,18 +118,27 @@
     <section class="section section-alt" id="menu">
       <div class="container">
         <div class="section-head">
-          <p class="eyebrow">The Menu</p>
-          <h2>What's cooking today</h2>
-          <p>Prices in naira. Please tell us about any allergies when you order.</p>
+          <p class="eyebrow">Restaurants</p>
+          <h2>Where are you eating today?</h2>
+          <p>Scroll through our restaurants and tap one to see its menu. Prices in naira.</p>
         </div>
 
-        <!-- The menu is loaded from menu.json. Edit it on admin.html (see README). -->
-        <div class="restaurant-picker" id="menu-restaurants" aria-label="Choose a restaurant" hidden></div>
-        <div class="restaurant-info" id="restaurant-info" hidden></div>
-        <div class="tabs" role="tablist" aria-label="Menu sections" id="menu-tabs"></div>
-        <div id="menu-panels"><p class="menu-note">Loading menu…</p></div>
+        <!-- Restaurants and menus are loaded from menu.json. Edit them on admin.html (see README). -->
+        <ul class="restaurant-list" id="restaurant-list" aria-label="Restaurants">
+          <li class="menu-note">Loading restaurants…</li>
+        </ul>
 
-        <p class="legend"><span class="tag tag-spicy">Spicy</span> Hot and peppery <span class="tag tag-popular">Popular</span> Customer favourite <span class="tag">Vegetarian</span> No meat or fish</p>
+        <div class="restaurant-view" id="restaurant-view" hidden>
+          <a class="restaurant-back" href="#menu">← All restaurants</a>
+          <div class="restaurant-head" id="restaurant-info"></div>
+          <div class="tabs" role="tablist" aria-label="Menu sections" id="menu-tabs"></div>
+          <div id="menu-panels"></div>
+          <div class="restaurant-order">
+            <a class="btn" id="restaurant-order-btn" href="order.html">Order on WhatsApp</a>
+            <a class="btn btn-outline" href="#menu">See other restaurants</a>
+          </div>
+          <p class="legend"><span class="tag tag-spicy">Spicy</span> Hot and peppery <span class="tag tag-popular">Popular</span> Customer favourite <span class="tag">Vegetarian</span> No meat or fish</p>
+        </div>
       </div>
     </section>
 

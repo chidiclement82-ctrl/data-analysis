@@ -41,52 +41,123 @@
     return menu.restaurants || [{ name: "", description: "", image: "", categories: menu.categories || [] }];
   }
 
-  function renderMenu(menu) {
-    var restaurants = restaurantsOf(menu).filter(function (r) { return (r.categories || []).length; });
-    var picker = document.getElementById("menu-restaurants");
-    clear(picker);
-    picker.hidden = restaurants.length < 2;
-    restaurants.forEach(function (r, i) {
-      var btn = el("button", "restaurant-card");
-      btn.type = "button";
-      btn.setAttribute("aria-pressed", "false");
-      if (r.image) {
-        var img = el("img"); img.src = r.image; img.alt = ""; img.loading = "lazy";
-        btn.appendChild(img);
-      } else {
-        btn.appendChild(el("span", "restaurant-card-ph", (r.name || "?").charAt(0)));
-      }
-      btn.appendChild(el("span", "restaurant-card-name", r.name || "Restaurant"));
-      btn.addEventListener("click", function () { showRestaurant(menu, restaurants, i); });
-      picker.appendChild(btn);
+  // Web-address name for a restaurant, e.g. "Kilimanjaro Restaurant" -> "kilimanjaro-restaurant".
+  // order.js makes the same names, so "Order" links open the same restaurant there.
+  function slugs(restaurants) {
+    var seen = {};
+    return restaurants.map(function (r, i) {
+      var slug = (r.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "restaurant-" + (i + 1);
+      if (seen[slug]) slug += "-" + (i + 1);
+      seen[slug] = true;
+      return slug;
     });
-    showRestaurant(menu, restaurants, 0);
   }
 
-  function showRestaurant(menu, restaurants, index) {
-    var r = restaurants[index];
-    Array.prototype.forEach.call(document.querySelectorAll(".restaurant-card"), function (c, i) {
-      c.setAttribute("aria-pressed", String(i === index));
+  function foodsIn(r) {
+    var foods = [];
+    (r.categories || []).forEach(function (c) {
+      (c.items || []).forEach(function (it) { if (it.name) foods.push(it); });
     });
+    return foods;
+  }
+
+  function money(menu, n) {
+    return (menu.currency || "₦") + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  function photoOrLetter(r, className) {
+    if (r.image) {
+      var img = el("img", className); img.src = r.image; img.alt = ""; img.loading = "lazy";
+      return img;
+    }
+    return el("span", className + " is-letter", (r.name || "?").charAt(0).toUpperCase());
+  }
+
+  var MENU = null, RESTAURANTS = [], SLUGS = [];
+
+  // The list of restaurant cards customers scroll through.
+  function renderList() {
+    var list = document.getElementById("restaurant-list");
+    clear(list);
+    if (!RESTAURANTS.length) {
+      list.appendChild(el("li", "menu-note", "Restaurants are coming soon. Message us on WhatsApp to order."));
+      return;
+    }
+    RESTAURANTS.forEach(function (r, i) {
+      var foods = foodsIn(r);
+      var li = el("li", "restaurant-tile");
+      var a = el("a");
+      a.href = "#restaurant=" + SLUGS[i];
+      a.appendChild(photoOrLetter(r, "restaurant-tile-img"));
+      var body = el("div", "restaurant-tile-body");
+      body.appendChild(el("h3", null, r.name || "Restaurant"));
+      if (r.description) body.appendChild(el("p", null, r.description));
+      var meta = el("div", "restaurant-tile-meta");
+      var prices = foods.filter(function (f) { return f.available !== false && Number(f.price) > 0; })
+        .map(function (f) { return Number(f.price); });
+      meta.appendChild(el("span", null, foods.length
+        ? foods.length + (foods.length === 1 ? " food" : " foods") + (prices.length ? " · from " + money(MENU, Math.min.apply(null, prices)) : "")
+        : "Menu coming soon"));
+      meta.appendChild(el("span", "restaurant-tile-cta", "See menu →"));
+      body.appendChild(meta);
+      a.appendChild(body);
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+  }
+
+  // One restaurant's menu.
+  function showRestaurant(index) {
+    var r = RESTAURANTS[index];
     var info = document.getElementById("restaurant-info");
     clear(info);
-    if (r && (r.name || r.description || r.image)) {
-      if (r.image) { var img = el("img", "restaurant-photo"); img.src = r.image; img.alt = r.name || ""; info.appendChild(img); }
-      var text = el("div");
-      if (r.name) text.appendChild(el("h3", null, r.name));
-      if (r.description) text.appendChild(el("p", null, r.description));
-      info.appendChild(text);
+    info.appendChild(photoOrLetter(r, "restaurant-head-img"));
+    var text = el("div", "restaurant-head-text");
+    text.appendChild(el("h3", null, r.name || "Restaurant"));
+    if (r.description) text.appendChild(el("p", null, r.description));
+    info.appendChild(text);
+    document.getElementById("restaurant-order-btn").href = "order.html#restaurant=" + SLUGS[index];
+    document.getElementById("restaurant-order-btn").textContent = "Order from " + (r.name || "this restaurant");
+    var categories = (r.categories || []).filter(function (c) { return (c.items || []).some(function (it) { return it.name; }); });
+    renderCategories(MENU, categories, index);
+    if (!categories.length) {
+      document.getElementById("menu-panels").appendChild(
+        el("p", "menu-note", "This restaurant's menu is coming soon. Tap Order to ask us on WhatsApp what's available today."));
     }
-    info.hidden = !info.childNodes.length;
-    renderCategories(menu, r ? r.categories : [], index);
+  }
+
+  // Which view to show comes from the address: "#restaurant=<name>" opens a
+  // restaurant, anything else shows the list. The phone's Back button works too.
+  function route(scroll) {
+    if (!MENU) return;
+    var m = /^#restaurant=(.+)$/.exec(location.hash);
+    var index = m ? SLUGS.indexOf(decodeURIComponent(m[1])) : -1;
+    var list = document.getElementById("restaurant-list");
+    var view = document.getElementById("restaurant-view");
+    if (index >= 0) showRestaurant(index);
+    list.hidden = index >= 0;
+    view.hidden = index < 0;
+    if (scroll && index >= 0) view.scrollIntoView();
+    else if (scroll && wasOpen) document.getElementById("menu").scrollIntoView();
+    wasOpen = index >= 0;
+  }
+  var wasOpen = false;
+  window.addEventListener("hashchange", function () { route(true); });
+
+  function renderMenu(menu) {
+    MENU = menu;
+    RESTAURANTS = restaurantsOf(menu);
+    SLUGS = slugs(RESTAURANTS);
+    renderList();
+    route(/^#restaurant=/.test(location.hash));
   }
 
   function renderCategories(menu, categories, rIndex) {
     var tabList = document.getElementById("menu-tabs");
     var panels = document.getElementById("menu-panels");
-    var cur = menu.currency || "₦";
     clear(tabList);
     clear(panels);
+    tabList.hidden = (categories || []).length < 2; // no tabs needed for a single section
     (categories || []).forEach(function (cat, i) {
       var id = "menu-" + rIndex + "-" + i;
       var tab = el("button", null, cat.name);
@@ -100,7 +171,7 @@
       panel.id = "panel-" + id;
       panel.setAttribute("aria-labelledby", tab.id);
       var ul = el("ul", "menu-list");
-      (cat.items || []).forEach(function (item) {
+      (cat.items || []).filter(function (item) { return item.name; }).forEach(function (item) {
         var li = el("li", (item.available === false ? "sold-out " : "") + (item.image ? "has-img" : ""));
         if (item.image) {
           var img = el("img", "dish-photo"); img.src = item.image; img.alt = item.name || ""; img.loading = "lazy";
@@ -110,7 +181,7 @@
         var head = el("div", "item-head");
         head.appendChild(el("h3", null, item.name));
         head.appendChild(el("span", "price", item.available === false
-          ? "Sold out" : cur + Number(item.price || 0).toLocaleString("en-NG")));
+          ? "Sold out" : money(menu, Number(item.price) || 0)));
         body.appendChild(head);
         if (item.description) body.appendChild(el("p", null, item.description));
         if (item.tags && item.tags.length) {
@@ -201,8 +272,8 @@
   xhr.send();
   function menuFailed(err) {
     if (window.console) console.error(err);
-    clear(document.getElementById("menu-panels"),
-      el("p", "menu-note", "Sorry, the menu couldn't load. Please refresh the page."));
+    clear(document.getElementById("restaurant-list"),
+      el("li", "menu-note", "Sorry, the restaurants couldn't load. Please refresh the page."));
   }
 
   // Helpers ---------------------------------------------------------------

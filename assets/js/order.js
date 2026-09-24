@@ -79,6 +79,7 @@ var RESTAURANT_NAME = "Ogarider";
     return restaurants.map(function (r) {
       return {
         name: r.name || "",
+        description: r.description || "",
         image: r.image || "",
         categories: (r.categories || []).map(function (c) {
           return {
@@ -92,32 +93,126 @@ var RESTAURANT_NAME = "Ogarider";
           };
         }).filter(function (c) { return c.items.length; })
       };
-    }).filter(function (r) { return r.categories.length; });
+    });
   }
 
+  // Web-address name for a restaurant, e.g. "Kilimanjaro Restaurant" -> "kilimanjaro-restaurant".
+  // Must match slugs() in main.js so the homepage's "Order" buttons open the right one.
+  function slugs(restaurants) {
+    var seen = {};
+    return restaurants.map(function (r, i) {
+      var slug = (r.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "restaurant-" + (i + 1);
+      if (seen[slug]) slug += "-" + (i + 1);
+      seen[slug] = true;
+      return slug;
+    });
+  }
+
+  function photoOrLetter(r, className) {
+    if (r.image) {
+      var img = el("img", className); img.src = r.image; img.alt = ""; img.loading = "lazy";
+      return img;
+    }
+    return el("span", className + " is-letter", (r.name || "?").charAt(0).toUpperCase());
+  }
+
+  var RESTAURANTS = [], SLUGS = [];
+
   function renderMenu(restaurants) {
+    RESTAURANTS = restaurants;
+    SLUGS = slugs(restaurants);
+    route();
+    window.addEventListener("hashchange", function () {
+      route();
+      var card = $("menu-title").parentNode;
+      if (card.scrollIntoView) card.scrollIntoView();
+    });
+  }
+
+  // "#restaurant=<name>" in the address opens that restaurant; otherwise the
+  // list of restaurants shows. The phone's Back button returns to the list.
+  function route() {
+    var m = /^#restaurant=(.+)$/.exec(location.hash);
+    var index = m ? SLUGS.indexOf(decodeURIComponent(m[1])) : -1;
+    if (index >= 0) showRestaurant(index);
+    else showList();
+  }
+
+  function inCart(restaurantName) {
+    var n = 0;
+    cartOrder.forEach(function (k) { if (cart[k].restaurant === restaurantName) n += cart[k].qty; });
+    return n;
+  }
+
+  function showList() {
     var picker = $("menu-picker");
+    $("menu-title").textContent = "Pick a restaurant";
+    cameFromList = false;
     clear(picker);
-    if (!restaurants.length) {
+    if (!RESTAURANTS.length) {
       picker.appendChild(el("p", "muted", "Write what you'd like in the note below and we'll confirm on WhatsApp."));
       return;
     }
-    var many = restaurants.length > 1;
-    restaurants.forEach(function (r) {
-      if (many || r.name) {
-        var head = el("div", "picker-restaurant");
-        if (r.image) { var img = el("img"); img.src = r.image; img.alt = ""; img.loading = "lazy"; head.appendChild(img); }
-        head.appendChild(el("h3", null, r.name || "Restaurant"));
-        picker.appendChild(head);
-      }
-      r.categories.forEach(function (section) {
-        picker.appendChild(el("h4", "picker-cat", section.name));
-        var ul = el("ul", "picker-list");
-        section.items.forEach(function (item) { ul.appendChild(pickerItem(r.name, item)); });
-        picker.appendChild(ul);
-      });
+    var ul = el("ul", "rest-list");
+    RESTAURANTS.forEach(function (r, i) {
+      var foods = 0;
+      r.categories.forEach(function (c) { foods += c.items.length; });
+      var li = el("li");
+      var a = el("a", "rest-row");
+      a.href = "#restaurant=" + SLUGS[i];
+      a.appendChild(photoOrLetter(r, "rest-row-img"));
+      var text = el("span", "rest-row-text");
+      text.appendChild(el("span", "rest-row-name", r.name || "Restaurant"));
+      if (r.description) text.appendChild(el("span", "rest-row-desc", r.description));
+      var n = inCart(r.name);
+      text.appendChild(el("span", "rest-row-meta" + (n ? " has-cart" : ""), n
+        ? n + " in your order"
+        : foods ? foods + (foods === 1 ? " food" : " foods") : "Menu coming soon"));
+      a.appendChild(text);
+      a.appendChild(el("span", "rest-row-go", "›"));
+      li.appendChild(a);
+      ul.appendChild(li);
     });
+    picker.appendChild(ul);
   }
+
+  function showRestaurant(index) {
+    var r = RESTAURANTS[index];
+    var picker = $("menu-picker");
+    $("menu-title").textContent = r.name || "Restaurant";
+    clear(picker);
+    var back = el("a", "rest-back", "← All restaurants");
+    back.href = "#";
+    back.addEventListener("click", function (e) {
+      e.preventDefault();
+      // Go back if we came from the list, so the phone's Back button stays tidy.
+      if (history.length > 1 && cameFromList) history.back();
+      else location.hash = "";
+    });
+    picker.appendChild(back);
+    var head = el("div", "rest-head");
+    head.appendChild(photoOrLetter(r, "rest-head-img"));
+    if (r.description) head.appendChild(el("p", "picker-desc", r.description));
+    picker.appendChild(head);
+    if (!r.categories.length) {
+      picker.appendChild(el("p", "muted", "This restaurant's menu is coming soon. Write what you'd like in the note below and we'll confirm on WhatsApp."));
+    }
+    r.categories.forEach(function (section) {
+      if (r.categories.length > 1 || section.name !== "Menu") picker.appendChild(el("h4", "picker-cat", section.name));
+      var ul = el("ul", "picker-list");
+      section.items.forEach(function (item) { ul.appendChild(pickerItem(r.name, item)); });
+      picker.appendChild(ul);
+    });
+    var more = el("a", "rest-more", "+ Add food from another restaurant");
+    more.href = "#";
+    more.addEventListener("click", function (e) { e.preventDefault(); back.click(); });
+    if (RESTAURANTS.length > 1) picker.appendChild(more);
+  }
+  var cameFromList = false;
+  document.addEventListener("click", function (e) {
+    var row = e.target.closest ? e.target.closest(".rest-row") : null;
+    if (row) cameFromList = true;
+  });
 
   function pickerItem(restaurant, item) {
     var key = restaurant + "\u0000" + item.name;
@@ -139,7 +234,8 @@ var RESTAURANT_NAME = "Ogarider";
 
     var stepper = el("div", "stepper");
     var minus = el("button", "icon-btn", "−");
-    var qty = el("span", "stepper-qty", "0");
+    var qty = el("span", "stepper-qty", String(cart[key] ? cart[key].qty : 0));
+    if (cart[key]) li.className += " in-cart";
     var plus = el("button", "icon-btn", "+");
     minus.type = plus.type = "button";
     minus.setAttribute("aria-label", "Remove one " + item.name);
