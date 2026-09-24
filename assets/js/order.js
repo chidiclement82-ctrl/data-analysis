@@ -307,21 +307,7 @@ var RESTAURANT_NAME = "Ogarider";
     s.className = "form-status" + (type ? " " + type : "");
   }
 
-  // Radio group value, without RadioNodeList.value (missing on old browsers).
-  function fulfilment() {
-    var checked = form.querySelector('input[name="fulfilment"]:checked');
-    return checked ? checked.value : "pickup";
-  }
-
   // Details ------------------------------------------------------------------
-  var addressField = form.querySelector(".address-field");
-  form.addEventListener("change", function (e) {
-    if (e.target.name !== "fulfilment") return;
-    var delivery = fulfilment() === "delivery";
-    addressField.hidden = !delivery;
-    form.elements.address.required = delivery;
-  });
-
   // Clear a field's error highlight (and the message) as soon as it's fixed.
   form.addEventListener("input", function (e) {
     if (e.target.hasAttribute("aria-invalid") && e.target.value.trim()) {
@@ -342,7 +328,6 @@ var RESTAURANT_NAME = "Ogarider";
     var f = form.elements;
     var t = totals();
     var note = f.note.value.trim();
-    var delivery = fulfilment() === "delivery";
 
     var firstInvalid = null;
     ["name", "address"].forEach(function (n) {
@@ -378,7 +363,7 @@ var RESTAURANT_NAME = "Ogarider";
     });
     if (t.count) lines.push("", "Total: " + money(t.total));
     lines.push("", "Name: " + f.name.value.trim());
-    lines.push(delivery ? "Delivery to: " + f.address.value.trim() : "Pickup");
+    lines.push("Deliver to: " + f.address.value.trim());
     if (note) lines.push("Note: " + note);
 
     try {
