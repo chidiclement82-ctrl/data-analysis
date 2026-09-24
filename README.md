@@ -52,7 +52,7 @@ For tighter security, use a [fine-grained token](https://github.com/settings/per
 
 ## Order on WhatsApp
 
-Customers pick dishes on `order.html` (the menu and prices come straight from the homepage), enter their name and choose pickup or delivery, then tap **Send on WhatsApp**. WhatsApp opens with the whole order already written, including dishes, quantities, total, name and address. They press send, and the order arrives on the restaurant's WhatsApp, where staff reply as in any normal chat.
+Customers pick dishes on `order.html` (the menu and prices come straight from the homepage), enter their name and delivery address, then tap **Send on WhatsApp**. WhatsApp opens with the whole order already written, including dishes, quantities, total, name and delivery address. Ordering is delivery only. They press send, and the order arrives on the restaurant's WhatsApp, where staff reply as in any normal chat.
 
 There's no database, no login and no monthly cost.
 

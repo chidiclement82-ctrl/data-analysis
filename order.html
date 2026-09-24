@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Order on WhatsApp — Ogarider</title>
-  <meta name="description" content="Pick your dishes and send your order to Ogarider on WhatsApp, for pickup or delivery.">
+  <meta name="description" content="Pick your dishes and send your order to Ogarider on WhatsApp for delivery.">
   <meta name="theme-color" content="#1c1512">
   <link rel="canonical" href="https://ogarider.name.ng/order.html">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -31,7 +31,7 @@
     <section class="app-state" id="state-unavailable" hidden>
       <div class="app-card">
         <h1>Online ordering is coming soon</h1>
-        <p>In the meantime, call us on <a href="tel:+2347059946531">0705 994 6531</a> to order for pickup.</p>
+        <p>In the meantime, call us on <a href="tel:+2347059946531">0705 994 6531</a> to order for delivery.</p>
         <a class="btn" href="./">Back to the website</a>
       </div>
     </section>
@@ -55,16 +55,11 @@
             <label>Your name
               <input name="name" autocomplete="name" maxlength="80" required>
             </label>
-            <fieldset class="choice">
-              <legend>How would you like it?</legend>
-              <label><input type="radio" name="fulfilment" value="pickup" checked> Pickup</label>
-              <label><input type="radio" name="fulfilment" value="delivery"> Delivery</label>
-            </fieldset>
-            <label class="address-field" hidden>Delivery address
-              <textarea name="address" rows="2" maxlength="300" autocomplete="street-address"></textarea>
+            <label>Delivery address
+              <textarea name="address" rows="2" maxlength="300" autocomplete="street-address" placeholder="House number, street, area, nearest landmark" required></textarea>
             </label>
             <label><span>Note for the kitchen <span class="optional">(optional)</span></span>
-              <textarea name="note" rows="2" maxlength="500" placeholder="Allergies, pickup time, anything else…"></textarea>
+              <textarea name="note" rows="2" maxlength="500" placeholder="Allergies, delivery time, anything else…"></textarea>
             </label>
           </section>
 
