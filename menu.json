@@ -38,6 +38,17 @@
         "assets/images/menu/kilimanjaro-restaurant-food-1790248828553.jpg",
         "assets/images/menu/kilimanjaro-restaurant-food-1790248831061.jpg"
       ]
+    },
+    {
+      "name": "Genesis Pizza",
+      "description": "Hot, cheesy pizza loaded with flavors",
+      "image": "",
+      "categories": [
+        {
+          "name": "Menu",
+          "items": []
+        }
+      ]
     }
   ]
 }
