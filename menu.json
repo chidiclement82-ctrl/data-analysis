@@ -48,6 +48,13 @@
           "name": "Menu",
           "items": []
         }
+      ],
+      "gallery": [
+        "assets/images/menu/genesis-pizza-food-1790272439011.jpg",
+        "assets/images/menu/genesis-pizza-food-1790272441628.jpg",
+        "assets/images/menu/genesis-pizza-food-1790272443738.jpg",
+        "assets/images/menu/genesis-pizza-food-1790272445512.jpg",
+        "assets/images/menu/genesis-pizza-food-1790272447769.jpg"
       ]
     }
   ]
