@@ -80,6 +80,7 @@ var RESTAURANT_NAME = "Ogarider";
       return {
         name: r.name || "",
         description: r.description || "",
+        gallery: r.gallery || [],
         image: r.image || "",
         categories: (r.categories || []).map(function (c) {
           return {
@@ -144,6 +145,29 @@ var RESTAURANT_NAME = "Ogarider";
     return n;
   }
 
+  // Food photos that slide sideways by themselves (added on the admin page).
+  // The photos are repeated to fill the width, then the whole strip is doubled
+  // and moved left by half its length, so the loop never shows a gap.
+  function foodSlider(r) {
+    var photos = (r.gallery || []).filter(function (p) { return p; });
+    if (!photos.length) return null;
+    var slider = el("div", "food-slider");
+    var track = el("div", "food-slider-track");
+    var half = [];
+    while (half.length < 12) half = half.concat(photos);
+    half.concat(half).forEach(function (src, i) {
+      var img = el("img"); img.src = src; img.alt = i < photos.length ? "Food at " + (r.name || "this restaurant") : "";
+      if (i >= photos.length) img.setAttribute("aria-hidden", "true");
+      track.appendChild(img);
+    });
+    if (photos.length > 1) {
+      track.className += " is-moving";
+      track.style.animationDuration = (half.length * 3) + "s";
+    }
+    slider.appendChild(track);
+    return slider;
+  }
+
   function showList() {
     var picker = $("menu-picker");
     $("menu-title").textContent = "Pick a restaurant";
@@ -193,6 +217,8 @@ var RESTAURANT_NAME = "Ogarider";
     var head = el("div", "rest-head");
     head.appendChild(photoOrLetter(r, "rest-head-img"));
     if (r.description) head.appendChild(el("p", "picker-desc", r.description));
+    var slider = foodSlider(r);
+    if (slider) head.appendChild(slider);
     picker.appendChild(head);
     if (!r.categories.length) {
       picker.appendChild(el("p", "muted", "This restaurant's menu is coming soon. Write what you'd like in the note below and we'll confirm on WhatsApp."));

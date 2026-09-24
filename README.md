@@ -27,6 +27,7 @@ All restaurants, foods, photos and prices live in [`menu.json`](menu.json). The 
 On `admin.html` you can:
 - Set the **homepage photos**: the top photo behind "FOOD IS READY" and the "Our kitchen" photo next to Our Story.
 - **Add restaurants**, each with a name, a short description and a photo or logo. When there's more than one, customers pick a restaurant on the homepage.
+- Add up to **5 food photos per restaurant**. They slide sideways by themselves under the restaurant's name and description when a customer opens its menu.
 - **Add foods under each restaurant**, grouped in sections, with a name, price (in naira), description and **photo**. Photos are shrunk automatically so the site stays fast.
 - Mark a food **sold out**. It stays on the menu but can't be ordered.
 - Tag foods **Spicy**, **Popular** or **Vegetarian**.

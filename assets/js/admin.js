@@ -320,6 +320,74 @@ function photoField(obj, label, nameOf, key = "image") {
   return wrap;
 }
 
+// Food photos that slide across the top of a restaurant's menu (up to 5).
+const GALLERY_MAX = 5;
+function galleryField(r) {
+  if (!Array.isArray(r.gallery)) r.gallery = [];
+  const wrap = el("div", "admin-gallery");
+  const label = el("span", "admin-photo-label");
+  const strip = el("div", "admin-gallery-strip");
+  const status = el("span", "admin-photo-status");
+  const input = el("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.multiple = true;
+  input.hidden = true;
+  const pick = el("button", "btn btn-small btn-outline", "+ Add food photos");
+  pick.type = "button";
+
+  function paint() {
+    label.textContent = "Food photos (" + r.gallery.length + " of " + GALLERY_MAX + "). They slide across the top of this restaurant's menu.";
+    strip.replaceChildren();
+    r.gallery.forEach((path, i) => {
+      const cell = el("div", "admin-gallery-cell");
+      const img = el("img");
+      img.src = previews.get(path) || path;
+      img.alt = "";
+      const del = el("button", "admin-gallery-del", "×");
+      del.type = "button";
+      del.setAttribute("aria-label", "Remove food photo " + (i + 1));
+      del.addEventListener("click", () => { r.gallery.splice(i, 1); changed(); paint(); });
+      cell.append(img, del);
+      strip.appendChild(cell);
+    });
+    pick.hidden = r.gallery.length >= GALLERY_MAX;
+  }
+
+  pick.addEventListener("click", () => input.click());
+  input.addEventListener("change", async () => {
+    const files = Array.from(input.files).filter((f) => f.type.startsWith("image/"))
+      .slice(0, GALLERY_MAX - r.gallery.length);
+    input.value = "";
+    if (!files.length) return;
+    uploading++;
+    pick.disabled = true;
+    let failed = 0;
+    // One at a time: GitHub rejects several uploads to the same branch at once.
+    for (let i = 0; i < files.length; i++) {
+      status.textContent = "Uploading photo " + (i + 1) + " of " + files.length + "…";
+      try {
+        r.gallery.push(await uploadPhoto(files[i], (r.name || "restaurant") + " food"));
+        changed();
+        paint();
+      } catch (err) {
+        console.error(err);
+        failed++;
+      }
+    }
+    uploading--;
+    pick.disabled = false;
+    status.textContent = failed
+      ? "Couldn't upload " + failed + " photo" + (failed > 1 ? "s" : "") + ". Check your connection and try again."
+      : "Photos added. Tap Save & publish to show them.";
+    paint();
+  });
+
+  wrap.append(label, strip, pick, status, input);
+  paint();
+  return wrap;
+}
+
 // Editor --------------------------------------------------------------------
 function itemRow(cat, item, i) {
   const row = el("li", "admin-item" + (item.available === false ? " sold-out" : ""));
@@ -396,7 +464,7 @@ function restaurantBar() {
   const add = el("button", "btn btn-small", "+ Add restaurant");
   add.type = "button";
   add.addEventListener("click", () => {
-    menu.restaurants.push({ name: "", description: "", image: "", categories: [{ name: "Menu", items: [] }] });
+    menu.restaurants.push({ name: "", description: "", image: "", gallery: [], categories: [{ name: "Menu", items: [] }] });
     current = menu.restaurants.length - 1;
     changed(); render();
     bar.querySelector(".restaurant-name input").focus();
@@ -415,6 +483,7 @@ function restaurantBar() {
   card.appendChild(nameField);
   card.appendChild(field("Short description (optional)", textInput(r, "description", "e.g. Home-style soups and swallow", 160)));
   card.appendChild(photoField(r, "Restaurant photo or logo", () => r.name));
+  card.appendChild(galleryField(r));
 
   const actions = el("div", "admin-actions");
   const del = el("button", "link-btn danger", "Delete restaurant");
