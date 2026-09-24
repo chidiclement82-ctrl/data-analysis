@@ -32,6 +32,8 @@ On `admin.html` you can:
 - Tag foods **Spicy**, **Popular** or **Vegetarian**.
 - Delete and reorder foods, sections and restaurants.
 
+**How customers see it:** the homepage shows every restaurant as a card, one under another. Customers scroll up and down, tap a restaurant to see its menu, and tap **← All restaurants** to go back. The order page works the same way, and customers can add foods from several restaurants to one order. A restaurant with no foods yet shows "Menu coming soon".
+
 Tap **Save & publish** when you're done. The website updates in about a minute. Orders that include foods from several restaurants arrive on WhatsApp grouped by restaurant.
 
 **Signing in (once per phone or computer):** the admin page signs in with a GitHub access token, and saving writes `menu.json` straight into this repository.
