@@ -25,7 +25,15 @@ jobs:
       - name: Collect site files
         run: |
           mkdir _site
-          cp -r index.html order.html admin.html menu.json 404.html robots.txt sitemap.xml site.webmanifest .nojekyll assets _site/
+          # Every page (*.html) is published, so a new page can't be forgotten here.
+          cp -r *.html menu.json robots.txt sitemap.xml site.webmanifest .nojekyll assets flyer _site/
+      - name: Make phones load the newest scripts and styles after each update
+        run: |
+          # Adds ?v=<commit> to our own .css/.js links, so a browser that still
+          # remembers the old files fetches the new ones instead.
+          v="${GITHUB_SHA::8}"
+          sed -i -E "s#(href|src)=\"(assets/[^\"?]+\.(css|js))\"#\1=\"\2?v=$v\"#g" _site/*.html
+          grep -o 'assets/[^"]*?v=[^"]*' _site/*.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
