@@ -7,13 +7,36 @@
   "restaurants": [
     {
       "name": "Kilimanjaro Restaurant",
-      "description": "Fast food & local dishes. Rice, chicken, shawarma, pastries. Best for quick office lunch.",
+      "description": "",
       "image": "assets/images/menu/kilimanjaro-restaurant-1790123879158.jpg",
       "categories": [
         {
           "name": "Menu",
-          "items": []
+          "items": [
+            {
+              "name": "White rice and stew",
+              "description": "",
+              "price": 2000,
+              "tags": [],
+              "available": true,
+              "image": ""
+            },
+            {
+              "name": "Chicken ",
+              "description": "",
+              "price": 5000,
+              "tags": [],
+              "available": true,
+              "image": ""
+            }
+          ]
         }
+      ],
+      "gallery": [
+        "assets/images/menu/kilimanjaro-restaurant-food-1790248823542.jpg",
+        "assets/images/menu/kilimanjaro-restaurant-food-1790248826683.jpg",
+        "assets/images/menu/kilimanjaro-restaurant-food-1790248828553.jpg",
+        "assets/images/menu/kilimanjaro-restaurant-food-1790248831061.jpg"
       ]
     }
   ]
