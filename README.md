@@ -16,24 +16,25 @@ After that, every change pushed to `main` goes live automatically.
 
 | Who | Link | What it's for |
 |---|---|---|
-| Everyone | `https://ogarider.name.ng/` | The main website |
-| Customers | `https://ogarider.name.ng/order.html` | Order food on WhatsApp. Linked from the "Order on WhatsApp" buttons on the homepage |
-| Admin | `https://ogarider.name.ng/admin.html` | Edit dishes and prices. Linked as "Admin" in the footer |
+| Everyone | `https://ogarider.name.ng/` | The homepage: two buttons, Order on WhatsApp and View restaurants |
+| Customers | `https://ogarider.name.ng/restaurants.html` | All restaurants; tap one to see its menu |
+| Customers | `https://ogarider.name.ng/order.html` | Order food on WhatsApp. Linked from the green button on the homepage |
+| Admin | `https://ogarider.name.ng/admin.html` | Edit restaurants, dishes, prices and photos (not linked from the site; bookmark it) |
 
 ## Editing the menu (admin page)
 
-All restaurants, foods, photos and prices live in [`menu.json`](menu.json). The homepage menu and the order page both read it, and the admin page edits it.
+All restaurants, foods, photos and prices live in [`menu.json`](menu.json). The restaurants page and the order page both read it, and the admin page edits it.
 
 On `admin.html` you can:
-- Set the **homepage photos**: the top photo behind "FOOD IS READY" and the "Our kitchen" photo next to Our Story.
-- **Add restaurants**, each with a name, a short description and a photo or logo. When there's more than one, customers pick a restaurant on the homepage.
+- Set the **homepage photo**: the background behind "FOOD IS READY" and the two buttons.
+- **Add restaurants**, each with a name, a short description and a photo or logo. When there's more than one, customers pick a restaurant on the restaurants page.
 - Add up to **5 food photos per restaurant**. They slide sideways by themselves under the restaurant's name and description when a customer opens its menu.
 - **Add foods under each restaurant**, grouped in sections, with a name, price (in naira), description and **photo**. Photos are shrunk automatically so the site stays fast.
 - Mark a food **sold out**. It stays on the menu but can't be ordered.
 - Tag foods **Spicy**, **Popular** or **Vegetarian**.
 - Delete and reorder foods, sections and restaurants.
 
-**How customers see it:** the homepage shows every restaurant as a card, one under another. Customers scroll up and down, tap a restaurant to see its menu, and tap **← All restaurants** to go back. The order page works the same way, and customers can add foods from several restaurants to one order. A restaurant with no foods yet shows "Menu coming soon".
+**How customers see it:** the restaurants page shows every restaurant as a card, one under another. Customers scroll up and down, tap a restaurant to see its menu, and tap **← All restaurants** to go back. The order page works the same way, and customers can add foods from several restaurants to one order. A restaurant with no foods yet shows "Menu coming soon".
 
 Tap **Save & publish** when you're done. The website updates in about a minute. Orders that include foods from several restaurants arrive on WhatsApp grouped by restaurant.
 
@@ -64,18 +65,18 @@ Dishes marked sold out on the admin page show on the order page but can't be pic
 
 Everything you'd normally change is in the files below. Look for comments marked `EDIT` in each one.
 
-### `index.html`: all the words, menu and details
+### `index.html`: the homepage
+
+The homepage does one job: it shows the logo, **FOOD IS READY** and two buttons, **ORDER ON WHATSAPP** (opens `order.html`) and **VIEW RESTAURANTS** (opens `restaurants.html`). The background photo is set on the admin page.
 
 | To change… | Find… |
 |---|---|
-| Restaurant name | `Oga<em>rider</em>` in the header, footer, `<title>` and share tags at the top |
-| Headline and intro | the `HERO` section |
-| Your story | the `ABOUT` section |
-| Menu items, prices and sections | the admin page (`admin.html`), or edit `menu.json` directly |
-| Reviews / quotes | the `QUOTES` section |
-| Phone and address | the `VISIT` section and footer; the WhatsApp number is in `assets/js/order.js` |
-| **Opening hours** | the hours table in `VISIT`. Only change `data-open` / `data-close` (24-hour time, e.g. `17:00`), or write `data-closed` for a day off. The displayed times and the "Open now" badge both update from this automatically. Late closing such as `data-close="01:00"` works too |
-| Google search info | the `application/ld+json` block at the top. Keep name, phone, address and hours in step with the page |
+| Headline or button words | the `<main class="hero landing">` block |
+| Google search info (name, phone, hours) | the `application/ld+json` block at the top |
+
+### `restaurants.html`: the restaurant list
+
+Lists every restaurant from `menu.json`. Customers tap one to see its menu. The words above the list are in the `section-head` block.
 
 ### `assets/js/order.js`: WhatsApp orders
 
@@ -84,15 +85,6 @@ Everything you'd normally change is in the files below. Look for comments marked
 ### `assets/css/style.css`: colours and fonts
 
 The `:root` block at the top holds the brand colours (`--ember` is the main accent) and fonts.
-
-## Photos
-
-Put photos in `assets/images/`; `.jpg` files around 1600px wide work well. The coloured "art" blocks are placeholders:
-
-- **About section:** replace the contents of `<div class="art-panel art-fire" …>` with
-  `<img src="assets/images/kitchen.jpg" alt="Describe the photo">`.
-- **Event cards:** replace `<div class="card-art art-wine" aria-hidden="true"></div>` with
-  `<img class="card-art" src="assets/images/wine.jpg" alt="…" style="object-fit:cover;width:100%">`.
 
 ## Share image and icons
 
@@ -127,12 +119,14 @@ python3 -m http.server 8000
 ## Files
 
 ```
-index.html            the whole site
+index.html            homepage: two buttons
+restaurants.html      restaurant list and menus
 order.html            order on WhatsApp
 404.html              "page not found" page
 assets/css/style.css  design
 assets/css/chat.css   design for the order page
-assets/js/main.js     menu tabs, opening hours
+assets/js/home.js     homepage photo
+assets/js/restaurants.js  restaurant list and menus
 assets/js/order.js    order page and your WhatsApp number
 admin.html            menu editor (admin)
 assets/js/admin.js    menu editor code

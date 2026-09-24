@@ -1,25 +1,6 @@
-/* Ogarider — site behaviour */
+/* Ogarider — restaurants page (restaurants.html): the list of restaurants and each one's menu */
 (function () {
   "use strict";
-
-  // Header background on scroll -----------------------------------------
-  var header = document.querySelector(".site-header");
-  function onScroll() { header.classList.toggle("scrolled", window.scrollY > 40); }
-  onScroll();
-  window.addEventListener("scroll", onScroll, { passive: true });
-
-  // Mobile navigation ---------------------------------------------------
-  var toggle = document.querySelector(".nav-toggle");
-  var nav = document.getElementById("site-nav");
-  function setNav(open) {
-    toggle.setAttribute("aria-expanded", String(open));
-    nav.classList.toggle("open", open);
-  }
-  toggle.addEventListener("click", function () {
-    setNav(toggle.getAttribute("aria-expanded") !== "true");
-  });
-  nav.addEventListener("click", function (e) { if (e.target.closest("a")) setNav(false); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") setNav(false); });
 
   // Menu, loaded from menu.json (edited on admin.html) ------------------
   function el(tag, className, text) {
@@ -249,39 +230,6 @@
     if (tabs.length) selectTab(tabs[0]);
   }
 
-  // Homepage photo (set on the admin page). Shown once it has loaded, so the
-  // top of the page never flashes an empty background.
-  function showHeroPhoto(menu) {
-    var src = menu.site && menu.site.image;
-    if (!src) return;
-    var hero = document.querySelector(".hero");
-    var img = new Image();
-    img.onload = function () {
-      // Use the full address: a relative url() inside a CSS variable would be
-      // resolved against the stylesheet's folder, not the page.
-      hero.style.setProperty("--hero-photo", 'url("' + img.src + '")');
-      hero.classList.add("has-photo");
-    };
-    img.src = src;
-  }
-
-  // "Our kitchen" photo in the Our Story section (set on the admin page).
-  function showKitchenPhoto(menu) {
-    var src = menu.site && menu.site.kitchenImage;
-    if (!src) return;
-    var panel = document.getElementById("kitchen-photo");
-    var img = new Image();
-    img.alt = "Our kitchen";
-    img.onload = function () {
-      panel.classList.remove("art-fire");
-      panel.classList.add("has-photo");
-      panel.removeAttribute("role");
-      panel.removeAttribute("aria-label");
-      panel.insertBefore(img, panel.firstChild);
-    };
-    img.src = src;
-  }
-
   // The timestamp skips the browser/CDN cache so price changes show right away.
   // XMLHttpRequest rather than fetch() so older phone browsers load it too.
   var xhr = new XMLHttpRequest();
@@ -290,7 +238,7 @@
     try {
       if (xhr.status !== 200) throw new Error("HTTP " + xhr.status);
       var menu = JSON.parse(xhr.responseText);
-      showHeroPhoto(menu); showKitchenPhoto(menu); renderMenu(menu);
+      renderMenu(menu);
     } catch (err) { menuFailed(err); }
   };
   xhr.onerror = menuFailed;
@@ -301,63 +249,4 @@
       el("li", "menu-note", "Sorry, the restaurants couldn't load. Please refresh the page."));
   }
 
-  // Helpers ---------------------------------------------------------------
-  function toMinutes(hhmm) { var p = hhmm.split(":"); return +p[0] * 60 + +p[1]; }
-  // Closing times past midnight (e.g. "01:00") count as the next day.
-  function closeMinutes(hours) {
-    var open = toMinutes(hours[0]), close = toMinutes(hours[1]);
-    return close <= open ? close + 24 * 60 : close;
-  }
-  function formatTime(mins) {
-    var h = Math.floor(mins / 60) % 24, m = mins % 60;
-    var suffix = h >= 12 ? "pm" : "am";
-    var h12 = h % 12 || 12;
-    return h12 + ":" + (m < 10 ? "0" : "") + m + suffix;
-  }
-
-
-  // Opening hours, read from the table in index.html -----------------------
-  // HOURS[day] = [open, close] in "HH:MM", or null when closed (0 = Sunday).
-  var HOURS = {};
-  Array.prototype.forEach.call(document.querySelectorAll(".hours tr[data-day]"), function (row) {
-    var day = +row.dataset.day;
-    var cell = row.querySelector("td");
-    if (row.hasAttribute("data-closed") || !row.dataset.open || !row.dataset.close) {
-      HOURS[day] = null;
-      cell.textContent = "Closed";
-    } else {
-      HOURS[day] = [row.dataset.open, row.dataset.close];
-      cell.textContent = formatTime(toMinutes(row.dataset.open)) + " – " + formatTime(toMinutes(row.dataset.close));
-    }
-  });
-
-  // Open-now badge + highlight today ------------------------------------
-  var now = new Date();
-  var today = now.getDay();
-  var todayRow = document.querySelector('.hours tr[data-day="' + today + '"]');
-  if (todayRow) todayRow.classList.add("today");
-
-  var badge = document.getElementById("open-now");
-  var hoursToday = HOURS[today];
-  var nowMins = now.getHours() * 60 + now.getMinutes();
-  var yesterday = HOURS[(today + 6) % 7];
-  var open = (!!hoursToday && nowMins >= toMinutes(hoursToday[0]) && nowMins < closeMinutes(hoursToday)) ||
-    // still open from a late night that started yesterday
-    (!!yesterday && closeMinutes(yesterday) > 24 * 60 && nowMins < closeMinutes(yesterday) - 24 * 60);
-  badge.textContent = open ? "Open now" : "Closed now";
-  badge.classList.add(open ? "is-open" : "is-closed");
-
-  // Footer year -----------------------------------------------------------
-  document.getElementById("year").textContent = now.getFullYear();
-
-  // Reveal-on-scroll ------------------------------------------------------
-  if ("IntersectionObserver" in window) {
-    var els = document.querySelectorAll(".section-head, .split > *, .card, .quote-grid figure");
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) { entry.target.classList.add("visible"); io.unobserve(entry.target); }
-      });
-    }, { threshold: 0.12 });
-    els.forEach(function (el) { el.classList.add("reveal"); io.observe(el); });
-  }
 })();

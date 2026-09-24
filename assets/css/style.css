@@ -495,3 +495,35 @@ p { margin: 0 0 1em; }
   .food-slider { overflow-x: auto; }
   .food-slider-track.is-moving { animation: none; }
 }
+
+/* Homepage: logo, headline and two buttons, nothing else ------------------ */
+.landing { justify-content: center; text-align: center; padding: 40px 20px; }
+.landing-inner { position: relative; width: min(520px, 100%); display: flex; flex-direction: column; align-items: center; }
+.landing-brand { display: flex; align-items: center; gap: 12px; font: 600 2.2rem/1 var(--font-display); color: var(--cream); }
+.landing-brand img { width: 64px; height: 64px; }
+.landing-brand em { color: var(--gold); }
+.landing h1 { margin: 28px 0 40px; font-size: clamp(3rem, 13vw, 5.6rem); line-height: 0.95; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
+.landing-actions { width: 100%; display: flex; flex-direction: column; gap: 16px; }
+.btn-landing {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; min-height: 64px; padding: 16px 24px; border-radius: 999px;
+  font: 700 1.1rem/1.2 var(--font-body); letter-spacing: 0.06em; text-decoration: none;
+  transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
+}
+.btn-landing:active { transform: scale(0.98); }
+.btn-landing:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.btn-landing-wa {
+  min-height: 76px; font-size: clamp(1rem, 4.8vw, 1.25rem); letter-spacing: 0.03em; white-space: nowrap; padding: 16px 18px;
+  background: #1fa855; color: #fff; box-shadow: 0 10px 30px rgba(31, 168, 85, 0.45);
+}
+.btn-landing-wa:hover { background: #178a45; color: #fff; }
+.btn-landing-wa svg { width: 28px; height: 28px; flex: none; }
+.btn-landing-alt { background: rgba(28, 21, 18, 0.55); color: var(--cream); border: 2px solid rgba(247, 241, 232, 0.7); }
+.btn-landing-alt:hover { background: rgba(247, 241, 232, 0.12); color: #fff; border-color: #fff; }
+
+/* Restaurants page -------------------------------------------------------- */
+.sticky-header { position: sticky; top: 0; z-index: 20; }
+.app-header .header-wa { background: #1fa855; border-color: #1fa855; color: #fff; font-weight: 600; }
+.app-header .header-wa:hover { background: #178a45; }
+.restaurants-page { min-height: calc(100vh - 60px); padding-top: 40px; }
+.restaurants-page .section-head { margin-bottom: 32px; }

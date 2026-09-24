@@ -47,170 +47,28 @@
     ],
     "acceptsReservations": "False",
     "url": "https://ogarider.name.ng/",
-    "hasMenu": "https://ogarider.name.ng/#menu"
+    "hasMenu": "https://ogarider.name.ng/restaurants.html"
   }
   </script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-
-  <header class="site-header" id="top">
-    <div class="container nav-wrap">
-      <a class="brand" href="#top" aria-label="Ogarider home">
-        <img class="brand-mark" src="assets/logo-mark.svg" alt="" width="34" height="34">
+  <!-- The homepage does one job: send people to order, or to browse restaurants.
+       The background photo is set on the admin page (Homepage photo). -->
+  <main class="hero landing" id="main">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="landing-inner">
+      <div class="landing-brand">
+        <img src="assets/logo-mark.svg" alt="" width="64" height="64">
         <span>Oga<em>rider</em></span>
-      </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">
-        <span class="sr-only">Menu</span>
-        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-      </button>
-      <nav id="site-nav" class="site-nav" aria-label="Main">
-        <a href="#about">Our Story</a>
-        <a href="#menu">Restaurants</a>
-        <a href="#visit">Contact</a>
-        <a class="btn btn-small" href="order.html">Order Now</a>
-      </nav>
+      </div>
+      <h1>FOOD IS READY</h1>
+      <div class="landing-actions">
+        <a class="btn-landing btn-landing-wa" href="order.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span>ORDER ON WHATSAPP</span></a>
+        <a class="btn-landing btn-landing-alt" href="restaurants.html">VIEW RESTAURANTS</a>
+      </div>
     </div>
-  </header>
-
-  <main id="main">
-    <!-- HERO -->
-    <section class="hero">
-      <div class="hero-glow" aria-hidden="true"></div>
-      <div class="container hero-inner">
-        <p class="eyebrow">Ogarider · Authentic Nigerian kitchen</p>
-        <h1>FOOD IS READY<br><em>Cooked fresh. Served hot.</em></h1>
-        <p class="lede">Smoky party jollof, rich soups with swallow, hot suya and pepper soup, and ice-cold Chapman and zobo. Order on WhatsApp and we deliver it hot to your door.</p>
-        <div class="hero-actions">
-          <a class="btn" href="order.html">Order on WhatsApp</a>
-          <a class="btn btn-ghost" href="#menu">See Restaurants</a>
-        </div>
-        <ul class="hero-facts">
-          <li><strong>Every day</strong><span>8:00am – 7:00pm</span></li>
-          <li><strong>Delivery</strong><span>Hot to your door</span></li>
-          <li><strong>Order</strong><span>On WhatsApp</span></li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ABOUT -->
-    <section class="section" id="about">
-      <div class="container split">
-        <div class="art-panel art-fire" id="kitchen-photo" role="img" aria-label="Our kitchen">
-          <!-- The photo is set on the admin page (Homepage photos → "Our kitchen" photo). -->
-          <span class="art-caption">Our kitchen</span>
-        </div>
-        <div>
-          <p class="eyebrow">Our Story</p>
-          <h2>Home-style Nigerian food, cooked fresh</h2>
-          <p>Ogarider started with a simple idea: cook Nigerian food the way it tastes at home, with fresh ingredients from the market every morning and no shortcuts.</p>
-          <p>From party jollof to egusi, afang and banga, every pot is made fresh daily. Order on WhatsApp and we'll bring it to you, hot and fresh.</p>
-          <dl class="stats">
-            <div><dt>20+</dt><dd>Dishes on the menu</dd></div>
-            <div><dt>6</dt><dd>Soups every day</dd></div>
-            <div><dt>100%</dt><dd>Cooked fresh daily</dd></div>
-          </dl>
-        </div>
-      </div>
-    </section>
-
-    <!-- MENU -->
-    <section class="section section-alt" id="menu">
-      <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">Restaurants</p>
-          <h2>Where are you eating today?</h2>
-          <p>Scroll through our restaurants and tap one to see its menu. Prices in naira.</p>
-        </div>
-
-        <!-- Restaurants and menus are loaded from menu.json. Edit them on admin.html (see README). -->
-        <ul class="restaurant-list" id="restaurant-list" aria-label="Restaurants">
-          <li class="menu-note">Loading restaurants…</li>
-        </ul>
-
-        <div class="restaurant-view" id="restaurant-view" hidden>
-          <a class="restaurant-back" href="#menu">← All restaurants</a>
-          <div class="restaurant-head" id="restaurant-info"></div>
-          <div class="tabs" role="tablist" aria-label="Menu sections" id="menu-tabs"></div>
-          <div id="menu-panels"></div>
-          <div class="restaurant-order">
-            <a class="btn" id="restaurant-order-btn" href="order.html">Order on WhatsApp</a>
-            <a class="btn btn-outline" href="#menu">See other restaurants</a>
-          </div>
-          <p class="legend"><span class="tag tag-spicy">Spicy</span> Hot and peppery <span class="tag tag-popular">Popular</span> Customer favourite <span class="tag">Vegetarian</span> No meat or fish</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- QUOTES -->
-    <section class="section quotes">
-      <div class="container quote-grid">
-        <figure>
-          <blockquote>"The best jollof in town, smoky like a real party jollof."</blockquote>
-          <figcaption>— City Food Guide</figcaption>
-        </figure>
-        <figure>
-          <blockquote>"The egusi and pounded yam took me straight back home."</blockquote>
-          <figcaption>— The Weekend Table</figcaption>
-        </figure>
-        <figure>
-          <blockquote>"We've been back every month since it opened."</blockquote>
-          <figcaption>— A happy regular</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- VISIT -->
-    <section class="section" id="visit">
-      <div class="container split split-top">
-        <div>
-          <p class="eyebrow">Opening hours &amp; contact</p>
-          <h2>Contact us</h2>
-          <p><a href="tel:+2347059946531">0705 994 6531</a><br>
-             <a href="https://wa.me/2347059946531" target="_blank" rel="noopener">WhatsApp us</a></p>
-        </div>
-        <div>
-          <h3 class="hours-title">Opening Hours <span class="open-now" id="open-now"></span></h3>
-          <!-- EDIT HOURS HERE ONLY: use 24-hour times in data-open / data-close,
-               or data-closed for days off. The "Open now" badge and the
-               times shown are worked out from these. -->
-          <table class="hours">
-            <tbody>
-              <tr data-day="1" data-open="08:00" data-close="19:00"><th scope="row">Monday</th><td>8:00am – 7:00pm</td></tr>
-              <tr data-day="2" data-open="08:00" data-close="19:00"><th scope="row">Tuesday</th><td>8:00am – 7:00pm</td></tr>
-              <tr data-day="3" data-open="08:00" data-close="19:00"><th scope="row">Wednesday</th><td>8:00am – 7:00pm</td></tr>
-              <tr data-day="4" data-open="08:00" data-close="19:00"><th scope="row">Thursday</th><td>8:00am – 7:00pm</td></tr>
-              <tr data-day="5" data-open="08:00" data-close="19:00"><th scope="row">Friday</th><td>8:00am – 7:00pm</td></tr>
-              <tr data-day="6" data-open="08:00" data-close="19:00"><th scope="row">Saturday</th><td>8:00am – 7:00pm</td></tr>
-              <tr data-day="0" data-open="08:00" data-close="19:00"><th scope="row">Sunday</th><td>8:00am – 7:00pm</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-grid">
-      <div>
-        <a class="brand" href="#top">
-          <img class="brand-mark" src="assets/logo-mark.svg" alt="" width="34" height="34">
-          <span>Oga<em>rider</em></span>
-        </a>
-        <p class="muted">Authentic Nigerian kitchen · Order on WhatsApp.</p>
-      </div>
-    </div>
-    <div class="container footer-base">
-      <p class="muted">© <span id="year">2026</span> Ogarider. All rights reserved.</p>
-      <span><a class="muted" href="admin.html" rel="nofollow">Admin</a> · <a class="muted" href="#top">Back to top ↑</a></span>
-    </div>
-  </footer>
-
-  <a class="chat-fab" href="order.html" aria-label="Order food on WhatsApp">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/></svg>
-    <span>Order on WhatsApp</span>
-  </a>
-
-  <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/home.js" defer></script>
 </body>
 </html>
