@@ -518,8 +518,6 @@ p { margin: 0 0 1em; }
 }
 .btn-landing-wa:hover { background: #178a45; color: #fff; }
 .btn-landing-wa svg { width: 28px; height: 28px; flex: none; }
-.btn-landing-alt { background: rgba(28, 21, 18, 0.55); color: var(--cream); border: 2px solid rgba(247, 241, 232, 0.7); }
-.btn-landing-alt:hover { background: rgba(247, 241, 232, 0.12); color: #fff; border-color: #fff; }
 
 /* Restaurants page -------------------------------------------------------- */
 .sticky-header { position: sticky; top: 0; z-index: 20; }
