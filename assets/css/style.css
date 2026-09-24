@@ -478,3 +478,20 @@ p { margin: 0 0 1em; }
 .art-panel.has-photo::before { display: none; }
 .art-panel.has-photo img { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
 .art-panel.has-photo .art-caption { z-index: 1; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+
+/* Food photos sliding across a restaurant's menu page --------------------- */
+.food-slider { overflow: hidden; margin-top: 16px; border-radius: 12px; }
+.food-slider-track { display: flex; width: max-content; }
+.food-slider-track img {
+  flex: none; width: 116px; height: 116px; object-fit: cover; margin-right: 10px; /* margin, not gap, keeps the loop seamless */
+  border-radius: 12px; background: rgba(247, 241, 232, 0.12);
+}
+.food-slider-track.is-moving { animation: food-slide 36s linear infinite; }
+.food-slider:hover .food-slider-track { animation-play-state: paused; }
+@keyframes food-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (max-width: 520px) { .food-slider-track img { width: 96px; height: 96px; } }
+/* People who turn off motion on their phone can swipe through instead. */
+@media (prefers-reduced-motion: reduce) {
+  .food-slider { overflow-x: auto; }
+  .food-slider-track.is-moving { animation: none; }
+}
