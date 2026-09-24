@@ -16,8 +16,8 @@ After that, every change pushed to `main` goes live automatically.
 
 | Who | Link | What it's for |
 |---|---|---|
-| Everyone | `https://ogarider.name.ng/` | The homepage: two buttons, Order on WhatsApp and View restaurants |
-| Customers | `https://ogarider.name.ng/restaurants.html` | All restaurants; tap one to see its menu |
+| Everyone | `https://ogarider.name.ng/` | The homepage: one button, Order on WhatsApp |
+| Customers | `https://ogarider.name.ng/restaurants.html` | All restaurants; tap one to see its menu (not linked from the homepage; share the link directly) |
 | Customers | `https://ogarider.name.ng/order.html` | Order food on WhatsApp. Linked from the green button on the homepage |
 | Admin | `https://ogarider.name.ng/admin.html` | Edit restaurants, dishes, prices and photos (not linked from the site; bookmark it) |
 
@@ -67,7 +67,7 @@ Everything you'd normally change is in the files below. Look for comments marked
 
 ### `index.html`: the homepage
 
-The homepage does one job: it shows the logo, **FOOD IS READY** and two buttons, **ORDER ON WHATSAPP** (opens `order.html`) and **VIEW RESTAURANTS** (opens `restaurants.html`). The background photo is set on the admin page.
+The homepage does one job: it shows the logo, **FOOD IS READY** and one big green **ORDER ON WHATSAPP** button (opens `order.html`, where customers pick a restaurant and their food). The background photo is set on the admin page.
 
 | To change… | Find… |
 |---|---|
@@ -119,7 +119,7 @@ python3 -m http.server 8000
 ## Files
 
 ```
-index.html            homepage: two buttons
+index.html            homepage: Order on WhatsApp button
 restaurants.html      restaurant list and menus
 order.html            order on WhatsApp
 404.html              "page not found" page
