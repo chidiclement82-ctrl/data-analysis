@@ -523,10 +523,9 @@ function siteSettings() {
   const box = $("site-settings");
   box.replaceChildren();
   const card = el("section", "wa-card admin-site");
-  card.appendChild(el("h2", null, "Homepage photos"));
-  card.appendChild(el("p", "muted", "The top photo sits behind \"FOOD IS READY\"; a wide photo works best. The kitchen photo shows next to \"Our Story\"."));
-  card.appendChild(photoField(menu.site, "Top of the homepage", () => "homepage"));
-  card.appendChild(photoField(menu.site, "\"Our kitchen\" photo", () => "kitchen", "kitchenImage"));
+  card.appendChild(el("h2", null, "Homepage photo"));
+  card.appendChild(el("p", "muted", "Fills the background behind \"FOOD IS READY\" and the two buttons. A tall or square food photo works best on phones."));
+  card.appendChild(photoField(menu.site, "Homepage background", () => "homepage"));
   box.appendChild(card);
 }
 

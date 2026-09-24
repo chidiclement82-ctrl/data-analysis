@@ -98,7 +98,7 @@ var RESTAURANT_NAME = "Ogarider";
   }
 
   // Web-address name for a restaurant, e.g. "Kilimanjaro Restaurant" -> "kilimanjaro-restaurant".
-  // Must match slugs() in main.js so the homepage's "Order" buttons open the right one.
+  // Must match slugs() in restaurants.js so its "Order" buttons open the right one.
   function slugs(restaurants) {
     var seen = {};
     return restaurants.map(function (r, i) {
