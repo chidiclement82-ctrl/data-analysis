@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Land &amp; Properties — Screen Ad</title>
+<meta name="description" content="Full-screen looping slideshow of land and properties for sale, for playing on a TV or display screen." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     THEME — change these to rebrand the whole screen
+     ============================================================ */
+  :root{
+    --green:#0f2e22;      /* deep estate green */
+    --green-2:#123c2c;
+    --gold:#c8a24a;       /* accent / price */
+    --gold-2:#e6c877;
+    --paper:#f5efe2;      /* light text */
+    --ink:#0b0b0b;
+    --avail:#2f9e6b;      /* "Available" pill */
+    --hot:#d9534f;        /* "Selling fast" pill */
+    --sold:#7a7a7a;       /* "Sold" pill */
+    --slide-seconds:9s;   /* how long each slide shows */
+    --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+    --font-body:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--green);
+    color:var(--paper);
+    font-family:var(--font-body);
+    overflow:hidden;
+    cursor:none;                 /* hide cursor on a display */
+    -webkit-font-smoothing:antialiased;
+  }
+  body.show-cursor{cursor:default}
+
+  #stage{position:fixed;inset:0;overflow:hidden}
+
+  /* ---- slides ---- */
+  .slide{
+    position:absolute;inset:0;
+    opacity:0;visibility:hidden;
+    transition:opacity 1s ease;
+    display:flex;flex-direction:column;justify-content:flex-end;
+  }
+  .slide.active{opacity:1;visibility:visible;z-index:2}
+
+  /* background photo / gradient with slow Ken Burns zoom */
+  .bg{
+    position:absolute;inset:0;
+    background-size:cover;background-position:center;
+    transform:scale(1.06);
+    transition:transform 10s ease-out;
+  }
+  .slide.active .bg{transform:scale(1.16)}
+  /* fallback gradient when a slide has no photo */
+  .bg.placeholder{
+    background:
+      radial-gradient(120% 90% at 80% 10%, rgba(200,162,74,.28), transparent 55%),
+      radial-gradient(120% 90% at 10% 90%, rgba(47,158,107,.30), transparent 55%),
+      linear-gradient(135deg,var(--green) 0%, var(--green-2) 55%, #0a231a 100%);
+  }
+  .bg.placeholder::after{
+    content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(120% 100% at 50% 40%,#000 40%,transparent 85%);
+  }
+  /* darkening for legibility */
+  .scrim{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(6,20,15,.15) 0%,rgba(6,20,15,.25) 45%,rgba(6,20,15,.88) 100%);
+  }
+
+  /* ---- slide content ---- */
+  .content{position:relative;z-index:3;padding:6vh 6vw 16vh;max-width:78%}
+  .pill{
+    display:inline-flex;align-items:center;gap:.5em;
+    font-weight:700;font-size:1.5vw;letter-spacing:.06em;text-transform:uppercase;
+    padding:.5em 1em;border-radius:999px;color:#fff;
+    background:var(--avail);
+  }
+  .pill.hot{background:var(--hot)}
+  .pill.sold{background:var(--sold)}
+  .pill .dot{width:.6em;height:.6em;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
+  @keyframes blink{50%{opacity:.25}}
+
+  .title{
+    font-family:var(--font-display);
+    font-weight:700;font-size:6.6vw;line-height:1.02;margin:.28em 0 .12em;
+    text-shadow:0 2px 30px rgba(0,0,0,.45);
+  }
+  .location{display:flex;align-items:center;gap:.4em;font-size:2.5vw;font-weight:600;opacity:.95}
+  .location svg{width:1em;height:1em;flex:none;fill:var(--gold-2)}
+
+  .facts{display:flex;flex-wrap:wrap;gap:1.4vw 2.6vw;margin-top:2.4vh}
+  .fact{display:flex;flex-direction:column;gap:.15em}
+  .fact .k{font-size:1.35vw;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-weight:700}
+  .fact .v{font-size:2.4vw;font-weight:700}
+  .fact.price .v{color:var(--gold-2);font-family:var(--font-display)}
+
+  /* ---- footer bar (brand + contact + QR) ---- */
+  .footer{
+    position:fixed;left:0;right:0;bottom:0;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;gap:3vw;
+    padding:1.6vh 6vw;
+    background:linear-gradient(0deg,rgba(4,14,10,.92),rgba(4,14,10,0));
+  }
+  .brand{display:flex;align-items:center;gap:1vw}
+  .brand .mark{
+    width:3.4vw;height:3.4vw;min-width:34px;min-height:34px;border-radius:12px;
+    background:linear-gradient(135deg,var(--gold),var(--gold-2));
+    display:grid;place-items:center;color:var(--green);font-family:var(--font-display);
+    font-weight:700;font-size:2vw;box-shadow:0 6px 24px rgba(200,162,74,.35);
+  }
+  .brand .name{font-family:var(--font-display);font-weight:700;font-size:2.1vw;line-height:1}
+  .brand .tag{font-size:1.25vw;opacity:.8;margin-top:.25em}
+
+  .contact{display:flex;align-items:center;gap:1.6vw;margin-left:auto}
+  .phone{text-align:right}
+  .phone .k{font-size:1.15vw;letter-spacing:.1em;text-transform:uppercase;opacity:.7;font-weight:700}
+  .phone .v{font-size:2.6vw;font-weight:800;color:var(--gold-2);white-space:nowrap}
+  .qr{
+    display:flex;align-items:center;gap:.9vw;
+    background:#fff;border-radius:14px;padding:.7vw;box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .qr img{width:6vw;height:6vw;min-width:70px;min-height:70px;display:block}
+  .qr .scan{color:var(--green);font-weight:800;font-size:1.15vw;line-height:1.2;max-width:6vw}
+
+  /* ---- intro slide ---- */
+  .intro{align-items:center;justify-content:center;text-align:center}
+  .intro .content{max-width:80%;padding-bottom:14vh}
+  .intro .kicker{font-size:1.8vw;letter-spacing:.35em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
+  .intro .headline{font-family:var(--font-display);font-weight:700;font-size:8vw;line-height:1.02;margin:.2em 0}
+  .intro .sub{font-size:2.4vw;opacity:.92;max-width:22ch;margin:0 auto}
+
+  /* ---- progress dots ---- */
+  #dots{position:fixed;top:3vh;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:.8vw}
+  #dots span{width:2.6vw;max-width:34px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);overflow:hidden}
+  #dots span i{display:block;height:100%;width:0;background:var(--gold-2)}
+  #dots span.active i{animation:fill var(--slide-seconds) linear forwards}
+  body.paused #dots span.active i{animation-play-state:paused}
+  @keyframes fill{to{width:100%}}
+
+  /* ---- help / paused hint ---- */
+  #hint{
+    position:fixed;top:3vh;right:3vw;z-index:7;
+    font-size:1.1vw;opacity:0;transition:opacity .3s;
+    background:rgba(0,0,0,.5);padding:.6em 1em;border-radius:10px;pointer-events:none;
+  }
+  body.show-cursor #hint{opacity:.85}
+  body.paused #paused-badge{opacity:1}
+  #paused-badge{
+    position:fixed;top:3vh;left:3vw;z-index:7;opacity:0;transition:opacity .3s;
+    font-weight:800;font-size:1.2vw;letter-spacing:.1em;text-transform:uppercase;
+    background:rgba(0,0,0,.55);padding:.5em .9em;border-radius:10px;
+  }
+
+  /* portrait screens: scale text up a touch and stack footer */
+  @media (max-aspect-ratio:1/1){
+    .title{font-size:9vw}.intro .headline{font-size:12vw}
+    .location{font-size:4vw}.fact .v{font-size:4.2vw}.fact .k{font-size:2.4vw}
+    .footer{flex-wrap:wrap;gap:2vh}
+    .phone .v{font-size:5vw}.brand .name{font-size:4vw}
+    .qr img{width:16vw;height:16vw}
+  }
+</style>
+</head>
+<body>
+  <div id="stage" aria-live="off"></div>
+
+  <div id="dots" aria-hidden="true"></div>
+  <div id="paused-badge">⏸ Paused</div>
+  <div id="hint">Space = pause · ← → = move · F = full screen · click = play/pause</div>
+
+  <!-- The footer is filled from CONFIG below -->
+  <div class="footer">
+    <div class="brand">
+      <div class="mark" id="brandMark">P</div>
+      <div>
+        <div class="name" id="brandName">Your Estate Name</div>
+        <div class="tag" id="brandTag">Land &amp; property, done right</div>
+      </div>
+    </div>
+    <div class="contact">
+      <div class="phone">
+        <div class="k">Call / WhatsApp</div>
+        <div class="v" id="brandPhone">+234 000 000 0000</div>
+      </div>
+      <div class="qr" title="Scan to enquire">
+        <img id="qrImg" src="enquiry-qr.svg" alt="Scan to enquire on WhatsApp" />
+        <div class="scan">Scan to enquire</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ================================================================
+   1) YOUR DETAILS  — edit these
+   ================================================================ */
+const CONFIG = {
+  brandName: "Your Estate Name",
+  tagline:   "Genuine land & property, verified titles",
+  phone:     "+234 000 000 0000",   // shown big on screen
+  // To change the QR target, run:  python3 make-qr.py "https://wa.me/234..."
+};
+
+/* ================================================================
+   2) YOUR PROPERTIES  — add, remove or edit freely.
+   Only "title" is required. Leave "photo" empty ("") to use a
+   styled placeholder background. Drop photos into this folder and
+   set photo to e.g. "photos/plot1.jpg".
+   status: "available" | "hot" (selling fast) | "sold"
+   ================================================================ */
+const PROPERTIES = [
+  {
+    status:"hot",
+    title:"Serviced Residential Plots",
+    location:"Mowe, Ogun State",
+    photo:"",
+    facts:[
+      ["Plot size","600 sqm"],
+      ["Title","Registered Survey + Deed"],
+      ["Price","₦4,500,000"],
+    ],
+  },
+  {
+    status:"available",
+    title:"Estate Land, Fenced & Gated",
+    location:"Epe, Lagos",
+    photo:"",
+    facts:[
+      ["Plot size","500 sqm"],
+      ["Title","C of O"],
+      ["Price","₦6,200,000"],
+    ],
+  },
+  {
+    status:"available",
+    title:"3-Bedroom Terrace, Off-Plan",
+    location:"Sangotedo, Lekki",
+    photo:"",
+    facts:[
+      ["Bedrooms","3 + BQ"],
+      ["Delivery","12 months"],
+      ["Price","from ₦45,000,000"],
+    ],
+  },
+  {
+    status:"hot",
+    title:"Waterfront Land",
+    location:"Ibeju-Lekki, Lagos",
+    photo:"",
+    facts:[
+      ["Plot size","648 sqm"],
+      ["Title","Governor's Consent"],
+      ["Price","₦12,000,000"],
+    ],
+  },
+];
+
+/* ================================================================
+   3) Engine — you usually don't need to touch below here.
+   ================================================================ */
+const PILL = {available:["Available",""], hot:["Selling fast","hot"], sold:["Sold","sold"]};
+
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function buildIntro(){
+  const el=document.createElement("div");
+  el.className="slide intro";
+  el.innerHTML=`
+    <div class="bg placeholder"></div>
+    <div class="scrim"></div>
+    <div class="content">
+      <div class="kicker">${esc(CONFIG.brandName)}</div>
+      <div class="headline">Land &amp; Property<br>for sale</div>
+      <div class="sub">${esc(CONFIG.tagline)}</div>
+    </div>`;
+  return el;
+}
+
+function buildProperty(p){
+  const el=document.createElement("div");
+  el.className="slide";
+  const [label,cls]=PILL[p.status]||PILL.available;
+  const bg = p.photo
+    ? `<div class="bg" style="background-image:url('${encodeURI(p.photo)}')"></div>`
+    : `<div class="bg placeholder"></div>`;
+  const facts=(p.facts||[]).map(([k,v])=>{
+    const isPrice=/price|from|₦/i.test(k)||/₦|from/i.test(v);
+    return `<div class="fact ${isPrice?'price':''}"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`;
+  }).join("");
+  el.innerHTML=`
+    ${bg}
+    <div class="scrim"></div>
+    <div class="content">
+      <span class="pill ${cls}">${cls==='hot'?'<span class="dot"></span>':''}${esc(label)}</span>
+      <h1 class="title">${esc(p.title)}</h1>
+      ${p.location?`<div class="location"><svg viewBox="0 0 24 24"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>${esc(p.location)}</div>`:""}
+      <div class="facts">${facts}</div>
+    </div>`;
+  return el;
+}
+
+// apply config to footer + intro
+document.getElementById("brandName").textContent=CONFIG.brandName;
+document.getElementById("brandTag").textContent=CONFIG.tagline;
+document.getElementById("brandPhone").textContent=CONFIG.phone;
+document.getElementById("brandMark").textContent=(CONFIG.brandName.trim()[0]||"P").toUpperCase();
+document.title=CONFIG.brandName+" — Properties";
+
+const stage=document.getElementById("stage");
+const dots=document.getElementById("dots");
+const slides=[buildIntro(), ...PROPERTIES.map(buildProperty)];
+slides.forEach(s=>stage.appendChild(s));
+slides.forEach(()=>{const d=document.createElement("span");d.innerHTML="<i></i>";dots.appendChild(d);});
+const dotEls=[...dots.children];
+
+let i=0, timer=null, paused=false;
+const SLIDE_MS=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--slide-seconds"))||9)*1000;
+
+function show(n){
+  slides[i].classList.remove("active"); dotEls[i].classList.remove("active");
+  i=(n+slides.length)%slides.length;
+  slides[i].classList.add("active"); dotEls[i].classList.add("active");
+  // restart the progress-bar animation for the active dot
+  const bar=dotEls[i].querySelector("i"); bar.style.animation="none"; void bar.offsetWidth; bar.style.animation="";
+}
+function next(){show(i+1);} function prev(){show(i-1);}
+function play(){clearInterval(timer); if(!paused) timer=setInterval(next,SLIDE_MS);}
+function setPaused(p){paused=p; document.body.classList.toggle("paused",p); if(p){clearInterval(timer);}else{show(i);play();}}
+
+show(0); play();
+
+// controls
+addEventListener("keydown",e=>{
+  if(e.key===" "){e.preventDefault();setPaused(!paused);}
+  else if(e.key==="ArrowRight"){next();play();}
+  else if(e.key==="ArrowLeft"){prev();play();}
+  else if(e.key.toLowerCase()==="f"){toggleFull();}
+});
+addEventListener("click",()=>setPaused(!paused));
+function toggleFull(){
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen?.();}
+  else{document.exitFullscreen?.();}
+}
+// show cursor + hint briefly on mouse move, then hide again for display use
+let hideT=null;
+addEventListener("mousemove",()=>{
+  document.body.classList.add("show-cursor");
+  clearTimeout(hideT);
+  hideT=setTimeout(()=>document.body.classList.remove("show-cursor"),2500);
+});
+// keep advancing correctly if the tab is backgrounded then shown
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!paused)play();});
+</script>
+</body>
+</html>
