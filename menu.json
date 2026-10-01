@@ -68,6 +68,18 @@
           "items": []
         }
       ]
+    },
+    {
+      "name": "Prapika Restaurant",
+      "description": "",
+      "image": "",
+      "gallery": [],
+      "categories": [
+        {
+          "name": "Menu",
+          "items": []
+        }
+      ]
     }
   ]
 }
