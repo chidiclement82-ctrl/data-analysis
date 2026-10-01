@@ -56,6 +56,18 @@
         "assets/images/menu/genesis-pizza-food-1790272445512.jpg",
         "assets/images/menu/genesis-pizza-food-1790272447769.jpg"
       ]
+    },
+    {
+      "name": "The Rodinia Restaurant ",
+      "description": "",
+      "image": "",
+      "gallery": [],
+      "categories": [
+        {
+          "name": "Menu",
+          "items": []
+        }
+      ]
     }
   ]
 }
