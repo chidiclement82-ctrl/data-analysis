@@ -33,41 +33,31 @@ Speech: the script goes to `POST /v1/text-to-speech/{voice_id}` and comes back a
 
 **API key handling:** the key is stored in the browser's localStorage and is only sent to `api.elevenlabs.io`. That's fine when each person uses their own key. If you run this as a service for other people, move these calls behind your own server so your key isn't exposed.
 
-## The two engines
+## Real AI face swap (your server)
 
-**In-browser (default, no backend).** Everything runs on the user's device, and uploads stay in IndexedDB.
+The generative face swap runs on the **Visage face swap server** in [`../studio-server`](../studio-server/README.md). That's a small Python service using InsightFace's `inswapper_128` model, which redraws the user's face in every frame while keeping the original expressions, lip movement, head turns and lighting. It runs free on Hugging Face Spaces (CPU, slow) or on any GPU machine. The setup steps, including automatic deployment from GitHub, are in that folder's README.
 
-- *Face swap:* MediaPipe face detection is loaded from jsDelivr. If it can't load, the browser's `FaceDetector` is used, and if that's missing too, the user clicks to place the face. The engine tracks the face through the video and smooths the track. It composites the user's face with a feathered mask, matches lighting and skin tone frame by frame, and follows head tilt from the eye line. An optional cut-out keeps the original mouth so lip movement and expressions come through. This is a real-time compositing preview, not a generative model: it follows position, scale and tilt, but it doesn't re-render the face at new angles.
-- *Voice (no ElevenLabs key):* creates a "preview voice": the browser's built-in voice, tuned to the sample's pitch and pace. It doesn't sound like the speaker and isn't in exported files. The UI labels it and points to the real clone setup.
-- *Export:* the edit is rendered to a canvas and recorded with `MediaRecorder` (MP4 where the browser supports it, otherwise WebM), with all audio mixed through Web Audio. Rendering runs in real time, so the tab must stay open.
+Connect it in **Dashboard → Account → AI face swap server** (URL plus access token). After that:
 
-**Cloud (set an API base URL in Dashboard → Account).** Generative face swap (and voice cloning, if you'd rather host it than use ElevenLabs) runs on your servers through the API below. The app then exports the swapped footage plus the real cloned-voice audio.
+- **Face swap**, the wizard's **Choose face** step, and the editor's **Face swap** tab send the video and the face photo to the server, show its progress and queue position, and download the swapped video. The before/after slider compares the original with the AI result.
+- The swapped footage replaces the source in the project, so trims, text, subtitles, the cloned voice, music and the "AI-generated" label are all rendered on top of it at export.
+- Face photos are screened by the server when added: a face must be present, and it must not match the server's protected-people gallery. If the server can't be reached, the photo isn't accepted.
 
-## Backend API contract
+Without a server, the site falls back to the **in-browser preview**. MediaPipe detects and tracks the face (or the user clicks to place it), and the user's face is overlaid with a feathered mask, per-frame lighting match and head tilt. It's instant, but it's an overlay, not a generated face, and the UI labels it as a preview.
 
-All endpoints live under the configured base URL. Requests send cookies (`credentials: 'include'`).
+**Voice** without an ElevenLabs key is a "preview voice": the browser's built-in voice tuned to the sample's pitch and pace. It doesn't sound like the speaker and isn't included in exports.
 
-| Method & path | Body | Returns |
-|---|---|---|
-| `GET /v1/health` | — | `{ ok: true }` |
-| `POST /v1/safety/screen` | multipart: `kind` (`face`/`voice`/`video`), `subjectName`, `file` | `{ allowed: boolean, reason?: string }` |
-| `POST /v1/reports` | JSON report (`contentId`, `url`, `reason`, `details`, `contact`) | `{ ok: true }` |
-| `POST /v1/voices` | multipart: one or more `sample` files, `name`, `consentId`, `removeNoise` | `{ voiceId }` |
-| `DELETE /v1/voices/:voiceId` | — | `{ ok: true }` |
-| `POST /v1/voices/:voiceId/speech` | JSON `{ text, speed, emotion, tone }` | audio file (e.g. `audio/mpeg`) |
-| `POST /v1/face-swap` | multipart: `video`, `face`, `preserveExpressions` | `{ jobId }` |
-| `GET /v1/jobs/:jobId` | — | `{ status: 'queued'│'running'│'succeeded'│'failed', progress: 0–1, stage?, resultPath?, error? }` |
-| `GET <resultPath>` | — | the swapped video file |
+**Export:** the edit is rendered to a canvas and recorded with `MediaRecorder` (MP4 where the browser supports it, otherwise WebM), with all audio mixed through Web Audio. Rendering runs in real time, so the tab must stay open.
 
-Some well-known building blocks for these endpoints are InsightFace/`inswapper` or FaceFusion for face swap, and XTTS-v2, OpenVoice or a hosted voice API for cloning. Whatever you choose, check its license and terms, since several of these models restrict commercial use.
+## Server API
 
-The screen endpoint is where the real protections go: face matching against protected public figures, voice anti-spoofing, and checking that the spoken consent statement in a voice sample matches the account holder.
+Requests carry `Authorization: Bearer <token>` when a token is set, and no cookies. The full table is in [`studio-server/README.md`](../studio-server/README.md#api). The ones the studio uses are `GET /v1/health`, `GET /v1/auth`, `POST /v1/safety/screen`, `POST /v1/face-swap`, `GET /v1/jobs/:id`, `GET /v1/results/:id` and `POST /v1/reports`. Any backend that implements these can stand in for the bundled server.
 
 ## Safety and consent
 
 - **Consent gate:** every face, voice and source video needs a signed consent (whether it's the user's own or someone else's with permission, three statements, and a typed signature). The record stores a SHA-256 fingerprint of the file. Records can be downloaded from Account.
 - **Spoken consent for voices:** every voice needs the user reading a statement that includes their name, either at the start of a mic sample or as a separate live recording for video and file samples. Where the browser supports speech recognition, the app checks the statement, and the signature must match the spoken name. For video and file samples, the consent recording's pitch must match the sample's, which blocks the obvious case of cloning someone else from their video. It's a heuristic, not speaker verification, so do proper verification on the server if you host cloning yourself.
-- **Public figures:** a name screen blocks a starter list of public figures (`PROTECTED_NAMES` in `js/safety.js`). In production, put a recognition-based check behind `/v1/safety/screen`.
+- **Public figures:** a name screen blocks a starter list of public figures (`PROTECTED_NAMES` in `js/safety.js`). With the face swap server, photos are also matched by face against a gallery of protected people (`PROTECTED_FACES_DIR`).
 - **Labeling:** an "✦ AI-generated" badge with a unique content ID is burned into every rendered frame, in previews and exports. It can't be turned off.
 - **Reporting:** anyone can report content by its ID from the footer, the Trust & Safety page or the export screen.
 - **Rate limits:** daily generation caps per plan (5 / 50 / 300), enforced locally. Enforce them on the server too.
@@ -77,7 +67,8 @@ The screen endpoint is where the real protections go: face matching against prot
 This is a complete front end, but some parts still need a real backend:
 
 - **Accounts and billing.** There is no sign-in, and choosing a plan only changes a local setting. Add auth and a payment provider.
-- **Server-side enforcement.** Consent, identity screening, rate limits and reports are client-side in local mode, and a determined user could bypass them. Re-check all of them on the server before any generation runs.
+- **Server-side enforcement.** The face swap server enforces its own checks: a face must be in the photo, protected faces are refused, there's a daily per-IP limit, and only the main person is swapped. Consent records, plan limits and the voice checks still live in the browser, so move them server-side alongside accounts.
+- **Model licenses.** InsightFace's `inswapper_128` and `buffalo_l` weights are for non-commercial use. Get a commercial license, or swap in a different model, before charging for face swaps.
 - **Storage.** Media lives in the browser's IndexedDB. It doesn't sync across devices, and clearing site data deletes it.
 
 ## Files
@@ -88,7 +79,7 @@ studio/
   css/styles.css    Design system and layout
   js/app.js         Router
   js/store.js       IndexedDB + settings
-  js/api.js         Cloud provider client
+  js/api.js         Face swap server + voice provider client
   js/elevenlabs.js  ElevenLabs voice cloning + speech
   js/safety.js      Consent, labels, reporting, rate limits
   js/faceswap.js    Detection, tracking, compositing

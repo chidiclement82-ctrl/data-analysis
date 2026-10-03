@@ -110,9 +110,12 @@ export async function requestConsent(kind, file, { suggestedLabel = '' } = {}) {
   });
   if (!result) return null;
 
-  // Server-side screening hook (face match against protected identities, voice
-  // anti-spoofing). The local engine returns { allowed: true }.
-  const screen = await api.screenIdentity(kind, file, result.subjectName);
+  // Server-side screen (a face must be present and must not match a protected
+  // person). Without a server this returns { allowed: true }. If the server
+  // can't be reached, the upload is refused rather than skipping the check.
+  let screen;
+  try { screen = await api.screenIdentity(kind, file); }
+  catch (e) { toast(`Couldn't run the safety check: ${e.message}`, 'error'); return null; }
   if (!screen.allowed) {
     toast(screen.reason || 'This upload was blocked by our safety screen.', 'error');
     return null;

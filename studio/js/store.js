@@ -82,6 +82,7 @@ const DEFAULT_SETTINGS = {
   plan: 'free',
   exportQuality: '720',
   apiBase: '',
+  apiToken: '',
   elevenKey: '',
   elevenModel: 'eleven_multilingual_v2',
 };

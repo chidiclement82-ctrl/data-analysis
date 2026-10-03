@@ -6,7 +6,7 @@ import { all, blobUrl } from './store.js';
 import { Player, SFX, timelineDuration, tlToSrc } from './player.js';
 import { analyzeVideo, manualTrack, getDetector } from './faceswap.js';
 import { addFace, faceTile } from './library.js';
-import { projectAssets, saveProject, subtitlesFromScript } from './projects.js';
+import { projectAssets, saveProject, subtitlesFromScript, runCloudSwap } from './projects.js';
 import { api } from './api.js';
 
 const TABS = [
@@ -37,6 +37,7 @@ export async function mountEditor(root, project, { initialTab = 'trim', onChange
   let manualMode = !!(edit.faceSwap.enabled && edit.faceSwap.track && edit.faceSwap.track.coverage < 0.15 && !edit.faceSwap.manual);
   let saveTimer = null;
   let destroyed = false;
+  let swapCtrl = null;
 
   function changed({ redrawPanel = false } = {}) {
     player?.setProject(edit);
@@ -59,7 +60,7 @@ export async function mountEditor(root, project, { initialTab = 'trim', onChange
     await player.load(edit, assets);
     stage.classList.toggle('portrait', player.vh > player.vw);
     if (wasAt) await player.seek(Math.min(wasAt, player.duration - 0.05));
-    compareBtn.hidden = !(edit.faceSwap.enabled && edit.faceSwap.track);
+    compareBtn.hidden = !((edit.faceSwap.enabled && edit.faceSwap.track) || assets.beforeUrl);
     drawTimeline();
   }
 
@@ -174,10 +175,56 @@ export async function mountEditor(root, project, { initialTab = 'trim', onChange
     const faceGrid = h('div', { class: 'thumb-grid', style: { gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))' } });
     all('faces').then(faces => {
       faceGrid.replaceChildren(...faces.map(f => faceTile(f, { selected: f.id === project.faceId, onSelect: async (face) => {
+        if (project.faceId === face.id && fs.enabled) return;
         project.faceId = face.id; fs.enabled = true; project.cloudSwapVideoId = null;
         changed({ redrawPanel: true }); await buildPlayer();
       } })));
     });
+    return [
+      h('div', { class: 'field' }, h('span', {}, 'Your face'), faceGrid,
+        dropzone({ accept: 'image/*', label: 'Add a face photo', hint: 'Clear, front-facing, good light', onFile: async (f) => { const rec = await addFace(f); if (rec) { project.faceId = rec.id; fs.enabled = true; project.cloudSwapVideoId = null; changed({ redrawPanel: true }); await buildPlayer(); } } })),
+      toggle('Swap the face in this video', fs.enabled, async (v) => { fs.enabled = v; changed({ redrawPanel: true }); await buildPlayer(); }),
+      ...(api.mode === 'cloud' ? cloudSwapControls() : localSwapControls()),
+    ];
+  }
+
+  // Generative swap on the AI server.
+  function cloudSwapControls() {
+    const fs = edit.faceSwap;
+    if (!fs.enabled || !project.faceId) return [];
+    const ready = project.cloudSwapVideoId && project.cloudSwapFaceId === project.faceId;
+    const bar = h('i');
+    const prog = h('div', { class: 'progress', hidden: true }, bar);
+    const stage = h('span', { class: 'small muted' });
+    const run = h('button', { class: 'btn primary sm' }, icon('sparkle', 14), ready ? 'Redo AI face swap' : 'Generate AI face swap');
+    run.addEventListener('click', async () => {
+      swapCtrl?.abort();
+      swapCtrl = new AbortController();
+      run.disabled = true; prog.hidden = false;
+      try {
+        await runCloudSwap(project, { signal: swapCtrl.signal, onProgress: (p, s) => { bar.style.width = `${Math.round(p * 100)}%`; stage.textContent = `${s || 'Working'} · ${Math.round(p * 100)}%`; } });
+        changed({ redrawPanel: true });
+        await buildPlayer();
+        player.split = 0.5; compareBtn.hidden = false; compareBtn.classList.add('primary'); player.draw();
+        toast('AI face swap ready. Drag across the video to compare.', 'success');
+      } catch (e) {
+        if (e.name !== 'AbortError') { toast(e.message, 'error'); stage.textContent = e.message; }
+        prog.hidden = true;
+      } finally {
+        run.disabled = false;
+      }
+    });
+    return [
+      h('div', { class: 'row' }, run, ready && h('span', { class: 'badge ok' }, icon('check', 12), 'AI face swap applied')),
+      prog, stage,
+      h('div', { class: 'notice' }, icon('sparkle'), h('span', {}, 'Runs on your AI server. The model redraws your face in every frame, keeping the original expressions, lip movement, head turns and lighting.')),
+    ];
+  }
+
+  // Instant in-browser overlay.
+  function localSwapControls() {
+    const fs = edit.faceSwap;
+    const t = fs.track;
     const status = h('div', { class: 'stack' });
     const prog = h('div', { class: 'progress', hidden: true }, h('i'));
     const analyze = async () => {
@@ -199,11 +246,7 @@ export async function mountEditor(root, project, { initialTab = 'trim', onChange
         v.removeAttribute('src'); v.load();
       }
     };
-    const t = fs.track;
     return [
-      h('div', { class: 'field' }, h('span', {}, 'Your face'), faceGrid,
-        dropzone({ accept: 'image/*', label: 'Add a face photo', hint: 'Clear, front-facing, good light', onFile: async (f) => { const rec = await addFace(f); if (rec) { project.faceId = rec.id; fs.enabled = true; changed({ redrawPanel: true }); await buildPlayer(); } } })),
-      toggle('Swap the face in this video', fs.enabled, async (v) => { fs.enabled = v; changed({ redrawPanel: true }); compareBtn.hidden = !(v && fs.track); }),
       fs.enabled && h('div', { class: 'row' },
         h('button', { class: 'btn primary sm', onclick: analyze }, icon('face', 14), t ? 'Re-detect face' : 'Detect & swap face'),
         t && h('span', { class: 'badge ok' }, t.detector === 'manual' ? 'Placed by hand' : `Tracked in ${Math.round(t.coverage * 100)}% of frames`),
@@ -218,9 +261,7 @@ export async function mountEditor(root, project, { initialTab = 'trim', onChange
         ...slider('Blend', fs.strength, 0.5, 1, 0.01, v => `${Math.round(v * 100)}%`, v => { fs.strength = v; changed(); })),
       fs.enabled && t && toggle('Keep original mouth movement (most natural lip-sync and expressions)', fs.preserveMouth, v => { fs.preserveMouth = v; changed(); }),
       fs.enabled && t && toggle('Match lighting and skin tone frame by frame', fs.colorMatch, v => { fs.colorMatch = v; changed(); }),
-      h('div', { class: 'notice' }, icon('sparkle'), h('span', {}, api.mode === 'cloud'
-        ? 'This is an instant preview. When you generate, your AI provider renders a full generative swap that re-creates expressions and lighting.'
-        : 'Instant in-browser swap. For a generative swap that re-creates expressions, connect an AI provider in Account settings.')),
+      h('div', { class: 'notice' }, icon('sparkle'), h('span', {}, 'Instant in-browser preview: your face is overlaid and follows head movement. For the real AI swap that redraws your face with the original expressions, ', h('a', { href: '#/dashboard/account' }, 'connect a face swap server'), '.')),
     ];
   }
 
@@ -318,6 +359,7 @@ export async function mountEditor(root, project, { initialTab = 'trim', onChange
     rebuild: buildPlayer,
     destroy() {
       destroyed = true;
+      swapCtrl?.abort();
       clearTimeout(saveTimer);
       saveProject(project);
       player?.destroy();

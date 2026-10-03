@@ -128,6 +128,8 @@ export class Player {
     this.video.volume = 1;
     this.narration = assets.narrationUrl ? Object.assign(new Audio(assets.narrationUrl), { preload: 'auto' }) : null;
     this.music = assets.musicUrl ? Object.assign(new Audio(assets.musicUrl), { preload: 'auto', loop: true }) : null;
+    // Original footage for the "Before" side when the main video is an AI-swapped copy.
+    this.before = assets.beforeUrl ? await loadVideo(assets.beforeUrl, { muted: true }) : null;
     this.vw = this.video.videoWidth;
     this.vh = this.video.videoHeight;
     if (!this.canvas.width || this.exporting === false) { this.canvas.width = this.vw; this.canvas.height = this.vh; }
@@ -172,7 +174,7 @@ export class Player {
     this.lastTl = this.tl;
     const { src, index } = tlToSrc(segs, this.tl);
     this.segIndex = index;
-    await seek(this.video, src);
+    await Promise.all([seek(this.video, src), this.before && seek(this.before, src)]);
     this.syncAux();
     this.draw();
     this.onTime?.(this.tl);
@@ -203,6 +205,7 @@ export class Player {
     this.playing = true;
     this.applyVolumes();
     await this.video.play();
+    this.before?.play().catch(() => {});
     this.syncAux();
     if (!this.exporting && this.assets.browserSpeech && this.tl < 0.3) {
       this.speaking = true;
@@ -228,6 +231,7 @@ export class Player {
     cancelAnimationFrame(this.raf);
     clearInterval(this.timer);
     this.video.pause();
+    this.before?.pause();
     this.narration?.pause();
     this.music?.pause();
     if (this.speaking) { speechSynthesis.cancel(); this.speaking = false; }
@@ -241,6 +245,7 @@ export class Player {
       if (this.segIndex < segs.length - 1) {
         this.segIndex++;
         this.video.currentTime = segs[this.segIndex].start;
+        if (this.before) this.before.currentTime = segs[this.segIndex].start;
         seg = segs[this.segIndex];
       } else {
         this.tl = this.duration;
@@ -257,6 +262,7 @@ export class Player {
       for (const fx of this.project.sfx) if (fx.t > this.lastTl && fx.t <= this.tl) playSfx(this.ac, this.sfxOut, fx.kind);
     }
     this.lastTl = this.tl;
+    if (this.before && Math.abs(this.before.currentTime - this.video.currentTime) > 0.12) this.before.currentTime = this.video.currentTime;
     this.syncAux();
     this.applyVolumes();
     this.draw();
@@ -283,7 +289,7 @@ export class Player {
       const x = W * this.split;
       ctx.save();
       ctx.beginPath(); ctx.rect(0, 0, x, H); ctx.clip();
-      ctx.drawImage(video, 0, 0, W, H);
+      ctx.drawImage(this.before || video, 0, 0, W, H);
       ctx.restore();
       ctx.fillStyle = '#fff';
       ctx.fillRect(x - 1, 0, 2, H);
@@ -389,8 +395,7 @@ export class Player {
   destroy() {
     this.pause();
     this.ac?.close();
-    this.video?.removeAttribute('src');
-    this.video?.load();
+    for (const v of [this.video, this.before]) { v?.removeAttribute('src'); v?.load(); }
   }
 }
 

@@ -3,7 +3,8 @@
 import { h, icon, toast, dropzone, fmtTime, fmtBytes, loadVideo } from '../ui.js';
 import { get, all, blobUrl } from '../store.js';
 import { addSourceVideo, addFace, faceTile, videoTile, sourceVideos } from '../library.js';
-import { createProject, saveProject, subtitlesFromScript, projectAssets } from '../projects.js';
+import { createProject, saveProject, subtitlesFromScript, projectAssets, runCloudSwap } from '../projects.js';
+import { api } from '../api.js';
 import { analyzeVideo, getDetector } from '../faceswap.js';
 import { Player, defaultProject } from '../player.js';
 import { mountEditor } from '../editor.js';
@@ -137,7 +138,27 @@ export async function renderCreate(app, { args }) {
     const fs = project.edit.faceSwap;
     const card = h('div', { class: 'card' });
     container.append(card);
-    if (!fs.track) {
+    const cloud = api.mode === 'cloud';
+    if (cloud && !(project.cloudSwapVideoId && project.cloudSwapFaceId === project.faceId)) {
+      // Real generative swap on the AI server.
+      const bar = h('i');
+      const msg = h('span', { class: 'small muted' }, 'Uploading…');
+      const retry = h('button', { class: 'btn sm', hidden: true, onclick: () => draw() }, 'Try again');
+      card.append(h('h3', {}, 'Swapping your face with AI'), h('div', { class: 'progress' }, bar),
+        h('p', { class: 'row', style: { marginTop: '10px' } }, h('span', { class: 'spinner' }), msg), retry);
+      const ctrl = new AbortController();
+      teardown.push(() => ctrl.abort());
+      try {
+        await runCloudSwap(project, { signal: ctrl.signal, onProgress: (p, st) => { bar.style.width = `${Math.round(p * 100)}%`; msg.textContent = `${st || 'Working'} · ${Math.round(p * 100)}%`; } });
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+        card.querySelector('.spinner')?.remove();
+        msg.textContent = e.message;
+        retry.hidden = false;
+        return;
+      }
+      card.replaceChildren();
+    } else if (!cloud && !fs.track) {
       const bar = h('i');
       const msg = h('span', { class: 'small muted' }, 'Loading face detector…');
       card.append(h('h3', {}, 'Finding the face in your video'), h('div', { class: 'progress' }, bar), h('p', { class: 'row', style: { marginTop: '10px' } }, h('span', { class: 'spinner' }), msg));
@@ -156,12 +177,13 @@ export async function renderCreate(app, { args }) {
       } finally { v.removeAttribute('src'); v.load(); }
       card.replaceChildren();
     }
-    const cov = fs.track.coverage;
+    const cov = cloud ? 1 : fs.track.coverage;
     const canvas = h('canvas');
     const stage = h('div', { class: 'stage' }, canvas);
     card.append(
       h('div', { class: 'row between' }, h('h3', { style: { margin: 0 } }, 'Before / after'),
-        cov > 0.15 ? h('span', { class: 'badge ok' }, `Face found in ${Math.round(cov * 100)}% of frames`) : h('span', { class: 'badge warn' }, 'No face detected')),
+        cloud ? h('span', { class: 'badge ok' }, icon('sparkle', 12), 'AI face swap')
+          : cov > 0.15 ? h('span', { class: 'badge ok' }, `Face found in ${Math.round(cov * 100)}% of frames`) : h('span', { class: 'badge warn' }, 'No face detected')),
       h('p', { class: 'muted small' }, cov > 0.15 ? 'Drag across the video to compare. Press play to see the face follow the movement.' : 'We couldn\'t detect a face automatically. Continue, then use "Place manually" in the Face swap tab of the editor.'),
       stage);
     const playBtn = h('button', { class: 'icon-btn', 'aria-label': 'Play' }, icon('play'));
@@ -321,7 +343,7 @@ export async function renderCreate(app, { args }) {
           summary('Voice', project.voiceMode === 'clone' ? (voice?.name || '—') + (willSpeakLive ? ' (preview only)' : '') : project.voiceMode === 'record' ? (project.narration ? 'Your recording' : 'Not recorded yet') : 'Original audio'),
           summary('Subtitles', project.edit.subtitles.length ? `${project.edit.subtitles.length} lines` : 'None'),
           summary('Content ID', project.contentId)),
-        fs.enabled && !fs.track && h('div', { class: 'notice warn', style: { marginTop: '12px' } }, icon('face'), h('span', {}, 'The face hasn\'t been placed yet. Go back to Edit → Face swap and press "Detect & swap face".')),
+        fs.enabled && api.mode !== 'cloud' && !fs.track && h('div', { class: 'notice warn', style: { marginTop: '12px' } }, icon('face'), h('span', {}, 'The face hasn\'t been placed yet. Go back to Edit → Face swap and press "Detect & swap face".')),
         willSpeakLive && h('div', { class: 'notice warn', style: { marginTop: '12px' } }, icon('mic'), h('span', {}, 'The AI voice can only be previewed live in this mode, so it won\'t be in the exported file. Your subtitles will be.'))),
       h('div', { class: 'card' },
         h('h3', {}, 'Generate'),
