@@ -26,7 +26,7 @@ jobs:
         run: |
           mkdir _site
           # Every page (*.html) is published, so a new page can't be forgotten here.
-          cp -r *.html menu.json robots.txt sitemap.xml site.webmanifest .nojekyll assets flyer _site/
+          cp -r *.html menu.json robots.txt sitemap.xml site.webmanifest .nojekyll assets flyer studio _site/
       - name: Make phones load the newest scripts and styles after each update
         run: |
           # Adds ?v=<commit> to our own .css/.js links, so a browser that still
