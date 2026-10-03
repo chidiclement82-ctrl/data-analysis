@@ -29,7 +29,7 @@ export function updateModePill() {
   pill.replaceChildren();
   const b = (t) => { const el = document.createElement('b'); el.textContent = t; return el; };
   const vp = api.voiceProvider;
-  pill.append('Face: ', b(api.mode === 'cloud' ? 'Cloud' : 'In-browser'), ' · Voice: ', b(vp === 'elevenlabs' ? 'ElevenLabs' : vp === 'cloud' ? 'Cloud' : 'Preview'));
+  pill.append('Face: ', b(api.mode === 'cloud' ? 'AI server' : 'Preview'), ' · Voice: ', b(vp === 'elevenlabs' ? 'ElevenLabs' : 'Preview'));
   pill.title = vp === 'local'
     ? 'Voice cloning is off. Add an ElevenLabs API key in Dashboard → Account.'
     : 'Real voice cloning is on.';

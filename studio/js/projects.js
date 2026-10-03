@@ -1,6 +1,6 @@
 // Project records and the generate step that turns one into a finished video.
 
-import { put, get, uid, blobUrl, getSettings } from './store.js';
+import { put, get, remove, uid, blobUrl, getSettings } from './store.js';
 import { defaultProject, exportVideo } from './player.js';
 import { preparedFace } from './library.js';
 import { newContentId, checkRateLimit } from './safety.js';
@@ -33,17 +33,47 @@ export async function createProject({ name, sourceVideoId, faceId = null, voiceI
 
 export const saveProject = (p) => put('projects', p);
 
+/**
+ * Runs the generative face swap for the whole source video on the AI server and
+ * stores the result. The project then uses the swapped footage, and the
+ * in-browser overlay is switched off.
+ */
+export async function runCloudSwap(project, { signal, onProgress } = {}) {
+  const src = await get('videos', project.sourceVideoId);
+  const face = await get('faces', project.faceId);
+  if (!src || !face) throw new Error('Choose a video and a face first.');
+  const blob = await api.faceSwapVideo(src.blob, face.blob, { signal, onProgress, duration: src.duration });
+  const old = project.cloudSwapVideoId;
+  const swapped = await put('videos', {
+    id: uid('vid'), kind: 'intermediate', name: `${src.name} (AI face swap)`, blob, mime: blob.type || 'video/mp4',
+    duration: src.duration, width: src.width, height: src.height, thumb: src.thumb, consentId: src.consentId,
+    faceId: face.id, sourceVideoId: src.id,
+  });
+  project.cloudSwapVideoId = swapped.id;
+  project.cloudSwapFaceId = face.id;
+  project.edit.faceSwap.enabled = true;
+  await saveProject(project);
+  if (old) await remove('videos', old);
+  return swapped;
+}
+
 /** Everything the Player needs for a project: URLs for media plus the prepared face. */
 export async function projectAssets(project) {
-  const video = await get('videos', project.cloudSwapVideoId || project.sourceVideoId);
+  const useSwap = project.cloudSwapVideoId && project.edit.faceSwap.enabled;
+  let video = useSwap ? await get('videos', project.cloudSwapVideoId) : null;
+  if (useSwap && !video) project.cloudSwapVideoId = null;
+  const source = await get('videos', project.sourceVideoId);
+  video = video || source;
   if (!video) throw new Error('The source video for this project was deleted.');
-  const face = project.faceId && !project.cloudSwapVideoId ? await preparedFace(project.faceId) : null;
+  const face = project.faceId && video === source ? await preparedFace(project.faceId) : null;
   const voice = project.voiceId ? await get('voices', project.voiceId) : null;
   const useBrowserVoice = project.voiceMode === 'clone' && !project.narration && voice && project.script.trim();
   return {
     video,
     voice,
     videoUrl: blobUrl(video.id, video.blob),
+    // With an AI-swapped video, the original is shown on the "Before" side of the compare slider.
+    beforeUrl: video !== source && source ? blobUrl(source.id, source.blob) : null,
     face,
     narrationUrl: project.narration ? blobUrl(project.id + ':narration', project.narration) : null,
     musicUrl: project.music ? blobUrl(project.id + ':music', project.music) : null,
@@ -87,22 +117,17 @@ export async function generateProject(project, { height = 720, onProgress, signa
   const limit = await checkRateLimit();
   if (!limit.ok) throw new Error(`You've reached today's limit of ${limit.limit} videos on your plan. Upgrade or try again tomorrow.`);
 
+  let swapShare = 0;
   if (api.mode === 'cloud' && project.faceId && project.edit.faceSwap.enabled && !project.cloudSwapVideoId) {
-    onProgress?.(0, 'Generating face swap on the AI provider');
-    const src = await get('videos', project.sourceVideoId);
-    const face = await get('faces', project.faceId);
-    const blob = await api.faceSwapVideo(src.blob, face.blob, { preserveExpressions: true }, (p) => onProgress?.(p * 0.5, 'Generating face swap'));
-    const swapped = await put('videos', { id: uid('vid'), kind: 'intermediate', name: `${src.name} (swapped)`, blob, duration: src.duration, width: src.width, height: src.height, thumb: src.thumb, consentId: src.consentId });
-    project.cloudSwapVideoId = swapped.id;
-    await saveProject(project);
+    swapShare = 0.6;
+    await runCloudSwap(project, { signal, onProgress: (p, s) => onProgress?.(p * swapShare, s || 'AI face swap') });
   }
 
   const assets = await projectAssets(project);
-  const cloudShare = project.cloudSwapVideoId && api.mode === 'cloud' ? 0.5 : 0;
   const out = await exportVideo(project.edit, assets, {
     height: Math.min(height, maxExportHeight()),
     signal,
-    onProgress: (p) => onProgress?.(cloudShare + p * (1 - cloudShare), 'Rendering video'),
+    onProgress: (p) => onProgress?.(swapShare + p * (1 - swapShare), 'Rendering video'),
   });
 
   const rec = await put('videos', {

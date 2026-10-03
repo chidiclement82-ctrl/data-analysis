@@ -118,7 +118,8 @@ export async function renderDashboard(app, { args, params }) {
       const s = getSettings();
       const name = h('input', { type: 'text', value: s.displayName });
       const quality = h('select', {}, [['720', 'HD 720p'], ['1080', 'Full HD 1080p']].map(([v, l]) => h('option', { value: v, selected: s.exportQuality === v }, l)));
-      const apiBase = h('input', { type: 'url', value: s.apiBase, placeholder: 'https://api.your-backend.com' });
+      const apiBase = h('input', { type: 'url', value: s.apiBase, placeholder: 'https://your-name-visage-faceswap.hf.space' });
+      const apiToken = h('input', { type: 'password', value: s.apiToken || '', placeholder: 'Only if your server has API_TOKEN set', autocomplete: 'off' });
       const apiStatus = h('span', { class: 'small muted' });
       const elevenKey = h('input', { type: 'password', value: s.elevenKey, placeholder: 'sk_…', autocomplete: 'off', spellcheck: 'false' });
       const elevenModel = h('select', {}, [
@@ -145,17 +146,25 @@ export async function renderDashboard(app, { args, params }) {
       drawPlans();
 
       const save = () => {
-        saveSettings({ displayName: name.value.trim() || 'Creator', exportQuality: quality.value, apiBase: apiBase.value.trim(), plan });
+        saveSettings({ displayName: name.value.trim() || 'Creator', exportQuality: quality.value, plan });
         updateModePill();
         drawStats();
         toast('Settings saved.', 'success');
       };
       const test = async () => {
-        saveSettings({ apiBase: apiBase.value.trim() });
+        saveSettings({ apiBase: apiBase.value.trim(), apiToken: apiToken.value.trim() });
         updateModePill();
-        apiStatus.textContent = 'Checking…';
-        try { const r = await api.health(); apiStatus.textContent = r.mode === 'local' ? 'No provider set: using the in-browser engine.' : 'Connected.'; }
-        catch (e) { apiStatus.textContent = `Couldn't connect: ${e.message}`; }
+        if (!apiBase.value.trim()) { apiStatus.replaceChildren('Server removed. Face swap uses the in-browser preview.'); return; }
+        apiStatus.replaceChildren(h('span', { class: 'spinner' }), ' Checking…');
+        try {
+          const r = await api.health({ fresh: true });
+          if (r.tokenRequired) await api.checkAuth();
+          apiStatus.replaceChildren(r.ready
+            ? h('span', { class: 'badge ok' }, icon('check', 12), `Connected · AI models ready on ${r.device === 'cuda' ? 'GPU' : 'CPU'} · videos up to ${Math.floor(r.maxSeconds)}s`)
+            : r.loading
+              ? h('span', { class: 'badge warn' }, 'Connected. The server is still loading its AI models, so check again in a minute.')
+              : h('span', { class: 'badge warn' }, `Connected, but the models failed to load: ${r.error}`));
+        } catch (e) { apiStatus.replaceChildren(h('span', { class: 'badge warn' }, e.message)); }
       };
       const exportConsents = async () => {
         const consents = await all('consents');
@@ -180,13 +189,14 @@ export async function renderDashboard(app, { args, params }) {
             h('label', { class: 'field' }, h('span', {}, 'Speech model'), elevenModel),
             h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: testEleven }, 'Save & test'), elevenStatus)),
           h('div', { class: 'card stack' },
-            h('h3', {}, 'AI provider'),
-            h('p', { class: 'muted small', style: { margin: 0 } }, 'Leave empty to use the in-browser engine. Add your backend URL to run generative face swap and neural voice cloning on servers. The API it needs is described in studio/README.md.'),
-            h('label', { class: 'field' }, h('span', {}, 'API base URL'), apiBase),
-            h('div', { class: 'row' }, h('button', { class: 'btn', onclick: test }, 'Test connection'), apiStatus)),
+            h('h3', {}, 'AI face swap server'),
+            h('p', { class: 'muted small', style: { margin: 0 } }, 'The real AI face swap runs on a server you host, for free on Hugging Face Spaces or on any GPU machine. Setup steps are in studio-server/README.md. Leave this empty to use the in-browser preview.'),
+            h('label', { class: 'field' }, h('span', {}, 'Server URL'), apiBase),
+            h('label', { class: 'field' }, h('span', {}, 'Access token'), apiToken),
+            h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: test }, 'Save & test'), apiStatus)),
           h('div', { class: 'card stack' },
             h('h3', {}, 'Privacy & data'),
-            h('p', { class: 'muted small', style: { margin: 0 } }, 'Your faces, voices and videos are stored in this browser only. Nothing is uploaded unless you connect an AI provider.'),
+            h('p', { class: 'muted small', style: { margin: 0 } }, 'Your faces, voices and videos are stored in this browser only. They\'re only sent out when you use the face swap server or ElevenLabs.'),
             h('div', { class: 'row' },
               h('button', { class: 'btn', onclick: exportConsents }, icon('download', 16), 'Download consent records'),
               h('button', { class: 'btn ghost', onclick: () => openReportDialog() }, icon('flag', 16), 'Report content')),
