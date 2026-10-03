@@ -136,8 +136,8 @@ export async function requestConsent(kind, file, { suggestedLabel = '' } = {}) {
 }
 
 // Burned-in label drawn on every exported frame. Not optional: it is how viewers
-// know the video is synthetic.
-export function drawAiLabel(ctx, w, hgt, contentId) {
+// know the video is synthetic. position: 'top-right' (default) or 'bottom-right'.
+export function drawAiLabel(ctx, w, hgt, contentId, { position = 'top-right' } = {}) {
   const scale = Math.max(0.6, Math.min(w, hgt) / 720);
   const pad = 14 * scale;
   ctx.save();
@@ -150,7 +150,7 @@ export function drawAiLabel(ctx, w, hgt, contentId) {
   const bw = tw + iw + pad * 1.6;
   const bh = 28 * scale;
   const x = w - bw - pad;
-  const y = pad;
+  const y = position === 'bottom-right' ? hgt - bh - pad : pad;
   ctx.fillStyle = 'rgba(10, 10, 20, 0.62)';
   ctx.beginPath();
   ctx.roundRect(x, y, bw, bh, bh / 2);

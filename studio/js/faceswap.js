@@ -178,7 +178,8 @@ function choose(faces, prev, pick) {
   return faces.sort((a, b) => b.w * b.h - a.w * a.h)[0];
 }
 
-function toTrackPoint(face) {
+/** A detected face as a track point (center, size, tilt, mouth offset). */
+export function toTrackPoint(face) {
   const cx = face.x + face.w / 2;
   const cy = face.y + face.h / 2;
   return {
