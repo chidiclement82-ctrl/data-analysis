@@ -12,6 +12,7 @@ Once GitHub Pages deploys, it's live at `/studio/`. To run it locally, serve the
 |---|---|---|
 | Create video | `#/create` | 7-step wizard. Saves to the project after every step. |
 | Face swap | `#/face-swap` | Pick a face and a video, then compare before and after with a drag slider and tune the blend. |
+| Live camera | `#/camera` | Your webcam with a saved (consented) face following your head in real time. The "AI-generated" label and a content ID are drawn into the **bottom-right corner** of every frame. Record clips (up to 5 minutes) to the dashboard. It runs only on this page: there's no virtual webcam for other apps, and no streaming into calls. |
 | Voice clone | `#/voice` | Clone a voice from the mic, **from a video's soundtrack**, or from an audio file. Then type a script and adjust speed, emotion and tone. |
 | Editor | `#/editor/<id>` | Trim, split and cut; text overlays; subtitles (auto from the script); music; synthesized sound effects; volumes with ducking; transitions and fades; 720p/1080p export. |
 | Dashboard | `#/dashboard` | Projects, faces, voice models, generated videos, export history, account, plan and AI provider settings. |

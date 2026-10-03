@@ -9,11 +9,13 @@ import { renderVoice } from './views/voice.js';
 import { renderEditorPage } from './views/editor.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderSafety } from './views/safety.js';
+import { renderCamera } from './views/camera.js';
 
 const routes = {
   '': renderLanding,
   create: renderCreate,
   'face-swap': renderFaceSwap,
+  camera: renderCamera,
   voice: renderVoice,
   editor: renderEditorPage,
   dashboard: renderDashboard,

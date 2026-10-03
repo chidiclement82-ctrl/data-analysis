@@ -56,20 +56,20 @@ p { margin: 0 0 1em; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; text-decoration: none; letter-spacing: -.02em; }
 .brand-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--grad); display: grid; place-items: center; color: var(--accent-ink); box-shadow: 0 6px 24px -6px #8b7bffaa; }
 .nav { display: flex; gap: 4px; flex: 1; }
-.nav a { text-decoration: none; padding: 8px 12px; border-radius: 9px; color: var(--muted); font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 7px; }
+.nav a { white-space: nowrap; text-decoration: none; padding: 8px 10px; border-radius: 9px; color: var(--muted); font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 7px; }
 .nav a:hover { color: var(--text); background: var(--panel); }
 .nav a.active { color: var(--text); background: var(--panel-2); }
 .topbar-right { display: flex; gap: 10px; align-items: center; }
 .mode-pill { font-size: 12px; padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line-2); color: var(--muted); white-space: nowrap; }
 .mode-pill b { color: var(--accent-2); font-weight: 600; }
-.menu-btn { display: none; }
+.icon-btn.menu-btn { display: none; }
 
-@media (max-width: 960px) {
+@media (max-width: 1280px) {
   .nav { display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; padding: 10px 16px 16px; background: var(--bg-2); border-bottom: 1px solid var(--line); }
   .nav.open { display: flex; }
-  .menu-btn { display: inline-grid; }
+  .icon-btn.menu-btn { display: inline-grid; }
   .topbar { justify-content: space-between; }
-  .mode-pill { display: none; }
+
 }
 
 /* ---------- buttons & inputs ---------- */
@@ -280,3 +280,4 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .spinner { width: 18px; height: 18px; border-radius: 99px; border: 2px solid var(--line-2); border-top-color: var(--accent); animation: spin .8s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+@media (max-width: 1440px) { .mode-pill { display: none; } }
