@@ -82,6 +82,8 @@ const DEFAULT_SETTINGS = {
   plan: 'free',
   exportQuality: '720',
   apiBase: '',
+  elevenKey: '',
+  elevenModel: 'eleven_multilingual_v2',
 };
 export function getSettings() {
   try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; }

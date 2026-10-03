@@ -4,6 +4,7 @@
 // your backend through the REST contract documented in studio/README.md.
 
 import { getSettings } from './store.js';
+import * as eleven from './elevenlabs.js';
 
 const base = () => getSettings().apiBase.replace(/\/+$/, '');
 
@@ -54,19 +55,40 @@ export const api = {
     return request('/v1/reports', { method: 'POST', json: report });
   },
 
-  // Returns { voiceId } in cloud mode. Locally, the caller keeps the analyzed profile.
-  async cloneVoice(sample, { name, consentId }) {
+  // Which engine clones voices: ElevenLabs (API key set), your backend, or none.
+  get voiceProvider() { return eleven.isConfigured() ? 'elevenlabs' : base() ? 'cloud' : 'local'; },
+
+  // Returns { voiceId, provider } when a real cloning provider is set up, else null
+  // (the caller then keeps only the local preview profile).
+  async cloneVoice(samples, { name, consentId, removeNoise = false, description = '' }) {
+    if (eleven.isConfigured()) {
+      const r = await eleven.cloneVoice(samples, { name, description, removeNoise, labels: { source: 'visage-studio', consent: consentId } });
+      return { ...r, provider: 'elevenlabs' };
+    }
     if (!base()) return null;
     const fd = new FormData();
-    fd.append('sample', sample, 'sample.webm');
+    samples.forEach((s, i) => fd.append('sample', s, s.name || `sample-${i + 1}.webm`));
     fd.append('name', name);
     fd.append('consentId', consentId);
-    return request('/v1/voices', { method: 'POST', body: fd });
+    fd.append('removeNoise', String(removeNoise));
+    const r = await request('/v1/voices', { method: 'POST', body: fd });
+    return { ...r, provider: 'cloud' };
   },
 
-  // Returns an audio Blob in cloud mode, or null when only the browser preview voice is available.
+  async deleteVoice(voice) {
+    if (!voice.remoteId) return;
+    if (voice.provider === 'elevenlabs' && eleven.isConfigured()) return eleven.deleteVoice(voice.remoteId);
+    if (voice.provider === 'cloud' && base()) return request(`/v1/voices/${encodeURIComponent(voice.remoteId)}`, { method: 'DELETE' });
+  },
+
+  // Returns an audio Blob from the cloned voice, or null when only the browser preview voice is available.
   async synthesize(voice, text, { speed = 1, emotion = 'neutral', tone = 'natural' } = {}) {
-    if (!base() || !voice.remoteId) return null;
+    if (!voice.remoteId) return null;
+    if (voice.provider === 'elevenlabs') {
+      if (!eleven.isConfigured()) throw new Error('Add your ElevenLabs API key in Dashboard → Account to use this voice.');
+      return eleven.speak(voice.remoteId, text, { speed, emotion, tone });
+    }
+    if (!base()) throw new Error('This voice lives on your AI backend. Add its URL in Dashboard → Account.');
     return request(`/v1/voices/${encodeURIComponent(voice.remoteId)}/speech`, {
       method: 'POST', json: { text, speed, emotion, tone },
     });

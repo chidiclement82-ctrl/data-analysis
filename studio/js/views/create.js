@@ -8,10 +8,9 @@ import { analyzeVideo, getDetector } from '../faceswap.js';
 import { Player, defaultProject } from '../player.js';
 import { mountEditor } from '../editor.js';
 import { generateBlock, downloadButton } from '../exportui.js';
-import { speechPanel, pickOrCreateVoice } from './voice.js';
-import { startRecording, drawWave, decode, peaks } from '../voice.js';
+import { speechPanel, pickOrCreateVoice, voiceKind } from './voice.js';
+import { startRecording, drawWave, decode, peaks, generateSpeech } from '../voice.js';
 import { openReportDialog } from '../safety.js';
-import { api } from '../api.js';
 import { navigate } from '../app.js';
 
 const STEPS = ['Upload', 'Choose face', 'Choose voice', 'Edit', 'Generate', 'Preview', 'Export'];
@@ -205,7 +204,7 @@ export async function renderCreate(app, { args }) {
             voices.map(v => h('div', { class: `tile selectable${v.id === project.voiceId ? ' selected' : ''}`, role: 'button', tabindex: '0',
               onclick: async () => { project.voiceId = v.id; project.narration = null; await saveProject(project); draw(); } },
               h('span', { class: 'check-mark' }, icon('check', 14)),
-              h('div', { class: 'body' }, h('span', { class: 'title' }, icon('mic', 14), ' ', v.name), h('span', { class: 'small muted' }, v.remoteId ? 'Neural clone' : 'Local profile')))),
+              h('div', { class: 'body' }, h('span', { class: 'title' }, icon('mic', 14), ' ', v.name), h('span', { class: 'small muted' }, voiceKind(v))))),
             h('button', { class: 'tile selectable', style: { alignItems: 'center', justifyContent: 'center', padding: '14px', color: 'var(--accent)' },
               onclick: async () => { const v = await pickOrCreateVoice(); if (v) { project.voiceId = v.id; await saveProject(project); draw(); } } },
               icon('plus'), h('span', { class: 'small' }, 'Create a new voice')))));
@@ -227,8 +226,10 @@ export async function renderCreate(app, { args }) {
       panel.text.addEventListener('input', () => { project.script = panel.text.value; project.narration = null; saveProject(project); });
       teardown.push(() => panel.stop());
       right.append(h('h3', {}, 'Script'), panel.el);
-      if (api.mode !== 'cloud') {
-        right.append(h('div', { class: 'notice warn', style: { marginTop: '14px' } }, icon('mic'), h('span', {}, 'Without an AI provider the voice plays live in previews but isn\'t saved into the exported file. Connect a provider in Account settings, or choose "I\'ll record the narration".')));
+      if (!voice.remoteId) {
+        right.append(h('div', { class: 'notice warn', style: { marginTop: '14px' } }, icon('mic'), h('span', {}, 'This is a preview voice, so it plays live in previews but isn\'t saved into the exported file. ', h('a', { href: '#/dashboard/account' }, 'Add an ElevenLabs key'), ' and create a real clone, or choose "I\'ll record the narration".')));
+      } else {
+        right.append(h('p', { class: 'small muted', style: { marginTop: '12px' } }, 'When you continue, your cloned voice reads the script and the speech is added to the video.'));
       }
     } else if (mode === 'record') {
       const text = h('textarea', { rows: 8, placeholder: 'Write what you\'ll say. It becomes your subtitles too.' }, project.script);
@@ -243,6 +244,17 @@ export async function renderCreate(app, { args }) {
     footer({
       canNext: mode !== 'clone' || !!voice,
       onNext: async () => {
+        // A real clone: make the narration now so it's in the edit and the export.
+        if (mode === 'clone' && voice?.remoteId && project.script?.trim() && !project.narration) {
+          toast('Generating your voice…');
+          try {
+            const res = await generateSpeech(voice, project.script.trim(), project.speech);
+            if (res.blob) { project.narration = res.blob; project.narrationSource = 'ai'; project.edit.subtitles = []; await saveProject(project); }
+          } catch (e) {
+            toast(`Couldn't generate the voice: ${e.message}`, 'error');
+            return false;
+          }
+        }
         if (project.script?.trim() && !project.edit.subtitles.length) {
           let dur = null;
           if (project.narration) { try { dur = (await decode(project.narration)).duration; } catch { /* estimate instead */ } }

@@ -184,3 +184,56 @@ export function estimateSpeechSeconds(text, speed = 1) {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   return words / (2.6 * speed) + 0.4;
 }
+
+// ---------- Voice samples from a video ----------
+
+/** Decodes a video's soundtrack. Throws a friendly error when there's no usable audio. */
+export async function audioFromVideo(file) {
+  let buf;
+  try { buf = await decode(file); } catch { throw new Error('We couldn\'t read any audio from this video. Try an MP4 or WebM with sound.'); }
+  if (!buf.duration || buf.duration < 3) throw new Error('This video has no audio track, or it\'s too short.');
+  return buf;
+}
+
+/** Start time of the `seconds`-long window with the most speech-like (voiced) audio. */
+export function bestSpeechWindow(buffer, seconds) {
+  if (buffer.duration <= seconds) return 0;
+  const sr = buffer.sampleRate;
+  const d = buffer.getChannelData(0);
+  const hop = Math.floor(sr * 0.25);
+  const voiced = [];
+  for (let s = 0; s + hop <= d.length; s += hop) {
+    let e = 0;
+    for (let i = s; i < s + hop; i += 4) e += d[i] * d[i];
+    voiced.push(Math.sqrt(e / (hop / 4)) > 0.02 ? 1 : 0);
+  }
+  const win = Math.floor(seconds / 0.25);
+  let sum = voiced.slice(0, win).reduce((a, b) => a + b, 0), best = sum, bestAt = 0;
+  for (let i = win; i < voiced.length; i++) {
+    sum += voiced[i] - voiced[i - win];
+    if (sum > best) { best = sum; bestAt = i - win + 1; }
+  }
+  return bestAt * 0.25;
+}
+
+/** Cuts [start, end) from a buffer, mixes to mono, resamples, normalizes, and returns a WAV File. */
+export async function encodeWavSegment(buffer, start, end, { rate = 22050, name = 'voice-sample.wav' } = {}) {
+  const dur = Math.max(0.5, end - start);
+  const off = new OfflineAudioContext(1, Math.ceil(dur * rate), rate);
+  const src = off.createBufferSource();
+  src.buffer = buffer;
+  src.connect(off.destination);
+  src.start(0, start, dur);
+  const pcm = (await off.startRendering()).getChannelData(0);
+  let peak = 0;
+  for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
+  const gain = peak > 0 ? Math.min(4, 0.89 / peak) : 1; // normalize to about -1 dBFS
+  const out = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const str = (o, s) => { for (let i = 0; i < s.length; i++) out.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, 'RIFF'); out.setUint32(4, 36 + pcm.length * 2, true); str(8, 'WAVE');
+  str(12, 'fmt '); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 1, true);
+  out.setUint32(24, rate, true); out.setUint32(28, rate * 2, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true);
+  str(36, 'data'); out.setUint32(40, pcm.length * 2, true);
+  for (let i = 0; i < pcm.length; i++) out.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i] * gain)) * 0x7fff, true);
+  return new File([out.buffer], name, { type: 'audio/wav' });
+}

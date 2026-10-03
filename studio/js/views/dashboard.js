@@ -5,6 +5,8 @@ import { downloadBlob, recordExport } from '../projects.js';
 import { drawWave } from '../voice.js';
 import { checkRateLimit, openReportDialog } from '../safety.js';
 import { api } from '../api.js';
+import { voiceKind, deleteVoice } from './voice.js';
+import * as eleven from '../elevenlabs.js';
 import { navigate, updateModePill } from '../app.js';
 
 const TABS = [
@@ -83,11 +85,11 @@ export async function renderDashboard(app, { args, params }) {
         requestAnimationFrame(() => v.peaks && drawWave(c, v.peaks));
         const a = new Audio(blobUrl(v.id, v.sample));
         return h('div', { class: 'tile voice-tile' }, h('div', { class: 'media' }, c),
-          h('div', { class: 'body' }, h('span', { class: 'title' }, v.name), h('span', { class: 'small muted' }, `${v.remoteId ? 'Neural clone' : 'Local profile'} · ${v.profile ? fmtTime(v.profile.duration) + ' sample' : ''}`)),
+          h('div', { class: 'body' }, h('span', { class: 'title' }, v.name), h('span', { class: 'small muted' }, `${voiceKind(v)} · ${v.profile ? fmtTime(v.profile.duration) + ' sample' : ''}`)),
           h('div', { class: 'actions' },
             h('button', { class: 'btn sm', onclick: () => (a.paused ? a.play() : a.pause()) }, icon('play', 14), 'Sample'),
             h('a', { class: 'btn sm ghost', href: '#/voice' }, 'Use'),
-            h('button', { class: 'btn sm ghost', 'aria-label': 'Delete voice', onclick: async () => { if (confirmDelete(`the voice "${v.name}"`)) await remove('voices', v.id); } }, icon('trash', 14))));
+            h('button', { class: 'btn sm ghost', 'aria-label': 'Delete voice', onclick: () => deleteVoice(v) }, icon('trash', 14))));
       }));
     },
     async videos() {
@@ -118,6 +120,25 @@ export async function renderDashboard(app, { args, params }) {
       const quality = h('select', {}, [['720', 'HD 720p'], ['1080', 'Full HD 1080p']].map(([v, l]) => h('option', { value: v, selected: s.exportQuality === v }, l)));
       const apiBase = h('input', { type: 'url', value: s.apiBase, placeholder: 'https://api.your-backend.com' });
       const apiStatus = h('span', { class: 'small muted' });
+      const elevenKey = h('input', { type: 'password', value: s.elevenKey, placeholder: 'sk_…', autocomplete: 'off', spellcheck: 'false' });
+      const elevenModel = h('select', {}, [
+        ['eleven_multilingual_v2', 'Multilingual v2: most natural, 29 languages'],
+        ['eleven_v3', 'v3: most expressive emotion'],
+        ['eleven_flash_v2_5', 'Flash v2.5: fastest, lower cost'],
+      ].map(([v, l]) => h('option', { value: v, selected: s.elevenModel === v }, l)));
+      const elevenStatus = h('span', { class: 'small muted' });
+      const saveVoice = () => { saveSettings({ elevenKey: elevenKey.value.trim(), elevenModel: elevenModel.value }); updateModePill(); };
+      const testEleven = async () => {
+        saveVoice();
+        if (!elevenKey.value.trim()) { elevenStatus.textContent = 'Key removed. Voice cloning is off.'; return; }
+        elevenStatus.textContent = 'Checking…';
+        try {
+          const sub = await eleven.subscription();
+          elevenStatus.replaceChildren(sub.can_use_instant_voice_cloning === false
+            ? h('span', { class: 'badge warn' }, `Connected (${sub.tier} plan), but this plan can't clone voices. Upgrade to Starter or higher at elevenlabs.io.`)
+            : h('span', { class: 'badge ok' }, icon('check', 12), `Connected · ${sub.tier} plan · ${(sub.character_limit - sub.character_count).toLocaleString()} characters left this month`));
+        } catch (e) { elevenStatus.replaceChildren(h('span', { class: 'badge warn' }, e.message)); }
+      };
       const plans = h('div', { class: 'chips' });
       let plan = params.plan && PLANS[params.plan] ? params.plan : s.plan;
       const drawPlans = () => plans.replaceChildren(...Object.entries(PLANS).map(([k, l]) => h('button', { class: `chip${plan === k ? ' on' : ''}`, onclick: () => { plan = k; drawPlans(); } }, l)));
@@ -150,6 +171,14 @@ export async function renderDashboard(app, { args, params }) {
           plan !== s.plan && h('div', { class: 'notice' }, icon('sparkle'), h('span', {}, 'Payments aren\'t connected in this build yet, so saving switches your plan right away. Hook your billing provider into this step before launch.')),
           h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: save }, 'Save changes'))),
         h('div', { class: 'stack' },
+          h('div', { class: 'card stack' },
+            h('h3', {}, 'Voice cloning (ElevenLabs)'),
+            h('p', { class: 'muted small', style: { margin: 0 } }, 'Real voice cloning runs on ElevenLabs. Paste an API key from ',
+              h('a', { href: 'https://elevenlabs.io/app/settings/api-keys', target: '_blank', rel: 'noopener' }, 'elevenlabs.io → API keys'),
+              '. Cloning needs their Starter plan or higher. The key is stored only in this browser and is sent only to ElevenLabs.'),
+            h('label', { class: 'field' }, h('span', {}, 'API key'), elevenKey),
+            h('label', { class: 'field' }, h('span', {}, 'Speech model'), elevenModel),
+            h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: testEleven }, 'Save & test'), elevenStatus)),
           h('div', { class: 'card stack' },
             h('h3', {}, 'AI provider'),
             h('p', { class: 'muted small', style: { margin: 0 } }, 'Leave empty to use the in-browser engine. Add your backend URL to run generative face swap and neural voice cloning on servers. The API it needs is described in studio/README.md.'),

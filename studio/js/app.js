@@ -27,13 +27,12 @@ export function navigate(path) { location.hash = '#/' + path.replace(/^#?\/?/, '
 export function updateModePill() {
   const pill = $('#mode-pill');
   pill.replaceChildren();
-  pill.append(api.mode === 'cloud' ? 'AI engine: ' : 'Engine: ');
-  const b = document.createElement('b');
-  b.textContent = api.mode === 'cloud' ? 'Cloud' : 'In-browser';
-  pill.append(b);
-  pill.title = api.mode === 'cloud'
-    ? 'Generative face swap and neural voice run on your connected AI provider.'
-    : 'Running on the in-browser engine. Connect an AI provider in Account settings for full-quality generation.';
+  const b = (t) => { const el = document.createElement('b'); el.textContent = t; return el; };
+  const vp = api.voiceProvider;
+  pill.append('Face: ', b(api.mode === 'cloud' ? 'Cloud' : 'In-browser'), ' · Voice: ', b(vp === 'elevenlabs' ? 'ElevenLabs' : vp === 'cloud' ? 'Cloud' : 'Preview'));
+  pill.title = vp === 'local'
+    ? 'Voice cloning is off. Add an ElevenLabs API key in Dashboard → Account.'
+    : 'Real voice cloning is on.';
 }
 
 async function render() {
