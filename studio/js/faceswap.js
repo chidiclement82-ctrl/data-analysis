@@ -18,13 +18,24 @@ const MP_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSI
 const MP_MODEL = 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite';
 
 let detectorPromise;
+let visionPromise;
+
+/** MediaPipe Tasks Vision, loaded once from the CDN: { vision, fileset }. */
+export function loadVision() {
+  visionPromise ??= (async () => {
+    const vision = await import(/* @vite-ignore */ `${MP_BASE}/vision_bundle.mjs`);
+    const fileset = await vision.FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+    return { vision, fileset };
+  })();
+  visionPromise.catch(() => { visionPromise = null; });
+  return visionPromise;
+}
 
 export function getDetector() {
   if (detectorPromise) return detectorPromise;
   detectorPromise = (async () => {
     try {
-      const vision = await import(/* @vite-ignore */ `${MP_BASE}/vision_bundle.mjs`);
-      const fileset = await vision.FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+      const { vision, fileset } = await loadVision();
       const fd = await vision.FaceDetector.createFromOptions(fileset, {
         baseOptions: { modelAssetPath: MP_MODEL },
         runningMode: 'IMAGE',
