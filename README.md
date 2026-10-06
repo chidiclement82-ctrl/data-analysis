@@ -61,6 +61,22 @@ There's no database, no login and no monthly cost.
 
 Dishes marked sold out on the admin page show on the order page but can't be picked.
 
+## Gift cards: sell for naira (`giftcards/`)
+
+`https://ogarider.name.ng/giftcards/` is a separate page for buying customers' gift cards and paying them in naira. Customers:
+1. Use the **quick calculator** on the home tab (or the **Rates** tab) to see exactly how much naira a card pays.
+2. Fill in the **Sell** tab: card, country, value, physical card or e-code, and their bank details.
+3. Tap **Send trade on WhatsApp**. WhatsApp opens with the whole trade written out (card, value, rate, naira amount, bank details), and they send a photo of the card or the code in the same chat. You check the card and pay them by bank transfer.
+
+**Change rates:** edit [`giftcards/rates.json`](giftcards/rates.json) on GitHub (pencil icon) and commit. The site updates in about a minute.
+- Each card's `rates` is **naira paid per 1 unit of card value**, per country, e.g. `"USD": 1150` means a $100 Amazon card pays ₦115,000.
+- Leave a country out to stop buying that card from that country. Add or remove whole cards in the `cards` list.
+- `ecodeDiscount` (`0.9`) means e-codes pay 90% of the physical-card rate. `minValue` is the smallest card value accepted. Change `updated` to today's date when you change rates.
+
+**WhatsApp number and name:** `WHATSAPP_NUMBER` and `BUSINESS_NAME` at the top of [`giftcards/js/cards.js`](giftcards/js/cards.js). Colours are in the `:root` block of `giftcards/css/cards.css`.
+
+There are no customer accounts, wallets or automatic payouts: you pay each trade yourself after checking the card.
+
 ## Where to change things
 
 Everything you'd normally change is in the files below. Look for comments marked `EDIT` in each one.
@@ -132,6 +148,7 @@ admin.html            menu editor (admin)
 assets/js/admin.js    menu editor code
 assets/images/menu/   food and restaurant photos uploaded from the admin page
 menu.json             the menu: dishes, prices, sections
+giftcards/            sell gift cards for naira (rates in giftcards/rates.json)
 assets/images/        photos and share image
 robots.txt, sitemap.xml, site.webmanifest   for search engines and phones
 .github/workflows/pages.yml                 publishes to GitHub Pages

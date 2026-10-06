@@ -1,0 +1,24 @@
+{
+  "updated": "2026-10-06",
+  "ecodeDiscount": 0.9,
+  "minValue": 10,
+  "currencies": {
+    "USD": { "symbol": "$", "label": "USA ($)" },
+    "GBP": { "symbol": "£", "label": "UK (£)" },
+    "EUR": { "symbol": "€", "label": "Europe (€)" },
+    "CAD": { "symbol": "C$", "label": "Canada (C$)" },
+    "AUD": { "symbol": "A$", "label": "Australia (A$)" }
+  },
+  "cards": [
+    { "id": "amazon",     "name": "Amazon",          "color": "#ff9900", "rates": { "USD": 1150, "GBP": 1380, "EUR": 1180, "CAD": 780, "AUD": 700 } },
+    { "id": "apple",      "name": "Apple / iTunes",  "color": "#a3aab8", "rates": { "USD": 1250, "GBP": 1450, "EUR": 1250, "CAD": 850, "AUD": 760 } },
+    { "id": "steam",      "name": "Steam",           "color": "#3d7ab8", "rates": { "USD": 1300, "GBP": 1500, "EUR": 1300, "CAD": 880, "AUD": 790 } },
+    { "id": "googleplay", "name": "Google Play",     "color": "#34a853", "rates": { "USD": 900,  "GBP": 1100, "EUR": 950 } },
+    { "id": "razer",      "name": "Razer Gold",      "color": "#44d62c", "rates": { "USD": 1200 } },
+    { "id": "sephora",    "name": "Sephora",         "color": "#e0457b", "rates": { "USD": 1100, "CAD": 750 } },
+    { "id": "nordstrom",  "name": "Nordstrom",       "color": "#8a7bd8", "rates": { "USD": 1050 } },
+    { "id": "ebay",       "name": "eBay",            "color": "#e53238", "rates": { "USD": 1000, "GBP": 1200 } },
+    { "id": "walmart",    "name": "Walmart",         "color": "#0071ce", "rates": { "USD": 1000 } },
+    { "id": "vanilla",    "name": "Vanilla Visa",    "color": "#f5c518", "rates": { "USD": 950 } }
+  ]
+}

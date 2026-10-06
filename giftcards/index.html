@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ogarider Cards — Sell Gift Cards for Naira</title>
+  <meta name="description" content="Sell Amazon, Apple, Steam, Google Play and other gift cards for naira. See today's rate, get paid to your Nigerian bank account.">
+  <meta name="theme-color" content="#050d1a">
+  <link rel="canonical" href="https://ogarider.name.ng/giftcards/">
+  <meta property="og:title" content="Ogarider Cards — Sell Gift Cards for Naira">
+  <meta property="og:description" content="Check today's gift card rates and get paid in naira.">
+  <meta property="og:url" content="https://ogarider.name.ng/giftcards/">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/cards.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">₦</span>
+        <span>Ogarider <b>Cards</b></span>
+      </div>
+      <a class="icon-btn" id="wa-top" href="#" aria-label="Chat with us on WhatsApp">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>
+      </a>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section class="view" id="view-home">
+        <div class="hero-card">
+          <p class="hero-label">Quick calculator</p>
+          <div class="calc">
+            <select id="q-card" aria-label="Gift card"></select>
+            <div class="calc-row">
+              <select id="q-cur" aria-label="Card country"></select>
+              <input id="q-amt" type="number" inputmode="decimal" min="1" value="100" aria-label="Card value">
+            </div>
+          </div>
+          <p class="hero-sub">You get</p>
+          <p class="hero-amount" id="q-out">₦0</p>
+          <p class="hero-rate" id="q-rate"></p>
+          <div class="hero-actions">
+            <a class="pill-btn" href="#sell" id="q-sell">
+              <span class="pill-ico pill-ico-green">↑</span>Sell now
+            </a>
+            <a class="pill-btn" href="#rates">
+              <span class="pill-ico">%</span>All rates
+            </a>
+          </div>
+        </div>
+
+        <div class="tiles">
+          <a class="tile tile-teal" href="#sell">
+            <span class="tile-ico">🎁</span>
+            <span class="tile-title">Sell Gift Card</span>
+            <span class="tile-sub">Paid to your bank in naira</span>
+          </a>
+          <a class="tile tile-blue" href="#rates">
+            <span class="tile-ico">📈</span>
+            <span class="tile-title">Today's Rates</span>
+            <span class="tile-sub" id="updated-label">Updated daily</span>
+          </a>
+          <a class="tile tile-rust tile-wide" href="#help">
+            <span class="tile-ico">⚡</span>
+            <span class="tile-title">How it works</span>
+            <span class="tile-sub">3 steps, paid in minutes</span>
+          </a>
+        </div>
+
+        <h2 class="section-title">Cards we buy</h2>
+        <div class="brand-strip" id="brand-strip"></div>
+      </section>
+
+      <!-- RATES -->
+      <section class="view" id="view-rates" hidden>
+        <h1 class="page-title">Today's rates</h1>
+        <p class="muted" id="rates-updated"></p>
+        <div class="seg" id="rates-cur" role="tablist"></div>
+        <div class="rate-list" id="rate-list"></div>
+        <p class="muted small" id="ecode-note"></p>
+      </section>
+
+      <!-- SELL -->
+      <section class="view" id="view-sell" hidden>
+        <h1 class="page-title">Sell a gift card</h1>
+        <form id="sell-form" novalidate>
+          <label class="field">
+            <span>Gift card</span>
+            <select id="s-card" required></select>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Card country</span>
+              <select id="s-cur" required></select>
+            </label>
+            <label class="field">
+              <span>Card value</span>
+              <input id="s-amt" type="number" inputmode="decimal" min="1" placeholder="100" required>
+            </label>
+          </div>
+          <div class="field">
+            <span>Card type</span>
+            <div class="seg" id="s-type">
+              <button type="button" class="on" data-type="physical">Physical card</button>
+              <button type="button" data-type="ecode">E-code</button>
+            </div>
+          </div>
+
+          <div class="payout">
+            <span>You get</span>
+            <strong id="s-out">₦0</strong>
+            <small id="s-rate"></small>
+          </div>
+
+          <h2 class="form-head">Pay me to</h2>
+          <label class="field">
+            <span>Bank</span>
+            <input id="s-bank" type="text" list="banks" autocomplete="off" placeholder="e.g. Opay, GTBank" required>
+            <datalist id="banks"></datalist>
+          </label>
+          <label class="field">
+            <span>Account number</span>
+            <input id="s-acct" type="text" inputmode="numeric" maxlength="10" placeholder="10 digits" required>
+          </label>
+          <label class="field">
+            <span>Account name</span>
+            <input id="s-name" type="text" autocomplete="name" required>
+          </label>
+
+          <p class="form-error" id="s-error" role="alert"></p>
+          <button class="btn-primary" type="submit">Send trade on WhatsApp</button>
+          <p class="muted small center">WhatsApp opens with your trade written out. Send it, then send a clear photo of the card (or the e-code) in the same chat.</p>
+        </form>
+      </section>
+
+      <!-- HELP -->
+      <section class="view" id="view-help" hidden>
+        <h1 class="page-title">How it works</h1>
+        <ol class="steps">
+          <li><b>Check the rate.</b> Pick your card and its value; you see exactly how much naira you'll get.</li>
+          <li><b>Send the trade.</b> Fill in your bank details and tap <i>Send trade on WhatsApp</i>. Then send a photo of the card or the e-code.</li>
+          <li><b>Get paid.</b> We check the card and pay the naira into your bank account, usually within 10–30 minutes.</li>
+        </ol>
+        <h2 class="section-title">Good to know</h2>
+        <ul class="faq">
+          <li>Only send cards you bought yourself. We don't accept stolen or chargeback cards.</li>
+          <li>Rates change daily. The rate you see when you send the trade is the one we honour that day.</li>
+          <li>Never share your card code with anyone claiming to be us on another number.</li>
+        </ul>
+        <a class="btn-primary" id="wa-help" href="#">Chat with us on WhatsApp</a>
+      </section>
+    </main>
+
+    <nav class="tabbar" aria-label="Main">
+      <a href="#home" data-tab="home"><span>⌂</span>Home</a>
+      <a href="#rates" data-tab="rates"><span>%</span>Rates</a>
+      <a href="#sell" data-tab="sell"><span>↑</span>Sell</a>
+      <a href="#help" data-tab="help"><span>?</span>Help</a>
+    </nav>
+  </div>
+
+  <script src="js/cards.js" defer></script>
+</body>
+</html>
