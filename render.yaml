@@ -23,6 +23,10 @@ services:
       # You fill these in on Render when creating the Blueprint.
       - key: TIKTOK_USERNAME
         sync: false
+      # The cartoon's brain. Fill in ONE of these two:
+      # GEMINI_API_KEY is free (aistudio.google.com/apikey); ANTHROPIC_API_KEY is Claude (paid).
+      - key: GEMINI_API_KEY
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: CARTOON_NAME

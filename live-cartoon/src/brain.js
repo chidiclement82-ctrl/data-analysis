@@ -1,7 +1,8 @@
 // The cartoon's brain: turns a viewer comment or a guest's question into a
-// short spoken reply (plus a facial expression) using Claude.
+// short spoken reply (plus a facial expression), using Claude or Google Gemini.
 
 import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI, ApiError as GeminiError } from '@google/genai';
 
 export const EMOTIONS = ['happy', 'excited', 'thinking', 'surprised', 'laughing', 'sad', 'cool', 'love'];
 
@@ -54,9 +55,8 @@ export function cleanForSpeech(text, maxChars = 700) {
   return t;
 }
 
-export function parseReply(message) {
-  if (message.stop_reason === 'refusal') return null;
-  const text = message.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+// Reads the {emotion, say} JSON the model wrote; null if it's unusable.
+export function parseJsonReply(text) {
   try {
     const data = JSON.parse(text);
     const say = cleanForSpeech(data.say);
@@ -67,15 +67,54 @@ export function parseReply(message) {
   }
 }
 
+export function parseReply(message) {
+  if (message.stop_reason === 'refusal') return null;
+  return parseJsonReply(message.content.filter((b) => b.type === 'text').map((b) => b.text).join(''));
+}
+
+// Each provider takes the system prompt and the user's text and returns
+// {emotion, say}, or null when the model declined or answered unusably.
+export function claudeProvider({ client = new Anthropic(), model = 'claude-opus-5-5', effort = 'low' } = {}) {
+  return async (system, prompt) => parseReply(await client.beta.messages.create({
+    model,
+    max_tokens: 16000,
+    system,
+    messages: [{ role: 'user', content: prompt }],
+    output_config: { effort, format: { type: 'json_schema', schema: REPLY_SCHEMA } },
+    // If a safety check declines the request, the API retries it on a suitable model.
+    betas: ['server-side-fallback-2026-07-01'],
+    fallbacks: 'default',
+  }));
+}
+
+export function geminiProvider({ ai, apiKey, model = 'gemini-flash-latest' } = {}) {
+  if (!ai && !apiKey) {
+    return async () => { throw new Error('The Gemini API key is missing. Add GEMINI_API_KEY (free from aistudio.google.com/apikey).'); };
+  }
+  ai ??= new GoogleGenAI({ apiKey });
+  return async (system, prompt) => {
+    const res = await ai.models.generateContent({
+      model,
+      contents: prompt,
+      config: {
+        systemInstruction: system,
+        responseMimeType: 'application/json',
+        responseJsonSchema: REPLY_SCHEMA,
+        maxOutputTokens: 4096,
+      },
+    });
+    if (res.promptFeedback?.blockReason) return null;
+    return parseJsonReply(res.text ?? '');
+  };
+}
+
 const FALLBACK_LINES = [
   "Ooh, that one's not for me! Hit me with another question.",
   "Hmm, let's skip that one. Ask me something else, I'm ready!",
 ];
 
 export function createBrain({
-  client = new Anthropic(),
-  model = 'claude-opus-5-5',
-  effort = 'low',
+  ask = claudeProvider(),
   cartoonName = 'Bobo',
   hostName = 'the host',
   persona = 'a cheerful, curious, slightly cheeky cartoon who loves learning and making the chat laugh.',
@@ -94,22 +133,11 @@ export function createBrain({
   async function reply({ kind, name, text }) {
     const who = (name || (kind === 'guest' ? 'The guest' : 'A viewer')).replace(/[<>]/g, '');
     text = String(text).replace(/[<>]/g, '');
-    const ask = kind === 'guest'
+    const request = kind === 'guest'
       ? `${who} is on the stream with you and asks out loud (speech transcript):\n<question>${text}</question>`
       : `New live chat comment from ${who}:\n<comment>${text}</comment>`;
 
-    const message = await client.beta.messages.create({
-      model,
-      max_tokens: 16000,
-      system,
-      messages: [{ role: 'user', content: `${contextBlock()}${ask}\n\nReply as ${cartoonName}.` }],
-      output_config: { effort, format: { type: 'json_schema', schema: REPLY_SCHEMA } },
-      // If a safety check declines the request, the API retries it on a suitable model.
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-    });
-
-    const parsed = parseReply(message)
+    const parsed = await ask(system, `${contextBlock()}${request}\n\nReply as ${cartoonName}.`)
       ?? { emotion: 'laughing', say: FALLBACK_LINES[recent.length % FALLBACK_LINES.length] };
 
     recent.push({ from: who, text, reply: parsed.say });
@@ -122,6 +150,14 @@ export function createBrain({
 
 // Turns an API error into a short message for the host's control panel.
 export function describeError(err) {
+  if (err instanceof GeminiError) {
+    if (err.status === 429) return 'Gemini free limit reached for now. The cartoon pauses briefly and carries on.';
+    if (err.status === 404) return 'That Gemini model was not found. Check GEMINI_MODEL, or remove it to use the default.';
+    if (err.status === 400 || err.status === 401 || err.status === 403) {
+      if (/api key/i.test(err.message)) return 'The Gemini API key is missing or wrong. Check GEMINI_API_KEY.';
+    }
+    return `Gemini error ${err.status ?? ''}: ${err.message}`.trim();
+  }
   if (err instanceof Anthropic.AuthenticationError || /authentication method/i.test(err?.message)) return 'The Anthropic API key is missing or wrong. Check ANTHROPIC_API_KEY in .env.';
   if (err instanceof Anthropic.RateLimitError) return 'Too many AI requests at once. Slowing down for a moment.';
   if (err instanceof Anthropic.APIConnectionError) return "Couldn't reach the AI. Check your internet connection.";

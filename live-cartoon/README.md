@@ -8,12 +8,12 @@ A cartoon character (**Bobo** by default) appears on your TikTok LIVE and:
 
 It only ever connects to **your** TikTok account: the username in your `.env` file.
 
-The cartoon's brain is Claude (Anthropic's AI). It gives real answers to real questions, stays family-friendly, and laughs off trolls.
+The cartoon's brain is an AI: **Google Gemini** (free, no card needed) or **Claude** (Anthropic's AI, paid). It gives real answers to real questions, stays family-friendly, and laughs off trolls.
 
 ## How it fits together
 
 ```
-TikTok LIVE chat ──► this app (on your computer) ──► Claude writes the reply
+TikTok LIVE chat ──► this app (on your computer) ──► the AI writes the reply
                               │
            control panel ◄────┴────► cartoon stage  ──►  TikTok LIVE Studio / OBS  ──►  your LIVE
            (you, and guests' mic)    (talks + moves)      (captures the stage window)
@@ -26,7 +26,9 @@ TikTok LIVE chat ──► this app (on your computer) ──► Claude writes t
 
 1. **Either a computer** (Windows or Mac) with [Node.js 20.12 or newer](https://nodejs.org) and Google Chrome, streaming with [TikTok LIVE Studio](https://www.tiktok.com/studio/download) or OBS; **or just your phone**, with the app hosted online (see [Run it online](#run-it-online-go-live-from-just-your-phone)).
 2. **The right kind of LIVE:** on a computer, LIVE Studio or OBS shows the cartoon window. On a phone, use TikTok's screen-share LIVE; the normal camera LIVE can't show a website.
-3. **An Anthropic API key** for the cartoon's brain. Get one at [console.anthropic.com](https://console.anthropic.com/settings/keys). Every answer costs a small amount; set a monthly spending limit in the console.
+3. **An AI key** for the cartoon's brain. Pick one:
+   - **Gemini (free):** sign in with your Google account at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) and tap **Create API key**. No card or ID needed. The free tier limits how many answers per minute the cartoon can give, and Google may use free-tier conversations (your viewers' comments) to improve its products.
+   - **Claude (paid):** get a key at [console.anthropic.com](https://console.anthropic.com/settings/keys). Every answer costs a small amount; set a monthly spending limit in the console.
 4. Optional: an **[ElevenLabs](https://elevenlabs.io) key** for a proper cartoon voice. Without it, the cartoon uses Chrome's built-in voice.
 
 ## Set it up (once)
@@ -41,7 +43,7 @@ Open `.env` in a text editor and fill in at least:
 
 ```
 TIKTOK_USERNAME=yourusername        # without the @
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=AIza...             # or ANTHROPIC_API_KEY=sk-ant-... for Claude
 CARTOON_NAME=Bobo
 HOST_NAME=Chidi                     # what the cartoon calls you
 ```
@@ -103,7 +105,7 @@ Host the app on [Render](https://render.com) and it runs 24/7 at a web address l
 
 1. Make sure the cartoon is on your `main` branch (merge its pull request first). Then sign up at [render.com](https://render.com) with your GitHub account.
 2. Click **New → Blueprint**, pick the `data-analysis` repository, and click **Connect**. Render reads [`render.yaml`](../render.yaml) and sets almost everything up.
-3. It asks for your settings: **TIKTOK_USERNAME** (without the @), **ANTHROPIC_API_KEY**, and **HOST_NAME** (what the cartoon calls you). The ElevenLabs and Euler keys are optional; leave them empty if you don't have them.
+3. It asks for your settings: **TIKTOK_USERNAME** (without the @), **GEMINI_API_KEY** (or **ANTHROPIC_API_KEY** if you use Claude; leave the other one empty), and **HOST_NAME** (what the cartoon calls you). The ElevenLabs and Euler keys are optional; leave them empty if you don't have them.
 4. Click **Apply**. The first deploy takes a few minutes.
 5. Open the new **live-cartoon** service → **Environment** and copy the value of **CONTROL_KEY**. That's the password for your cartoon's pages. Keep it private.
 
@@ -131,7 +133,8 @@ To keep the app on your computer but use your phone, set `HOST=0.0.0.0` and a lo
 - **Replies are spoken on the stream, not typed into TikTok chat.** TikTok has no official way for apps to post in your chat, and the unofficial way needs your login cookie, which would be risky for your account.
 - **How it reads your chat:** through [TikTok-Live-Connector](https://github.com/zerodytrash/TikTok-Live-Connector), an unofficial, free library that reads the same chat any viewer sees. It doesn't log in as you. If TikTok changes things, it can stop working until the library is updated (`npm update tiktok-live-connector`). If you hit its free rate limit, add a free `EULER_API_KEY`.
 - **Safety:** viewers can't change the cartoon's rules. Comments with links, spam, or anything in `BLOCKED_WORDS` are ignored. The cartoon refuses hateful or dangerous requests with a joke. You always have **Stop talking**.
-- **Cost:** each answer is one short Claude request. A busy 1-hour LIVE where the cartoon answers every few seconds makes several hundred requests. Check your usage in the Anthropic console, and turn auto-reply off to answer only the comments you pick.
+- **Cost:** each answer is one short AI request. A busy 1-hour LIVE where the cartoon answers every few seconds makes several hundred requests. On Gemini's free tier that's free, but if you hit its per-minute limit the cartoon pauses briefly and carries on. On Claude, check your usage in the Anthropic console. Either way, turn auto-reply off to answer only the comments you pick.
+- **Switching AI:** to move from Gemini to Claude later, add `ANTHROPIC_API_KEY` and set `AI_PROVIDER=claude` (or remove the Gemini key).
 - **Keep `.env` private.** It holds your API keys and is never uploaded to GitHub.
 
 ## For developers
@@ -140,7 +143,7 @@ To keep the app on your computer but use your phone, set `HOST=0.0.0.0` and a lo
 server.js          web server, WebSocket hub, access key check, and the speaking queue
 src/tiktok.js      connects to the one TikTok account and emits chat/follow/gift events
 src/filters.js     which comments are worth answering, and in what order
-src/brain.js       Claude prompt and reply parsing (emotion + what to say)
+src/brain.js       AI prompt, Claude and Gemini providers, reply parsing (emotion + what to say)
 src/tts.js         optional ElevenLabs voice
 public/stage.*     the animated cartoon (SVG + JS lip sync)
 public/control.*   the host control panel
