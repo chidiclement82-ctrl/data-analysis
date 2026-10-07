@@ -29,7 +29,10 @@ function renderStatus(s) {
   $('viewers').hidden = !(t.state === 'live' && t.viewers);
   $('viewers').textContent = `👀 ${t.viewers}`;
 
-  $('stagePill').textContent = s.stages ? `Stage: on (${s.voice === 'elevenlabs' ? 'ElevenLabs voice' : 'browser voice'})` : 'Stage: not open';
+  const voiceName = s.voice === 'elevenlabs' ? 'ElevenLabs voice'
+    : s.stageVoice?.ok ? `voice: ${s.stageVoice.name || 'phone voice'}` : s.stageVoice ? 'no voice!' : 'checking voice…';
+  $('stagePill').textContent = s.stages ? `Stage: on (${voiceName})` : 'Stage: not open';
+  $('voiceWarn').hidden = !(s.stages && s.voice !== 'elevenlabs' && s.stageVoice && !s.stageVoice.ok);
   $('stagePill').className = `pill ${s.stages ? 'ok' : 'bad'}`;
   $('stageHelp').hidden = Boolean(s.stages);
 

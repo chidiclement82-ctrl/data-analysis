@@ -94,8 +94,23 @@ function flap(on) {
   else target = 0;
 }
 
+const synth = window.speechSynthesis || null;
+const keep = new Set(); // Chrome forgets utterances it isn't holding on to, and they go silent
+
+// The phone's voices load a moment after the page; wait up to 2 s for them.
+function voicesReady() {
+  if (!synth) return Promise.resolve([]);
+  const now = synth.getVoices();
+  if (now.length) return Promise.resolve(now);
+  return new Promise((resolve) => {
+    const done = () => resolve(synth.getVoices());
+    synth.addEventListener?.('voiceschanged', done, { once: true });
+    setTimeout(done, 2000);
+  });
+}
+
 function pickVoice() {
-  const voices = speechSynthesis.getVoices();
+  const voices = synth.getVoices();
   const want = (params.get('voice') || '').toLowerCase();
   return (want && voices.find((v) => v.name.toLowerCase().includes(want)))
     || voices.find((v) => /en[-_]US/i.test(v.lang) && /google|natural|samantha|aria|jenny/i.test(v.name))
@@ -108,24 +123,60 @@ function sentences(text) {
   return text.match(/[^.!?…]+[.!?…]*\s*/g)?.map((s) => s.trim()).filter(Boolean) || [text];
 }
 
-function speakBrowser(text, onWord) {
+// A voice the browser rejects shouldn't stop the cartoon; it just uses the default.
+function useVoice(u, voice) {
+  try { if (voice) u.voice = voice; } catch { /* default voice */ }
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Stops any speech. On Android Chrome, speaking straight after cancel() is
+// silently dropped, so callers that speak next wait a moment after this.
+async function quiet() {
+  if (synth && (synth.speaking || synth.pending)) {
+    synth.cancel();
+    await sleep(250);
+  }
+}
+
+async function speakBrowser(text, onWord) {
+  if (!synth) { // no speech at all in this browser: just move the mouth
+    flap(true);
+    await sleep(300 * text.split(' ').length);
+    flap(false);
+    return;
+  }
+  await quiet();
+  if (synth.paused) synth.resume();
   return new Promise((resolve) => {
-    if (!('speechSynthesis' in window)) { flap(true); return setTimeout(() => { flap(false); resolve(); }, 300 * text.split(' ').length); }
-    speechSynthesis.cancel();
+    let finished = false;
+    const end = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(safety);
+      clearInterval(nudge);
+      flap(false);
+      resolve();
+    };
+    // Some phones never report the end of speech; don't stay stuck talking.
+    const safety = setTimeout(end, 6000 + text.split(' ').length * 700);
+    // Android Chrome can pause speech by itself; nudge it along.
+    const nudge = setInterval(() => { if (synth.paused) synth.resume(); }, 1000);
     const parts = sentences(text);
     const voice = pickVoice();
     let spoken = 0;
     parts.forEach((part, i) => {
       const u = new SpeechSynthesisUtterance(part);
-      if (voice) u.voice = voice;
+      useVoice(u, voice);
       u.pitch = Number(params.get('pitch')) || 1.35;
       u.rate = Number(params.get('rate')) || 1.05;
       const offset = spoken;
       u.onboundary = (e) => { if (e.name === 'word') onWord(offset + part.slice(0, e.charIndex).split(/\s+/).filter(Boolean).length + 1); };
       u.onstart = () => flap(true);
-      u.onend = u.onerror = () => { if (i === parts.length - 1) { flap(false); resolve(); } };
+      u.onend = u.onerror = () => { keep.delete(u); if (i === parts.length - 1) end(); };
       spoken += part.split(/\s+/).length;
-      speechSynthesis.speak(u);
+      keep.add(u);
+      synth.speak(u);
     });
   });
 }
@@ -207,7 +258,7 @@ function think(msg) {
 function stopAll() {
   if (current?.audio) current.audio.pause();
   current = null;
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (synth && (synth.speaking || synth.pending)) synth.cancel();
   flap(false);
   cartoon.classList.remove('talking');
 }
@@ -255,7 +306,7 @@ async function connect() {
 }
 
 function onMessage(msg) {
-  if (msg.type === 'hello') $('nameplate').textContent = msg.cartoonName;
+  if (msg.type === 'hello') { $('nameplate').textContent = msg.cartoonName; reportVoice(); }
   else if (msg.type === 'think') think(msg);
   else if (msg.type === 'say') say(msg);
   else if (msg.type === 'stop' || msg.type === 'idle') { stopAll(); $('bubble').hidden = true; setEmotion('happy'); }
@@ -271,10 +322,37 @@ function start() {
     levels = new Uint8Array(analyser.fftSize);
     analyser.connect(audioCtx.destination);
   } catch { audioCtx = null; }
-  window.speechSynthesis?.getVoices();
   keepAwake();
   audioCtx?.resume?.();
+  unlockSpeech();
   connect();
+}
+
+// Phones only let a page talk after it has spoken once in response to a tap,
+// so say hello right away. It doubles as a sound check.
+function unlockSpeech() {
+  if (!synth) return;
+  const hello = new SpeechSynthesisUtterance(`Hi! I'm ${$('nameplate').textContent || 'Bobo'}. Let's go live!`);
+  hello.pitch = Number(params.get('pitch')) || 1.35;
+  hello.rate = Number(params.get('rate')) || 1.05;
+  const voice = pickVoice();
+  useVoice(hello, voice);
+  hello.onstart = () => flap(true);
+  hello.onend = hello.onerror = () => { keep.delete(hello); flap(false); };
+  keep.add(hello);
+  synth.speak(hello);
+}
+
+// Tell the control panel whether this phone can actually talk.
+async function reportVoice() {
+  const voices = await voicesReady();
+  const voice = synth ? pickVoice() : null;
+  send({
+    type: 'voice',
+    ok: Boolean(synth) && voices.length > 0,
+    count: voices.length,
+    name: voice ? `${voice.name} (${voice.lang})` : '',
+  });
 }
 
 // Stop a phone's screen from going dark mid-LIVE (needs https or localhost).
