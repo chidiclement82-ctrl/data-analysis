@@ -59,6 +59,7 @@ const state = {
   priority: [],      // guest questions and host requests: answered before chat
   shoutouts: [],     // quick thank-yous for follows and gifts
   aiError: '',
+  stageVoice: null,  // { ok, count, name } reported by the stage phone
 };
 let lineId = 0;
 
@@ -85,6 +86,7 @@ function status() {
     busy: state.busy && { kind: state.busy.kind, name: state.busy.name, text: state.busy.text },
     aiError: state.aiError,
     voice: tts.enabled ? 'elevenlabs' : 'browser',
+    stageVoice: state.stageVoice,
     cartoonName: config.cartoonName,
   };
 }
@@ -328,6 +330,11 @@ function onPageMessage(role, msg) {
   if (!msg || typeof msg !== 'object') return;
   if (role === 'control') onControlMessage(msg);
   else if (msg.type === 'done') finish(Number(msg.id), 0);
+  else if (msg.type === 'voice') {
+    // What the stage phone said about its speaking voice, for the control panel.
+    state.stageVoice = { ok: Boolean(msg.ok), count: Number(msg.count) || 0, name: String(msg.name || '').slice(0, 80) };
+    pushStatus();
+  }
 }
 
 // ---------------------------------------------------------------- backup connection (long polling)
