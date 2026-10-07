@@ -6,6 +6,8 @@
 //   voice=Samantha           part of a browser voice name to use
 //   pitch=1.3  rate=1.05     browser voice pitch and speed
 
+import { getKey, askForKey, wsUrl } from './key.js';
+
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
 const svg = document.querySelector('.cartoon svg');
@@ -224,14 +226,23 @@ function celebrate({ kind, name, gift, count }) {
 // ---------------------------------------------------------------- server connection
 
 let ws;
+let key = getKey();
 function send(msg) {
   if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
 }
 
 function connect() {
-  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws?role=stage`);
+  ws = new WebSocket(wsUrl('stage', key));
   ws.onopen = () => { $('offline').hidden = true; };
-  ws.onclose = () => { $('offline').hidden = false; setTimeout(connect, 2000); };
+  ws.onclose = (e) => {
+    if (e.code === 4003) {
+      $('offline').hidden = true;
+      askForKey($('keyForm'), (k) => { key = k; connect(); }, Boolean(key));
+      return;
+    }
+    $('offline').hidden = false;
+    setTimeout(connect, 2000);
+  };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.type === 'hello') $('nameplate').textContent = msg.cartoonName;
@@ -252,9 +263,19 @@ function start() {
     analyser.connect(audioCtx.destination);
   } catch { audioCtx = null; }
   window.speechSynthesis?.getVoices();
+  keepAwake();
   audioCtx?.resume?.();
   connect();
 }
+
+// Stop a phone's screen from going dark mid-LIVE (needs https or localhost).
+let wakeLock = null;
+async function keepAwake() {
+  try { wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* not supported */ }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && wakeLock?.released !== false) keepAwake();
+});
 
 setEmotion('happy');
 drawMouth();

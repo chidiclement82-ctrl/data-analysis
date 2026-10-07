@@ -168,7 +168,18 @@ body.bg-transparent .sparkles, body.bg-green .sparkles { display: none; }
 }
 .toast[hidden] { display: none; }
 
-/* ---------------------------------------------------------------- start + offline */
+/* ---------------------------------------------------------------- start, key, offline */
+.keyform {
+  position: absolute; inset: 0; z-index: 6;
+  display: grid; place-content: center; gap: 2cqh; padding: 8cqw;
+  background: rgb(35 22 74 / 0.92); color: #fff; text-align: center;
+}
+.keyform[hidden], .key-error[hidden] { display: none; }
+.keyform strong { font-size: 7cqw; }
+.key-error { color: #ffb3c8; font-size: 3.6cqw; }
+.keyform input, .keyform button { font: inherit; font-size: 5cqw; padding: 1.5cqh 4cqw; border-radius: 3cqw; border: 0; }
+.keyform button { background: var(--accent); color: var(--ink); font-weight: 800; cursor: pointer; }
+
 .start {
   position: absolute; inset: 0; z-index: 5;
   display: grid; place-content: center; gap: 1cqh;

@@ -24,8 +24,8 @@ TikTok LIVE chat ──► this app (on your computer) ──► Claude writes t
 
 ## What you need
 
-1. **A computer** (Windows or Mac) with [Node.js 20.12 or newer](https://nodejs.org) and Google Chrome.
-2. **A way to stream from that computer.** Use [TikTok LIVE Studio](https://www.tiktok.com/studio/download) if your account has access to it, or OBS with a TikTok stream key. Going live from the phone app alone can't show a website on your stream.
+1. **Either a computer** (Windows or Mac) with [Node.js 20.12 or newer](https://nodejs.org) and Google Chrome, streaming with [TikTok LIVE Studio](https://www.tiktok.com/studio/download) or OBS; **or just your phone**, with the app hosted online (see [Run it online](#run-it-online-go-live-from-just-your-phone)).
+2. **The right kind of LIVE:** on a computer, LIVE Studio or OBS shows the cartoon window. On a phone, use TikTok's screen-share LIVE; the normal camera LIVE can't show a website.
 3. **An Anthropic API key** for the cartoon's brain. Get one at [console.anthropic.com](https://console.anthropic.com/settings/keys). Every answer costs a small amount; set a monthly spending limit in the console.
 4. Optional: an **[ElevenLabs](https://elevenlabs.io) key** for a proper cartoon voice. Without it, the cartoon uses Chrome's built-in voice.
 
@@ -93,10 +93,38 @@ Add these to the stage address, e.g. `http://localhost:3000/stage?bg=green&pitch
 | `autostart=1` | Skip *Tap to start* (OBS browser sources can play sound without a click) |
 | `voice=Samantha` | Use a specific Chrome voice (any part of its name) |
 | `pitch=1.5`, `rate=1.1` | Make the browser voice higher or faster |
+| `key=…` | Your CONTROL_KEY, so the page doesn't ask for it. It's removed from the address bar straight away. |
 
-## Using the control panel from your phone
+## Run it online: go live from just your phone
 
-Set `HOST=0.0.0.0` and a long random `CONTROL_KEY` in `.env`. Then open `http://YOUR-COMPUTER-IP:3000/control?key=YOUR_CONTROL_KEY` on a phone on the same Wi-Fi. The guest mic needs a secure page, so use it on the computer itself.
+Host the app on [Render](https://render.com) and it runs 24/7 at a web address like `https://live-cartoon-xxxx.onrender.com`. You don't need a computer. Open the cartoon on your phone and go live with TikTok's screen-share LIVE.
+
+**Set it up (once, about 10 minutes):**
+
+1. Make sure the cartoon is on your `main` branch (merge its pull request first). Then sign up at [render.com](https://render.com) with your GitHub account.
+2. Click **New → Blueprint**, pick the `data-analysis` repository, and click **Connect**. Render reads [`render.yaml`](../render.yaml) and sets almost everything up.
+3. It asks for your settings: **TIKTOK_USERNAME** (without the @), **ANTHROPIC_API_KEY**, and **HOST_NAME** (what the cartoon calls you). The ElevenLabs and Euler keys are optional; leave them empty if you don't have them.
+4. Click **Apply**. The first deploy takes a few minutes.
+5. Open the new **live-cartoon** service → **Environment** and copy the value of **CONTROL_KEY**. That's the password for your cartoon's pages. Keep it private.
+
+The Blueprint uses Render's **Starter** plan (about $7 a month). Don't switch to the free plan: it falls asleep after 15 minutes without visitors, which drops your TikTok connection mid-LIVE.
+
+Every change merged into `main` redeploys automatically.
+
+**Going live from your phone:**
+
+1. In Chrome on your phone, open `https://YOUR-APP.onrender.com/stage`. Enter your CONTROL_KEY (asked once per device), then tap **Tap to start**. The screen stays on while the stage is open.
+2. Turn on **Do Not Disturb** and turn the volume up. The phone's mic picks up the cartoon's voice for your viewers.
+3. In TikTok, start a **screen-share LIVE** (the *Mobile Gaming* option, if your account has it), then switch back to Chrome so the cartoon fills the screen. Don't open other apps or the control panel on this phone: viewers see everything on your screen.
+4. With **auto-reply** on, the cartoon answers your chat by itself. To pick comments, take guest questions or press **Stop**, open `https://YOUR-APP.onrender.com/control` on a second phone, tablet or computer.
+
+**Good to know about hosting online:**
+- TikTok is sometimes stricter with connections from cloud servers. If the control panel keeps saying it can't connect while you're live, add a free [Euler Stream](https://www.eulerstream.com) key as `EULER_API_KEY` under **Environment** on Render.
+- Anyone who has your CONTROL_KEY can make the cartoon talk on your LIVE. If it leaks, change it on Render (Environment → CONTROL_KEY) and enter the new one on your devices.
+
+## Using the control panel from your phone (same Wi-Fi)
+
+To keep the app on your computer but use your phone, set `HOST=0.0.0.0` and a long random `CONTROL_KEY` (12+ characters) in `.env`. Then open `http://YOUR-COMPUTER-IP:3000/control` on a phone on the same Wi-Fi and enter the key. The stage asks for the key too. The guest mic only works on secure pages, so over Wi-Fi it works only on the computer itself; hosted online, it also works on phones.
 
 ## Good to know
 
@@ -109,13 +137,15 @@ Set `HOST=0.0.0.0` and a long random `CONTROL_KEY` in `.env`. Then open `http://
 ## For developers
 
 ```
-server.js          web server, WebSocket hub, and the speaking queue
+server.js          web server, WebSocket hub, access key check, and the speaking queue
 src/tiktok.js      connects to the one TikTok account and emits chat/follow/gift events
 src/filters.js     which comments are worth answering, and in what order
 src/brain.js       Claude prompt and reply parsing (emotion + what to say)
 src/tts.js         optional ElevenLabs voice
 public/stage.*     the animated cartoon (SVG + JS lip sync)
 public/control.*   the host control panel
+public/js/key.js   asks for and remembers the access key
+../render.yaml     Render hosting setup
 test/              npm test
 ```
 

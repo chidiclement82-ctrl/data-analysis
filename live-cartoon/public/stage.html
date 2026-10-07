@@ -110,6 +110,12 @@
       <strong>Tap to start</strong>
       <span>Browsers only play sound after a click</span>
     </button>
+    <form id="keyForm" class="keyform" hidden>
+      <strong>Enter your access key</strong>
+      <span class="key-error" hidden>That key didn't work. Check CONTROL_KEY on your server.</span>
+      <input type="password" autocomplete="current-password" placeholder="CONTROL_KEY" aria-label="Access key">
+      <button type="submit">Connect</button>
+    </form>
     <p id="offline" class="offline" hidden>Reconnecting to the cartoon server…</p>
   </div>
 

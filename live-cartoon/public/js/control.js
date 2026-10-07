@@ -1,5 +1,7 @@
 // Host control panel: watch chat, steer the cartoon, take guest questions.
 
+import { getKey, askForKey, wsUrl } from './key.js';
+
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 let ws;
@@ -171,9 +173,10 @@ wire('testText', 'test', 'test-comment', { name: 'TestViewer' });
 
 // ---------------------------------------------------------------- connection
 
+let key = getKey();
 function connect() {
-  const key = params.get('key');
-  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws?role=control${key ? `&key=${encodeURIComponent(key)}` : ''}`);
+  ws = new WebSocket(wsUrl('control', key));
+  ws.onopen = () => { document.querySelector('main').hidden = false; };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.type === 'status') renderStatus(msg);
@@ -183,8 +186,14 @@ function connect() {
   ws.onclose = (e) => {
     const pill = $('tiktokPill');
     pill.className = 'pill bad';
-    pill.textContent = e.code === 4003 ? 'Not allowed: open this page with ?key=YOUR_CONTROL_KEY' : 'Server offline: is npm start running?';
-    if (e.code !== 4003) setTimeout(connect, 2000);
+    if (e.code === 4003) {
+      pill.textContent = 'Locked: enter your access key';
+      document.querySelector('main').hidden = true;
+      askForKey($('keyForm'), (k) => { key = k; connect(); }, Boolean(key));
+      return;
+    }
+    pill.textContent = 'Server offline. Reconnecting…';
+    setTimeout(connect, 2000);
   };
 }
 connect();

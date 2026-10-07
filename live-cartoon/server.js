@@ -3,6 +3,7 @@
 // then open the control panel and the stage (see README.md).
 
 import http from 'node:http';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,6 +33,13 @@ const config = {
   thankFollows: env.THANK_FOLLOWS !== 'false',
   thankGifts: env.THANK_GIFTS !== 'false',
 };
+
+const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
+const isLoopbackOnly = LOOPBACK.has(config.host) || config.host === '::1';
+if (!isLoopbackOnly && (env.CONTROL_KEY || '').length < 12) {
+  console.error('\n  Set CONTROL_KEY to a long secret (12+ characters) before running with HOST=' + config.host + '.\n  Anyone who can reach this server could otherwise make the cartoon talk on your LIVE.\n');
+  process.exit(1);
+}
 
 const brain = createBrain(config);
 const tts = createTts({ apiKey: env.ELEVENLABS_API_KEY, voiceId: env.ELEVENLABS_VOICE_ID });
@@ -224,6 +232,7 @@ const publicDir = join(here, 'public');
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
+  if (url.pathname === '/healthz') return res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok');
   const audio = url.pathname.match(/^\/audio\/([\w-]+)\.mp3$/);
   if (audio) {
     const buf = tts.get(audio[1]);
@@ -241,25 +250,26 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
-const isLoopbackOnly = LOOPBACK.has(config.host) || config.host === '::1';
-
 // Browsers let any website open a WebSocket to localhost, so only accept our
 // own pages: the Origin must match the address the page was loaded from.
-function allowed(req, role, key) {
+// Online (or on your Wi-Fi), both pages also need the CONTROL_KEY.
+function sameKey(a, b) {
+  const hash = (s) => createHash('sha256').update(String(s)).digest();
+  return timingSafeEqual(hash(a), hash(b));
+}
+function allowed(req, key) {
   const host = req.headers.host || '';
   const origin = req.headers.origin;
-  if (origin && origin !== `http://${host}`) return false;
-  if (isLoopbackOnly && !LOOPBACK.has(host.replace(/:\d+$/, ''))) return false; // blocks DNS rebinding
-  if (role === 'control' && !isLoopbackOnly) return Boolean(env.CONTROL_KEY) && key === env.CONTROL_KEY;
-  return true;
+  if (origin && origin !== `http://${host}` && origin !== `https://${host}`) return false;
+  if (isLoopbackOnly) return LOOPBACK.has(host.replace(/:\d+$/, '')); // blocks DNS rebinding
+  return Boolean(key) && sameKey(key, env.CONTROL_KEY);
 }
 
 const wss = new WebSocketServer({ server, path: '/ws' });
 wss.on('connection', (ws, req) => {
   const params = new URL(req.url, 'http://localhost').searchParams;
   const role = params.get('role') === 'control' ? 'control' : 'stage';
-  if (!allowed(req, role, params.get('key'))) return ws.close(4003, 'Not allowed');
+  if (!allowed(req, params.get('key'))) return ws.close(4003, 'Not allowed');
   sockets[role].add(ws);
   if (role === 'stage') send(ws, { type: 'hello', cartoonName: config.cartoonName });
   else send(ws, status());
@@ -278,7 +288,7 @@ wss.on('connection', (ws, req) => {
 });
 
 server.listen(config.port, config.host, () => {
-  const base = `http://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}`;
+  const base = env.PUBLIC_URL || env.RENDER_EXTERNAL_URL || `http://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}`;
   console.log(`\n  ${config.cartoonName} is ready!\n`);
   console.log(`  Control panel:  ${base}/control`);
   console.log(`  Cartoon stage:  ${base}/stage   (capture this in TikTok LIVE Studio or OBS)\n`);

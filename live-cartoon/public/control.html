@@ -25,6 +25,15 @@
     The cartoon stage isn't open. Open <a href="/stage" target="_blank" rel="noopener">/stage</a> and click <b>Tap to start</b>, or the cartoon can't talk.
   </p>
 
+  <form id="keyForm" class="card keyform" hidden>
+    <h2>Enter your access key</h2>
+    <p class="key-error banner" hidden>That key didn't work. Check CONTROL_KEY on your server.</p>
+    <div class="row">
+      <input type="password" autocomplete="current-password" placeholder="CONTROL_KEY" aria-label="Access key">
+      <button type="submit" class="btn primary">Connect</button>
+    </div>
+  </form>
+
   <main class="grid">
     <section class="card now">
       <div class="row between">

@@ -50,6 +50,7 @@ a { color: var(--brand); }
 .banner.warn { background: var(--warn-bg); color: var(--warn-ink); }
 .banner[hidden], [hidden] { display: none !important; }
 
+.keyform { margin-top: 14px; }
 .grid { display: grid; gap: 14px; margin-top: 14px; grid-template-columns: 1fr; }
 @media (min-width: 900px) {
   .grid { grid-template-columns: 1.1fr 1fr; grid-template-areas: "now now" "guest feed" "history feed" "tools feed"; }
@@ -64,7 +65,7 @@ a { color: var(--brand); }
 .now-text { font-size: 18px; margin: 8px 0 0; }
 .now-text b { color: var(--brand); }
 
-input[type="text"], textarea {
+input[type="text"], input[type="password"], textarea {
   flex: 1 1 200px; min-width: 0; width: 100%;
   font: inherit; color: var(--ink); background: var(--bg);
   border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px;

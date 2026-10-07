@@ -1,0 +1,37 @@
+# One-click hosting for live-cartoon/ on Render (https://render.com).
+# Render → New → Blueprint → pick this repository. See live-cartoon/README.md.
+services:
+  - type: web
+    name: live-cartoon
+    runtime: node
+    # "starter" stays on all the time. The free plan falls asleep when nobody
+    # visits for 15 minutes, which would drop your TikTok connection.
+    plan: starter
+    rootDir: live-cartoon
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: HOST
+        value: 0.0.0.0
+      # The password for your cartoon's pages. Render makes up a long random
+      # one; find it under Environment after the first deploy.
+      - key: CONTROL_KEY
+        generateValue: true
+      # You fill these in on Render when creating the Blueprint.
+      - key: TIKTOK_USERNAME
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CARTOON_NAME
+        value: Bobo
+      - key: HOST_NAME
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_ID
+        sync: false
+      - key: EULER_API_KEY
+        sync: false
