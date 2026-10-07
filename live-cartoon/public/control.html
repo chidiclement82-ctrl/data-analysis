@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cartoon Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/control.css">
+</head>
+<body>
+  <header class="top">
+    <h1><span id="cartoonName">Bobo</span> <small>control</small></h1>
+    <div class="pills">
+      <span id="tiktokPill" class="pill">TikTok: …</span>
+      <span id="stagePill" class="pill">Stage: …</span>
+      <span id="viewers" class="pill" hidden></span>
+    </div>
+  </header>
+
+  <p id="tiktokDetail" class="detail"></p>
+  <p id="aiError" class="banner" hidden></p>
+  <p id="stageHelp" class="banner warn" hidden>
+    The cartoon stage isn't open. Open <a href="/stage" target="_blank" rel="noopener">/stage</a> and click <b>Tap to start</b>, or the cartoon can't talk.
+  </p>
+
+  <main class="grid">
+    <section class="card now">
+      <div class="row between">
+        <h2>On air</h2>
+        <div class="row">
+          <label class="switch"><input id="auto" type="checkbox"> <span>Auto-reply to chat</span></label>
+          <button id="stop" class="btn danger" type="button">■ Stop talking</button>
+        </div>
+      </div>
+      <p id="nowText" class="now-text muted">Waiting for a comment…</p>
+      <p id="queueInfo" class="muted small"></p>
+    </section>
+
+    <section class="card guest">
+      <h2>🎤 Guest question</h2>
+      <p class="muted small">Bring someone up on your LIVE, press <b>Listen</b> while they ask, then press <b>Ask</b>. You can fix the words before sending.</p>
+      <div class="row">
+        <input id="guestName" type="text" placeholder="Guest's name (optional)" maxlength="40" autocomplete="off">
+      </div>
+      <div class="row">
+        <button id="listen" class="btn mic" type="button">🎤 Listen</button>
+        <span id="micState" class="muted small"></span>
+      </div>
+      <textarea id="guestText" rows="3" placeholder="The guest's question appears here, or type it"></textarea>
+      <div class="row">
+        <button id="ask" class="btn primary" type="button">Ask the cartoon</button>
+        <label class="small check"><input id="autoAsk" type="checkbox" checked> Ask as soon as they stop talking</label>
+      </div>
+    </section>
+
+    <section class="card feed">
+      <div class="row between">
+        <h2>Live chat</h2>
+        <button id="clear" class="btn ghost small" type="button">Clear queue</button>
+      </div>
+      <ol id="comments" class="comments"></ol>
+      <p id="noComments" class="muted small">Comments from your LIVE show up here. Click one to have the cartoon answer it next.</p>
+    </section>
+
+    <section class="card history">
+      <h2>What the cartoon said</h2>
+      <ol id="said" class="said"></ol>
+    </section>
+
+    <section class="card tools">
+      <h2>Extras</h2>
+      <label class="small" for="sayText">Make the cartoon say exactly this</label>
+      <div class="row">
+        <input id="sayText" type="text" placeholder="Welcome everyone to the stream!" maxlength="500">
+        <button id="say" class="btn" type="button">Say it</button>
+      </div>
+      <label class="small" for="testText">Practice: pretend a viewer commented</label>
+      <div class="row">
+        <input id="testText" type="text" placeholder="What's the biggest animal ever?" maxlength="300">
+        <button id="test" class="btn" type="button">Send test</button>
+      </div>
+      <button id="reconnect" class="btn ghost small" type="button">Reconnect to TikTok</button>
+    </section>
+  </main>
+
+  <script type="module" src="/js/control.js"></script>
+</body>
+</html>

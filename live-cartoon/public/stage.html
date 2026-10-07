@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cartoon Stage</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/stage.css">
+</head>
+<body>
+  <div id="frame">
+    <div class="sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <section id="bubble" class="bubble" hidden aria-live="polite">
+      <p id="asker" class="asker"></p>
+      <p id="question" class="question"></p>
+      <p id="answer" class="answer"></p>
+      <p id="dots" class="dots" hidden><span></span><span></span><span></span></p>
+    </section>
+
+    <div id="cartoon" class="cartoon">
+      <svg viewBox="0 0 400 480" role="img" aria-label="Cartoon co-host">
+        <defs>
+          <radialGradient id="skin" cx="38%" cy="30%" r="80%">
+            <stop offset="0" stop-color="var(--skin-hi)"/>
+            <stop offset="0.6" stop-color="var(--skin)"/>
+            <stop offset="1" stop-color="var(--skin-lo)"/>
+          </radialGradient>
+          <clipPath id="eyeClip">
+            <ellipse cx="148" cy="200" rx="41" ry="47"/><ellipse cx="252" cy="200" rx="41" ry="47"/>
+          </clipPath>
+          <clipPath id="mouthClip"><path id="mouthClipPath" d=""/></clipPath>
+        </defs>
+
+        <ellipse class="shadow" cx="200" cy="462" rx="120" ry="14"/>
+
+        <g id="bob">
+          <!-- antenna -->
+          <g id="antenna">
+            <path d="M200 92 C 196 60, 214 46, 210 22" class="stroke" fill="none"/>
+            <circle cx="210" cy="20" r="14" class="ball"/>
+          </g>
+
+          <!-- arms -->
+          <g id="armL" class="arm"><path d="M92 300 C 50 300, 34 268, 40 240" class="limb"/><circle cx="40" cy="236" r="20" class="hand"/></g>
+          <g id="armR" class="arm"><path d="M308 300 C 350 300, 366 268, 360 240" class="limb"/><circle cx="360" cy="236" r="20" class="hand"/></g>
+
+          <!-- feet -->
+          <ellipse cx="150" cy="446" rx="44" ry="20" class="foot"/>
+          <ellipse cx="250" cy="446" rx="44" ry="20" class="foot"/>
+
+          <!-- body -->
+          <path d="M200 88 C 310 88, 336 170, 336 270 C 336 380, 286 446, 200 446 C 114 446, 64 380, 64 270 C 64 170, 90 88, 200 88 Z" fill="url(#skin)" class="outline"/>
+          <ellipse cx="200" cy="368" rx="84" ry="60" class="belly"/>
+
+          <!-- cheeks -->
+          <ellipse cx="116" cy="262" rx="24" ry="14" class="cheek"/>
+          <ellipse cx="284" cy="262" rx="24" ry="14" class="cheek"/>
+
+          <!-- eyes -->
+          <g id="eyes">
+            <g class="eye-open">
+              <ellipse cx="148" cy="200" rx="40" ry="46" class="eyeball"/>
+              <ellipse cx="252" cy="200" rx="40" ry="46" class="eyeball"/>
+              <g id="pupils">
+                <circle cx="152" cy="206" r="20" class="pupil"/><circle cx="160" cy="196" r="7" class="glint"/>
+                <circle cx="256" cy="206" r="20" class="pupil"/><circle cx="264" cy="196" r="7" class="glint"/>
+              </g>
+              <g id="lids" clip-path="url(#eyeClip)">
+                <rect x="104" y="150" width="88" height="100" class="lid" id="lidL"/>
+                <rect x="208" y="150" width="88" height="100" class="lid" id="lidR"/>
+              </g>
+            </g>
+            <g class="eye-happy">
+              <path d="M116 214 Q 148 168 180 214" class="stroke thick" fill="none"/>
+              <path d="M220 214 Q 252 168 284 214" class="stroke thick" fill="none"/>
+            </g>
+            <g class="eye-love">
+              <path d="M148 236 C 104 206, 112 168, 148 186 C 184 168, 192 206, 148 236 Z" class="heart"/>
+              <path d="M252 236 C 208 206, 216 168, 252 186 C 288 168, 296 206, 252 236 Z" class="heart"/>
+            </g>
+            <g class="eye-cool">
+              <path d="M98 176 H 302 V 196 C 302 236, 270 244, 252 244 C 222 244, 212 222, 206 202 H 194 C 188 222, 178 244, 148 244 C 130 244, 98 236, 98 196 Z" class="shades"/>
+              <path d="M120 190 L 150 190" class="shine"/>
+            </g>
+          </g>
+
+          <!-- brows -->
+          <rect id="browL" x="118" y="132" width="60" height="12" rx="6" class="brow"/>
+          <rect id="browR" x="222" y="132" width="60" height="12" rx="6" class="brow"/>
+
+          <!-- mouth -->
+          <g transform="translate(200 300)">
+            <path id="mouth" d="" class="mouth"/>
+            <g clip-path="url(#mouthClip)">
+              <ellipse id="tongue" cx="0" cy="40" rx="30" ry="18" class="tongue"/>
+              <rect x="-40" y="-8" width="80" height="12" rx="4" class="teeth"/>
+            </g>
+          </g>
+        </g>
+      </svg>
+      <p id="nameplate" class="nameplate">Bobo</p>
+    </div>
+
+    <button id="start" class="start" type="button">
+      <strong>Tap to start</strong>
+      <span>Browsers only play sound after a click</span>
+    </button>
+    <p id="offline" class="offline" hidden>Reconnecting to the cartoon server…</p>
+  </div>
+
+  <script type="module" src="/js/stage.js"></script>
+</body>
+</html>

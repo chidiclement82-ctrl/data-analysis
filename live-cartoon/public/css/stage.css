@@ -1,0 +1,190 @@
+/* Cartoon stage: captured into the TikTok LIVE as a 9:16 window. */
+:root {
+  color-scheme: light;
+  --bg-top: #7c5cff;
+  --bg-bottom: #ff7ac3;
+  --ink: #23164a;
+  --paper: #ffffff;
+  --accent: #ffd23f;
+  --skin: #35c9b4;
+  --skin-hi: #7cf0dc;
+  --skin-lo: #1f9886;
+  --belly: #c8fff4;
+  --cheek: #ff8cb6;
+  --mouth: #5a1235;
+  --tongue: #ff6f91;
+  --font: "Baloo 2", system-ui, sans-serif;
+}
+/* The stage is a broadcast graphic, so it keeps the same colours in dark mode. */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: #000;
+  font-family: var(--font);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+}
+body.bg-transparent { background: transparent; }
+body.bg-green { background: #00b140; }
+
+#frame {
+  position: relative;
+  height: 100vh;
+  width: min(100vw, 56.25vh);
+  overflow: hidden;
+  background: linear-gradient(170deg, var(--bg-top), var(--bg-bottom));
+  container-type: size;
+}
+body.bg-transparent #frame { background: transparent; }
+body.bg-green #frame { background: #00b140; }
+body.bg-transparent .sparkles, body.bg-green .sparkles { display: none; }
+
+/* floating dots in the background */
+.sparkles i {
+  position: absolute; bottom: -10%;
+  width: 4cqw; aspect-ratio: 1; border-radius: 50%;
+  background: rgb(255 255 255 / 0.25);
+  animation: rise 14s linear infinite;
+}
+.sparkles i:nth-child(1) { left: 8%;  animation-delay: 0s; }
+.sparkles i:nth-child(2) { left: 26%; animation-delay: -4s; width: 2.5cqw; }
+.sparkles i:nth-child(3) { left: 47%; animation-delay: -9s; }
+.sparkles i:nth-child(4) { left: 66%; animation-delay: -2s; width: 6cqw; }
+.sparkles i:nth-child(5) { left: 82%; animation-delay: -11s; width: 3cqw; }
+.sparkles i:nth-child(6) { left: 93%; animation-delay: -6s; }
+@keyframes rise { to { transform: translateY(-120cqh) rotate(360deg); } }
+
+/* ---------------------------------------------------------------- cartoon */
+.cartoon {
+  position: absolute; left: 50%; bottom: 3cqh;
+  width: 88cqw; transform: translateX(-50%);
+  text-align: center;
+}
+.cartoon svg { width: 100%; height: auto; overflow: visible; display: block; }
+.nameplate {
+  display: inline-block; margin: -1cqh 0 0; padding: 0.4cqh 5cqw;
+  background: var(--ink); color: var(--paper);
+  font-size: 4.2cqw; font-weight: 800; border-radius: 99px;
+  letter-spacing: 0.02em;
+}
+
+#bob { animation: bob 2.6s ease-in-out infinite; transform-origin: 200px 446px; }
+@keyframes bob { 50% { transform: translateY(-8px) scale(1.01, 0.99); } }
+.talking #bob { animation-duration: 0.9s; }
+.jump #bob { animation: jump 0.7s cubic-bezier(.3,1.6,.5,1) 2; }
+@keyframes jump { 40% { transform: translateY(-60px) scale(0.95, 1.06); } }
+
+.shadow { fill: rgb(0 0 0 / 0.18); }
+.outline { stroke: var(--ink); stroke-width: 6; }
+.stroke { stroke: var(--ink); stroke-width: 6; stroke-linecap: round; }
+.stroke.thick { stroke-width: 10; }
+.ball { fill: var(--accent); stroke: var(--ink); stroke-width: 5; }
+#antenna { transform-origin: 200px 92px; animation: wobble 3s ease-in-out infinite; }
+@keyframes wobble { 50% { transform: rotate(8deg); } }
+.limb { fill: none; stroke: var(--skin-lo); stroke-width: 26; stroke-linecap: round; }
+.hand, .foot { fill: var(--skin); stroke: var(--ink); stroke-width: 5; }
+.belly { fill: var(--belly); opacity: 0.8; }
+.cheek { fill: var(--cheek); opacity: 0.9; }
+.eyeball { fill: var(--paper); stroke: var(--ink); stroke-width: 5; }
+.pupil { fill: var(--ink); }
+.glint { fill: var(--paper); }
+.lid { fill: var(--skin); transform-box: fill-box; transform-origin: top; transform: scaleY(0); transition: transform 0.07s; }
+.blink .lid { transform: scaleY(1); }
+.brow { fill: var(--ink); transform-box: fill-box; transform-origin: center; transition: transform 0.25s; }
+.heart { fill: #ff3b6b; stroke: var(--ink); stroke-width: 5; }
+.shades { fill: var(--ink); }
+.shine { stroke: rgb(255 255 255 / 0.6); stroke-width: 6; stroke-linecap: round; }
+.mouth { fill: var(--mouth); stroke: var(--ink); stroke-width: 6; stroke-linejoin: round; }
+.tongue { fill: var(--tongue); }
+.teeth { fill: var(--paper); }
+#pupils { transition: transform 0.3s; }
+
+.arm { transition: transform 0.3s; }
+#armL { transform-origin: 92px 300px; }
+#armR { transform-origin: 308px 300px; }
+.wave #armR { animation: wave 0.5s ease-in-out infinite alternate; }
+.wave #armL { animation: waveL 0.5s ease-in-out infinite alternate; }
+@keyframes wave { from { transform: rotate(-10deg); } to { transform: rotate(25deg); } }
+@keyframes waveL { from { transform: rotate(10deg); } to { transform: rotate(-25deg); } }
+
+/* which eyes show for each emotion */
+.eye-happy, .eye-love, .eye-cool { display: none; }
+.e-happy .eye-open, .e-laughing .eye-open { display: none; }
+.e-happy .eye-happy, .e-laughing .eye-happy { display: inline; }
+.e-love .eye-open { display: none; }
+.e-love .eye-love { display: inline; animation: pulse 0.6s ease-in-out infinite alternate; transform-origin: 200px 210px; }
+.e-cool .eye-open { display: none; }
+.e-cool .eye-cool { display: inline; }
+.e-surprised .eyeball { transform: scale(1.08); transform-box: fill-box; transform-origin: center; }
+.e-sad .cheek { opacity: 0.2; }
+@keyframes pulse { to { transform: scale(1.08); } }
+
+/* ---------------------------------------------------------------- speech bubble */
+.bubble {
+  position: absolute; left: 5cqw; right: 5cqw; top: 6cqh;
+  max-height: 42cqh; overflow: hidden;
+  background: var(--paper); color: var(--ink);
+  border: 1cqw solid var(--ink); border-radius: 6cqw;
+  padding: 3cqw 5cqw 4cqw;
+  box-shadow: 0 1.2cqw 0 var(--ink);
+  animation: pop 0.35s cubic-bezier(.3,1.6,.5,1);
+}
+.bubble::after {
+  content: ""; position: absolute; left: 50%; bottom: -5cqw;
+  width: 8cqw; height: 8cqw; background: var(--paper);
+  border-right: 1cqw solid var(--ink); border-bottom: 1cqw solid var(--ink);
+  transform: translateX(-50%) rotate(45deg);
+}
+@keyframes pop { from { transform: scale(0.6); opacity: 0; } }
+.bubble[hidden] { display: none; }
+.asker { margin: 0; font-size: 3.6cqw; font-weight: 800; color: #7c5cff; }
+.asker.guest { color: #e0367a; }
+.question {
+  margin: 0.3cqh 0 1cqh; font-size: 3.8cqw; line-height: 1.25; opacity: 0.75;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.question:empty { display: none; }
+.answer { margin: 0; font-size: 5.6cqw; line-height: 1.22; font-weight: 700; text-wrap: pretty; }
+.answer .w { opacity: 0; }
+.answer .w.on { opacity: 1; transition: opacity 0.12s; }
+.dots[hidden] { display: none; }
+.dots { margin: 1cqh 0 0; display: flex; gap: 2cqw; justify-content: center; }
+.dots span { width: 3cqw; height: 3cqw; border-radius: 50%; background: var(--ink); animation: dot 1s infinite; }
+.dots span:nth-child(2) { animation-delay: 0.15s; }
+.dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dot { 50% { transform: translateY(-1.5cqw); opacity: 0.4; } }
+
+/* ---------------------------------------------------------------- follow / gift toast */
+.toast {
+  position: absolute; top: 2cqh; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: var(--ink);
+  border: 0.8cqw solid var(--ink); border-radius: 99px;
+  padding: 1cqh 5cqw; font-size: 4cqw; font-weight: 800; white-space: nowrap;
+  max-width: 92cqw; overflow: hidden; text-overflow: ellipsis;
+  animation: pop 0.35s cubic-bezier(.3,1.6,.5,1);
+  z-index: 2;
+}
+.toast[hidden] { display: none; }
+
+/* ---------------------------------------------------------------- start + offline */
+.start {
+  position: absolute; inset: 0; z-index: 5;
+  display: grid; place-content: center; gap: 1cqh;
+  border: 0; background: rgb(35 22 74 / 0.75); color: #fff;
+  font: inherit; cursor: pointer;
+}
+.start strong { font-size: 8cqw; }
+.start span { font-size: 3.6cqw; opacity: 0.85; }
+.start[hidden] { display: none; }
+.offline {
+  position: absolute; bottom: 1cqh; left: 50%; transform: translateX(-50%);
+  margin: 0; padding: 0.5cqh 3cqw; border-radius: 99px;
+  background: rgb(0 0 0 / 0.6); color: #fff; font-size: 3cqw; z-index: 4;
+}
+.offline[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkles i, #antenna { animation: none; }
+}

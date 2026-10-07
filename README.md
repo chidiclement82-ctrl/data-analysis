@@ -4,6 +4,8 @@ A fast, mobile-friendly restaurant website built with plain HTML, CSS and JavaSc
 
 Live address, once GitHub Pages is switched on: **https://ogarider.name.ng/**
 
+> **Also in this repository:** [`live-cartoon/`](live-cartoon/README.md), an AI cartoon co-host for TikTok LIVE that answers your chat and your guests' questions out loud.
+
 ## Put it online (one-time setup)
 
 1. Merge the pull request into `main`.
