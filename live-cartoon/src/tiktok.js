@@ -3,13 +3,34 @@
 // so you can start this before you go live.
 
 import { EventEmitter } from 'node:events';
-import { TikTokLiveConnection, WebcastEvent, ControlEvent, UserOfflineError } from 'tiktok-live-connector';
+import {
+  TikTokLiveConnection, WebcastEvent, ControlEvent, UserOfflineError,
+  SignatureRateLimitError, SignAPIError, PremiumFeatureError, InvalidUniqueIdError, ConnectTimeoutError,
+} from 'tiktok-live-connector';
 
 const RETRY_MS = 20_000;
 
+// Plain-language reason a connection attempt failed, shown on the control panel.
+export function explain(err, username) {
+  const msg = String(err?.message || err || '');
+  if (err instanceof UserOfflineError) return `@${username} isn't live yet. Checking again every ${RETRY_MS / 1000} s…`;
+  if (err instanceof InvalidUniqueIdError) return `"${username}" doesn't look like a TikTok username. Check TIKTOK_USERNAME on Render (no @, no spaces).`;
+  if (err instanceof SignatureRateLimitError || /rate.?limit|429/i.test(msg)) {
+    return 'The free TikTok connection service is busy right now. Get a free key at eulerstream.com and add it on Render as EULER_API_KEY. Retrying…';
+  }
+  if (err instanceof PremiumFeatureError) return 'That TikTok connection needs a paid Euler Stream plan. Retrying with the free one…';
+  if (err instanceof SignAPIError) return `The TikTok connection service refused (${msg.replace(/\.+$/, '')}). Adding a free EULER_API_KEY on Render usually fixes this. Retrying…`;
+  if (err instanceof ConnectTimeoutError) return 'TikTok took too long to answer. Retrying…';
+  if (/room id/i.test(msg)) return `Couldn't find a LIVE for @${username}. Are you live, and is the username right? Checking again…`;
+  return `Couldn't connect (${msg.replace(/\.+$/, '')}). Retrying…`;
+}
+
 export class TikTokLink extends EventEmitter {
-  constructor({ username, signApiKey } = {}) {
+  constructor({ username, signApiKey, createConnection } = {}) {
     super();
+    // Swappable for tests.
+    this.createConnection = createConnection || ((user, opts) => new TikTokLiveConnection(user, opts));
+    this.attempt = 0; // bumps on every connect/stop, so a slow old attempt can't overwrite a newer one
     this.username = String(username || '').replace(/^@/, '').trim();
     this.signApiKey = signApiKey || undefined;
     this.state = 'off'; // off | waiting | connecting | live | error
@@ -34,6 +55,12 @@ export class TikTokLink extends EventEmitter {
     this.connect();
   }
 
+  // The control panel's "Reconnect to TikTok": drop whatever is happening and try now.
+  reconnect() {
+    if (!this.username) return this.setState('off', 'Add TIKTOK_USERNAME on Render (Environment), then press Reconnect.');
+    this.connect();
+  }
+
   retry(detail) {
     this.setState('waiting', detail);
     clearTimeout(this.timer);
@@ -42,10 +69,12 @@ export class TikTokLink extends EventEmitter {
 
   async connect() {
     clearTimeout(this.timer);
+    const attempt = ++this.attempt;
     this.setState('connecting', `Looking for @${this.username}'s LIVE…`);
-    this.conn?.disconnect().catch(() => {}); // drop the previous stream's connection
-    const conn = new TikTokLiveConnection(this.username, { signApiKey: this.signApiKey });
+    this.conn?.disconnect()?.catch?.(() => {}); // drop the previous stream's connection
+    const conn = this.createConnection(this.username, { signApiKey: this.signApiKey });
     this.conn = conn;
+    const current = () => this.attempt === attempt;
 
     conn.on(WebcastEvent.CHAT, (d) => {
       const text = String(d.comment ?? '').trim();
@@ -75,24 +104,26 @@ export class TikTokLink extends EventEmitter {
         this.emit('status', this.status());
       }
     });
-    conn.on(WebcastEvent.STREAM_END, () => this.retry('Your LIVE ended. Waiting for the next one…'));
+    conn.on(WebcastEvent.STREAM_END, () => { if (current()) this.retry('Your LIVE ended. Waiting for the next one…'); });
     conn.on(ControlEvent.DISCONNECTED, () => {
-      if (this.conn === conn && this.state === 'live') this.retry('Disconnected from TikTok. Reconnecting…');
+      if (current() && this.state === 'live') this.retry('Disconnected from TikTok. Reconnecting…');
     });
     conn.on(ControlEvent.ERROR, (e) => console.warn('[tiktok]', e?.info || e?.message || e));
 
     try {
       await conn.connect();
+      if (!current()) return conn.disconnect()?.catch?.(() => {}); // a newer attempt took over
       this.setState('live', `Connected to @${this.username}'s LIVE`);
     } catch (err) {
-      if (err instanceof UserOfflineError) this.retry(`@${this.username} isn't live yet. Checking again every ${RETRY_MS / 1000} s…`);
-      else if (/room id/i.test(err?.message)) this.retry(`Couldn't find a LIVE for @${this.username}. Are you live, and is the username right? Checking again…`);
-      else this.retry(`Couldn't connect (${String(err?.message || err).replace(/\.+$/, '')}). Retrying…`);
+      if (!current()) return;
+      console.warn('[tiktok] connect failed:', err?.name, err?.message);
+      this.retry(explain(err, this.username));
     }
   }
 
   async stop() {
     clearTimeout(this.timer);
+    this.attempt++;
     const conn = this.conn;
     this.conn = null;
     if (conn) await conn.disconnect().catch(() => {});
