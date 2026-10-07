@@ -225,6 +225,9 @@ function onControlMessage(msg) {
     case 'reconnect':
       tiktok.reconnect();
       break;
+    case 'live-link': // the LIVE's Share → Copy link, for when TikTok blocks the username look-up
+      if (text) tiktok.useLiveLink(text);
+      break;
     default:
       return;
   }

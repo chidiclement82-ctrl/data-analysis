@@ -46,6 +46,7 @@ a { color: var(--brand); }
 .pill.warn { background: var(--warn-bg); color: var(--warn-ink); }
 .pill.bad { background: var(--bad-bg); color: var(--bad-ink); }
 .tiktok-row { margin-top: 6px; align-items: center; }
+.live-link { margin-top: 6px; }
 .tiktok-row .detail { margin: 0; flex: 1 1 220px; }
 .detail { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 .banner { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--bad-bg); color: var(--bad-ink); }
