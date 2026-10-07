@@ -74,8 +74,8 @@ test('online mode: needs the key on both pages, accepts https origins', async ()
   try {
     await new Promise((r) => online.stdout.on('data', (d) => { if (String(d).includes('Control panel')) r(); }));
     assert.equal(await (await fetch(`http://127.0.0.1:${port}/healthz`)).text(), 'ok');
-    const at = (path, origin) => new Promise((resolve) => {
-      const ws = new WebSocket(`ws://127.0.0.1:${port}${path}`, { headers: { Host: 'bobo.example.com', Origin: origin } });
+    const at = (path, origin, host = 'bobo.example.com') => new Promise((resolve) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${port}${path}`, { headers: { Host: host, Origin: origin } });
       ws.on('message', () => { ws.close(); resolve('open'); });
       ws.on('close', (code) => resolve(code));
     });
@@ -84,6 +84,9 @@ test('online mode: needs the key on both pages, accepts https origins', async ()
     assert.equal(await at('/ws?role=stage&key=correct-horse-battery', 'https://bobo.example.com'), 'open');
     assert.equal(await at('/ws?role=control&key=correct-horse-battery', 'https://bobo.example.com'), 'open');
     assert.equal(await at('/ws?role=control&key=correct-horse-battery', 'https://evil.example'), 4003);
+    // A proxy that adds the default port to the Host header (or the Origin) still works.
+    assert.equal(await at('/ws?role=stage&key=correct-horse-battery', 'https://bobo.example.com', 'bobo.example.com:443'), 'open');
+    assert.equal(await at('/ws?role=stage&key=correct-horse-battery', 'https://bobo.example.com:443'), 'open');
   } finally {
     online.kill();
   }
