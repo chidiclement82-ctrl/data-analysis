@@ -332,6 +332,7 @@ function removePage(role, client, why) {
 function onPageMessage(role, msg) {
   if (!msg || typeof msg !== 'object') return;
   if (role === 'control') onControlMessage(msg);
+  else if (msg.type === 'ask') onControlMessage(msg); // the stage phone heard someone on the LIVE
   else if (msg.type === 'done') finish(Number(msg.id), 0);
   else if (msg.type === 'voice') {
     // What the stage phone said about its speaking voice, for the control panel.

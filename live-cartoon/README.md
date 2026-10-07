@@ -64,6 +64,15 @@ You can start the app before you go live; it keeps checking until your LIVE star
 
 **Practice first:** with no LIVE running, type in **Practice: pretend a viewer commented** on the control panel, and the cartoon answers it on the stage.
 
+## Bobo listens on the LIVE phone itself
+
+After **Tap to start**, the stage page listens through the phone's microphone. Whenever someone on your LIVE says something and pauses, Bobo answers them out loud, with no second phone and no buttons. A small 👂 in the bottom-left corner shows when Bobo is listening, and 🔇 shows while he's talking (he never answers his own voice).
+
+- The first time, Chrome asks to use the microphone: tap **Allow**.
+- Whether a phone lets Chrome listen while TikTok is streaming depends on the phone. If the 👂 stays on but Bobo never reacts to people talking, use a second phone with hands-free (below) instead.
+- Some Android phones play a short beep each time listening restarts.
+- Add `?listen=0` to the stage address to turn listening off on that phone.
+
 ## Hands-free guests (answers whatever they say)
 
 Turn on **🎧 Hands-free: answer guests automatically** in the Guest question box on the control panel. From then on, every time a guest on your LIVE says something and pauses, the cartoon answers it out loud, with no buttons to press.

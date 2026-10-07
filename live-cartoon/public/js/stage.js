@@ -5,9 +5,11 @@
 //   autostart=1              skip the "tap to start" screen (OBS browser source)
 //   voice=Samantha           part of a browser voice name to use
 //   pitch=1.3  rate=1.05     browser voice pitch and speed
+//   listen=0                 don't listen on this phone (e.g. a second phone does it)
 
 import { getKey, askForKey } from './key.js';
 import { openChannel, needsKey } from './channel.js';
+import { createListener, canListen } from './listener.js';
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
@@ -224,6 +226,7 @@ function showBubble({ kind, name, question }) {
 
 let hideTimer = 0;
 async function say(msg) {
+  ears.setBusy(true);
   stopAll();
   clearTimeout(hideTimer);
   const token = { id: msg.id, audio: null };
@@ -243,10 +246,12 @@ async function say(msg) {
   cartoon.classList.remove('talking');
   current = null;
   send({ type: 'done', id: msg.id });
+  ears.setBusy(false);
   hideTimer = setTimeout(() => { $('bubble').hidden = true; setEmotion('happy'); }, 4000);
 }
 
 function think(msg) {
+  ears.setBusy(true);
   stopAll();
   clearTimeout(hideTimer);
   setEmotion('thinking');
@@ -309,7 +314,7 @@ function onMessage(msg) {
   if (msg.type === 'hello') { $('nameplate').textContent = msg.cartoonName; reportVoice(); }
   else if (msg.type === 'think') think(msg);
   else if (msg.type === 'say') say(msg);
-  else if (msg.type === 'stop' || msg.type === 'idle') { stopAll(); $('bubble').hidden = true; setEmotion('happy'); }
+  else if (msg.type === 'stop' || msg.type === 'idle') { stopAll(); ears.setBusy(false); $('bubble').hidden = true; setEmotion('happy'); }
   else if (msg.type === 'event') celebrate(msg);
 }
 
@@ -325,6 +330,7 @@ function start() {
   keepAwake();
   audioCtx?.resume?.();
   unlockSpeech();
+  startListening();
   connect();
 }
 
@@ -338,10 +344,35 @@ function unlockSpeech() {
   const voice = pickVoice();
   useVoice(hello, voice);
   hello.onstart = () => flap(true);
-  hello.onend = hello.onerror = () => { keep.delete(hello); flap(false); };
+  ears.setBusy(true); // don't hear the hello
+  const done = () => { keep.delete(hello); flap(false); ears.setBusy(false); };
+  hello.onend = hello.onerror = done;
+  setTimeout(() => { if (keep.has(hello)) done(); }, 6000); // some phones never report the end
   keep.add(hello);
   synth.speak(hello);
 }
+
+// ---------------------------------------------------------------- listening
+// The streaming phone listens to the people on the LIVE and Bobo answers them.
+
+const ears = createListener({
+  lang: params.get('lang') || navigator.language || 'en-US',
+  onHeard: (text) => send({ type: 'ask', name: '', text }),
+  onState: (st) => {
+    const el = $('ears');
+    el.hidden = st === 'off';
+    el.className = `ears ${st}`;
+    el.textContent = st === 'listening' ? '👂' : '🔇';
+  },
+});
+
+function startListening() {
+  if (params.get('listen') === '0' || !canListen) return;
+  ears.start();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') ears.resume();
+});
 
 // Tell the control panel whether this phone can actually talk.
 async function reportVoice() {
