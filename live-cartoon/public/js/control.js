@@ -40,6 +40,7 @@ function renderStatus(s) {
   $('aiError').textContent = s.aiError ? `⚠️ ${s.aiError}` : '';
 
   $('auto').checked = s.auto;
+  trackCartoon(s);
 
   const now = $('nowText');
   if (s.busy) {
@@ -153,6 +154,112 @@ $('listen').addEventListener('click', () => {
 $('ask').addEventListener('click', () => {
   if (rec) { $('listen').classList.remove('on'); rec.stop(); }
   askGuest();
+});
+
+// ---------------------------------------------------------------- hands-free guests
+// Listens all the time and sends each thing a guest says to the cartoon once
+// they pause. While the cartoon is thinking or talking (and a moment after),
+// whatever the mic hears is ignored, so it never answers its own voice.
+
+const ECHO_GUARD_MS = 1800; // keep ignoring the mic this long after the cartoon stops
+const MIN_WORDS = 3;        // "ok", "yes", "hmm" aren't questions
+let handsFree = false;
+let hfRec = null;
+let hfHeard = '';
+let cartoonBusy = false;
+let quietUntil = 0;
+let hfWake = null;
+
+function hfNote(text) { $('hfState').textContent = text; }
+function hfListening() { return handsFree && !cartoonBusy && Date.now() >= quietUntil; }
+
+// Called with every status update from the server.
+function trackCartoon(s) {
+  const busy = Boolean(s.busy) || s.waiting > 0;
+  if (cartoonBusy && !busy) {
+    quietUntil = Date.now() + ECHO_GUARD_MS;
+    if (handsFree) setTimeout(hfStart, ECHO_GUARD_MS); // listen again once the cartoon's voice has died down
+  }
+  if (!cartoonBusy && busy && hfRec) { try { hfRec.abort(); } catch { /* stopped */ } } // don't hear the cartoon
+  cartoonBusy = busy;
+  if (handsFree) hfNote(busy ? `🔇 ${s.cartoonName} is answering… (not listening)` : '🎧 Listening for your guests…');
+}
+
+function hfSend() {
+  const text = hfHeard.trim();
+  hfHeard = '';
+  if (!text || text.split(/\s+/).length < MIN_WORDS || !hfListening()) return;
+  send({ type: 'ask', name: $('guestName').value.trim(), text });
+  cartoonBusy = true; // until the server says otherwise
+  $('guestText').value = text;
+  hfNote(`🎤 Sent: "${text}"`);
+}
+
+function hfStart() {
+  if (!handsFree || hfRec || cartoonBusy) return;
+  hfRec = new Recognition();
+  hfRec.lang = params.get('lang') || navigator.language || 'en-US';
+  hfRec.interimResults = true;
+  hfRec.continuous = false; // one sentence per round; it stops by itself when they pause
+  hfRec.onresult = (e) => {
+    if (!hfListening()) { hfHeard = ''; return; } // the cartoon's own voice, or mid-answer
+    let interim = '';
+    let final = '';
+    for (let i = 0; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) final += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    hfHeard = final || interim;
+    $('guestText').value = hfHeard;
+  };
+  hfRec.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      stopHandsFree('Allow the microphone for this page (tap the lock icon in the address bar), then turn hands-free on again.');
+    }
+  };
+  hfRec.onend = () => {
+    hfRec = null;
+    hfSend();
+    if (handsFree && !cartoonBusy) setTimeout(hfStart, 250); // listen for the next thing they say
+  };
+  try { hfRec.start(); } catch { hfRec = null; setTimeout(hfStart, 1000); }
+}
+
+async function startHandsFree() {
+  if (!Recognition) {
+    $('handsFree').checked = false;
+    hfNote('Hands-free needs Google Chrome (Android or computer) or Microsoft Edge.');
+    return;
+  }
+  if (rec) rec.stop();
+  handsFree = true;
+  $('listen').disabled = true;
+  document.querySelector('.handsfree').classList.add('on');
+  hfNote('🎧 Listening for your guests…');
+  try { hfWake = await navigator.wakeLock?.request('screen'); } catch { /* screen may sleep */ }
+  hfStart();
+}
+
+function stopHandsFree(note = 'Hands-free is off.') {
+  handsFree = false;
+  $('handsFree').checked = false;
+  $('listen').disabled = false;
+  document.querySelector('.handsfree').classList.remove('on');
+  hfNote(note);
+  try { hfRec?.abort(); } catch { /* already stopped */ }
+  hfRec = null;
+  hfHeard = '';
+  hfWake?.release?.().catch(() => {});
+  hfWake = null;
+}
+
+$('handsFree').addEventListener('change', (e) => (e.target.checked ? startHandsFree() : stopHandsFree()));
+document.addEventListener('visibilitychange', async () => {
+  if (handsFree && document.visibilityState === 'visible') {
+    try { hfWake = await navigator.wakeLock?.request('screen'); } catch { /* ignore */ }
+    hfStart();
+  }
 });
 
 // ---------------------------------------------------------------- other controls

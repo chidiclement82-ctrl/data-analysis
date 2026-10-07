@@ -134,7 +134,7 @@ export function createBrain({
     const who = (name || (kind === 'guest' ? 'The guest' : 'A viewer')).replace(/[<>]/g, '');
     text = String(text).replace(/[<>]/g, '');
     const request = kind === 'guest'
-      ? `${who} is on the stream with you and asks out loud (speech transcript):\n<question>${text}</question>`
+      ? `${who} is on the stream with you and says this out loud to you (speech transcript; it may be a question or just a comment, so respond naturally):\n<question>${text}</question>`
       : `New live chat comment from ${who}:\n<comment>${text}</comment>`;
 
     const parsed = await ask(system, `${contextBlock()}${request}\n\nReply as ${cartoonName}.`)
