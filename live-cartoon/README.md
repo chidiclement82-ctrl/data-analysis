@@ -64,6 +64,16 @@ You can start the app before you go live; it keeps checking until your LIVE star
 
 **Practice first:** with no LIVE running, type in **Practice: pretend a viewer commented** on the control panel, and the cartoon answers it on the stage.
 
+## Hands-free guests (answers whatever they say)
+
+Turn on **🎧 Hands-free: answer guests automatically** in the Guest question box on the control panel. From then on, every time a guest on your LIVE says something and pauses, the cartoon answers it out loud, with no buttons to press.
+
+- Keep the control-panel device (phone, tablet or computer) **near the phone you're streaming from**, so its mic can hear your guests. Use Chrome.
+- While the cartoon is answering, the mic stops listening, so the cartoon never answers its own voice. It starts listening again a moment after the cartoon finishes.
+- Very short sounds ("ok", "yes", "hmm") are ignored.
+- The mic can't tell voices apart, so it answers **you** too when you speak. Turn hands-free off when you want to talk without the cartoon replying.
+- Typing a guest's name in the box lets the cartoon address them by name.
+
 ## Taking guest questions
 
 1. Bring a guest onto your LIVE as you normally do.

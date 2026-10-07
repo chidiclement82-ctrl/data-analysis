@@ -56,7 +56,11 @@
 
     <section class="card guest">
       <h2>🎤 Guest question</h2>
-      <p class="muted small">Bring someone up on your LIVE, press <b>Listen</b> while they ask, then press <b>Ask</b>. You can fix the words before sending.</p>
+      <div class="handsfree">
+        <label class="switch"><input id="handsFree" type="checkbox"> <span>🎧 Hands-free: answer guests automatically</span></label>
+        <p id="hfState" class="muted small">Turn on to have the cartoon answer whatever your guests say, without pressing anything. Keep this device near the phone you're streaming from so it can hear them.</p>
+      </div>
+      <p class="muted small">Or one question at a time: press <b>Listen</b> while they ask, then press <b>Ask</b>. You can fix the words before sending.</p>
       <div class="row">
         <input id="guestName" type="text" placeholder="Guest's name (optional)" maxlength="40" autocomplete="off">
       </div>

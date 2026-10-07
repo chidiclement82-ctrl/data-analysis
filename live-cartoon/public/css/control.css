@@ -89,6 +89,9 @@ label.small { display: block; margin-top: 10px; }
 @keyframes throb { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--pink) 30%, transparent); } }
 .tools .btn.ghost { margin-top: 12px; }
 
+.handsfree { padding: 10px 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); margin-bottom: 6px; }
+.handsfree p { margin: 6px 0 0; }
+.handsfree.on { border-color: var(--pink); }
 .switch { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; cursor: pointer; }
 .switch input { width: 18px; height: 18px; accent-color: var(--brand); }
 
