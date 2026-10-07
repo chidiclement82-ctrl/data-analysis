@@ -223,7 +223,7 @@ function onControlMessage(msg) {
       if (text) onComment({ id: `test-${Date.now()}`, userId: `test-${name || 'viewer'}`, name: name || 'TestViewer', handle: '', text, ts: Date.now() });
       break;
     case 'reconnect':
-      tiktok.stop().then(() => tiktok.start());
+      tiktok.reconnect();
       break;
     default:
       return;

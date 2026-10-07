@@ -267,7 +267,13 @@ document.addEventListener('visibilitychange', async () => {
 $('auto').addEventListener('change', (e) => send({ type: 'auto', on: e.target.checked }));
 $('stop').addEventListener('click', () => send({ type: 'stop' }));
 $('clear').addEventListener('click', () => send({ type: 'clear' }));
-$('reconnect').addEventListener('click', () => send({ type: 'reconnect' }));
+$('reconnect').addEventListener('click', () => {
+  const btn = $('reconnect');
+  send({ type: 'reconnect' });
+  btn.disabled = true;
+  btn.textContent = '↻ Reconnecting…';
+  setTimeout(() => { btn.disabled = false; btn.textContent = '↻ Reconnect to TikTok'; }, 4000);
+});
 
 function wire(inputId, buttonId, type, extra = {}) {
   const go = () => {
