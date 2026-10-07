@@ -3,7 +3,7 @@
 // then open the control panel and the stage (see README.md).
 
 import http from 'node:http';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,15 +62,17 @@ const state = {
 };
 let lineId = 0;
 
-// ---------------------------------------------------------------- websockets
+// ---------------------------------------------------------------- connected pages
 
+// Each open stage or control page, connected by WebSocket or (when a browser
+// or network blocks WebSockets) by long polling. Both have deliver(text).
 const sockets = { stage: new Set(), control: new Set() };
 
-function send(ws, msg) {
-  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
+function send(client, msg) {
+  client.deliver(JSON.stringify(msg));
 }
 function broadcast(role, msg) {
-  for (const ws of sockets[role]) send(ws, msg);
+  for (const client of sockets[role]) send(client, msg);
 }
 function status() {
   return {
@@ -237,6 +239,16 @@ const publicDir = join(here, 'public');
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (url.pathname === '/healthz') return res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok');
+  if (url.pathname.startsWith('/api/')) {
+    try {
+      if (await handleApi(req, res, url)) return;
+    } catch (err) {
+      console.error('[api]', err);
+      if (!res.headersSent) return json(res, 500, { error: 'Server error' });
+      return;
+    }
+    return json(res, 404, { error: 'Not found' });
+  }
   const audio = url.pathname.match(/^\/audio\/([\w-]+)\.mp3$/);
   if (audio) {
     const buf = tts.get(audio[1]);
@@ -287,26 +299,137 @@ wss.on('connection', (ws, req) => {
     console.log(`[ws] ${role} refused: ${why}`);
     return ws.close(4003, 'Not allowed');
   }
-  console.log(`[ws] ${role} connected`);
   ws.isAlive = true;
   ws.on('pong', () => { ws.isAlive = true; });
-  sockets[role].add(ws);
-  if (role === 'stage') send(ws, { type: 'hello', cartoonName: config.cartoonName });
-  else send(ws, status());
-  pushStatus();
+  ws.deliver = (text) => { if (ws.readyState === ws.OPEN) ws.send(text); };
+  addPage(role, ws, 'ws');
 
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
-    if (role === 'control') onControlMessage(msg);
-    else if (msg.type === 'done') finish(Number(msg.id), 0);
+    onPageMessage(role, msg);
   });
-  ws.on('close', (code) => {
-    console.log(`[ws] ${role} disconnected (${code})`);
-    sockets[role].delete(ws);
-    pushStatus();
-  });
+  ws.on('close', (code) => removePage(role, ws, `ws ${code}`));
 });
+
+function addPage(role, client, how) {
+  console.log(`[page] ${role} connected (${how})`);
+  sockets[role].add(client);
+  if (role === 'stage') send(client, { type: 'hello', cartoonName: config.cartoonName });
+  else send(client, status());
+  pushStatus();
+}
+function removePage(role, client, why) {
+  if (!sockets[role].delete(client)) return;
+  console.log(`[page] ${role} disconnected (${why})`);
+  pushStatus();
+}
+function onPageMessage(role, msg) {
+  if (!msg || typeof msg !== 'object') return;
+  if (role === 'control') onControlMessage(msg);
+  else if (msg.type === 'done') finish(Number(msg.id), 0);
+}
+
+// ---------------------------------------------------------------- backup connection (long polling)
+
+const POLL_WAIT_MS = 20_000;   // how long a poll waits for news before answering []
+const POLL_EXPIRE_MS = 45_000; // a page that stops polling for this long is gone
+const pollers = new Map();     // id -> PollClient
+
+class PollClient {
+  constructor(role) {
+    this.id = randomUUID();
+    this.role = role;
+    this.queue = [];
+    this.waiting = null; // the poll request being held open
+    this.lastSeen = Date.now();
+  }
+  deliver(text) {
+    this.queue.push(text);
+    if (this.queue.length > 300) this.queue.shift();
+    this.flush();
+  }
+  flush() {
+    if (!this.waiting) return;
+    const res = this.waiting;
+    this.waiting = null;
+    clearTimeout(res.timer);
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end(`[${this.queue.splice(0).join(',')}]`);
+  }
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, c] of pollers) {
+    if (!c.waiting && now - c.lastSeen > POLL_EXPIRE_MS) {
+      pollers.delete(id);
+      removePage(c.role, c, 'stopped polling');
+    }
+  }
+}, 10_000).unref();
+
+const json = (res, code, body) => res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end(JSON.stringify(body));
+
+function readBody(req, limit = 20_000) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > limit) { reject(new Error('too large')); req.destroy(); } else chunks.push(c);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('error', reject);
+  });
+}
+
+// Returns true when it handled the request.
+async function handleApi(req, res, url) {
+  if (url.pathname === '/api/info') {
+    json(res, 200, { needsKey: !isLoopbackOnly, cartoonName: config.cartoonName });
+    return true;
+  }
+  if (url.pathname === '/api/connect' && req.method === 'POST') {
+    const role = url.searchParams.get('role') === 'control' ? 'control' : 'stage';
+    const why = refusal(req, url.searchParams.get('key'));
+    if (why) {
+      console.log(`[page] ${role} refused: ${why}`);
+      json(res, 403, { error: 'Not allowed' });
+      return true;
+    }
+    const c = new PollClient(role);
+    pollers.set(c.id, c);
+    addPage(role, c, 'backup');
+    json(res, 200, { id: c.id });
+    return true;
+  }
+  if (url.pathname === '/api/poll' && req.method === 'GET') {
+    const c = pollers.get(url.searchParams.get('id') || '');
+    if (!c) { json(res, 410, { error: 'Reconnect' }); return true; }
+    c.lastSeen = Date.now();
+    if (c.waiting) c.flush(); // only one poll at a time
+    c.waiting = res;
+    res.timer = setTimeout(() => { if (c.waiting === res) c.flush(); else if (!res.writableEnded) json(res, 200, []); }, POLL_WAIT_MS);
+    req.on('close', () => {
+      if (c.waiting === res) { c.waiting = null; clearTimeout(res.timer); c.lastSeen = Date.now(); }
+    });
+    if (c.queue.length) c.flush();
+    return true;
+  }
+  if (url.pathname === '/api/send' && req.method === 'POST') {
+    const c = pollers.get(url.searchParams.get('id') || '');
+    if (!c) { json(res, 410, { error: 'Reconnect' }); return true; }
+    c.lastSeen = Date.now();
+    try {
+      onPageMessage(c.role, JSON.parse(await readBody(req)));
+      json(res, 200, { ok: true });
+    } catch {
+      json(res, 400, { error: 'Bad message' });
+    }
+    return true;
+  }
+  return false;
+}
 
 // Ping every page every 25 s. Hosting proxies close connections that stay
 // quiet, and a page that stops answering (phone asleep, lost signal) is dropped.

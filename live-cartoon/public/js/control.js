@@ -1,13 +1,14 @@
 // Host control panel: watch chat, steer the cartoon, take guest questions.
 
-import { getKey, askForKey, wsUrl } from './key.js';
+import { getKey, askForKey } from './key.js';
+import { openChannel, needsKey, transportName } from './channel.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
-let ws;
+let channel = null;
 
 function send(msg) {
-  if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+  channel?.send(msg);
 }
 
 // ---------------------------------------------------------------- status
@@ -174,26 +175,36 @@ wire('testText', 'test', 'test-comment', { name: 'TestViewer' });
 // ---------------------------------------------------------------- connection
 
 let key = getKey();
-function connect() {
-  ws = new WebSocket(wsUrl('control', key));
-  ws.onopen = () => { document.querySelector('main').hidden = false; };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'status') renderStatus(msg);
-    else if (msg.type === 'comment') addComment(msg);
-    else if (msg.type === 'said') addSaid(msg);
-  };
-  ws.onclose = (e) => {
-    const pill = $('tiktokPill');
-    pill.className = 'pill bad';
-    if (e.code === 4003) {
-      pill.textContent = 'Locked: enter your access key';
-      document.querySelector('main').hidden = true;
-      askForKey($('keyForm'), (k) => { key = k; connect(); }, Boolean(key));
-      return;
-    }
-    pill.textContent = `Can't reach the server (code ${e.code}). Reconnecting…`;
-    setTimeout(connect, 2000);
-  };
+function locked(wrong) {
+  const pill = $('tiktokPill');
+  pill.className = 'pill bad';
+  pill.textContent = 'Locked: enter your access key';
+  document.querySelector('main').hidden = true;
+  askForKey($('keyForm'), (k) => { key = k; connect(); }, wrong);
+}
+
+async function connect() {
+  // Online, ask for the key straight away instead of waiting for a refusal.
+  if (!key && await needsKey()) return locked(false);
+  channel = openChannel('control', key, {
+    onOpen: () => {
+      document.querySelector('main').hidden = false;
+      $('connection').textContent = `Connected (${transportName()})`;
+    },
+    onMessage: (msg) => {
+      if (msg.type === 'status') renderStatus(msg);
+      else if (msg.type === 'comment') addComment(msg);
+      else if (msg.type === 'said') addSaid(msg);
+    },
+    onClose: (code) => {
+      channel = null;
+      if (code === 4003) return locked(Boolean(key));
+      const pill = $('tiktokPill');
+      pill.className = 'pill bad';
+      pill.textContent = `Can't reach the server (code ${code}). Reconnecting…`;
+      $('connection').textContent = '';
+      setTimeout(connect, 2000);
+    },
+  });
 }
 connect();

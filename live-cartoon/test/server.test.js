@@ -101,3 +101,38 @@ test('refuses to run online without a strong key', async () => {
   const code = await new Promise((r) => p.on('exit', r));
   assert.equal(code, 1);
 });
+
+test('backup connection (long polling) works when WebSockets are blocked', async () => {
+  const port = PORT + 3;
+  const p = spawn(process.execPath, ['server.js'], {
+    cwd: fileURLToPath(new URL('..', import.meta.url)),
+    env: { PATH: process.env.PATH, PORT: String(port), HOST: '0.0.0.0', CONTROL_KEY: 'correct-horse-battery', TIKTOK_USERNAME: '' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  try {
+    await new Promise((r) => p.stdout.on('data', (d) => { if (String(d).includes('Control panel')) r(); }));
+    const base = `http://127.0.0.1:${port}`;
+    const headers = { Origin: base };
+    assert.deepEqual(await (await fetch(`${base}/api/info`)).json(), { needsKey: true, cartoonName: 'Bobo' });
+
+    assert.equal((await fetch(`${base}/api/connect?role=stage&key=wrong`, { method: 'POST', headers })).status, 403);
+    assert.equal((await fetch(`${base}/api/connect?role=stage&key=correct-horse-battery`, { method: 'POST', headers: { Origin: 'https://evil.example' } })).status, 403);
+
+    const stage = (await (await fetch(`${base}/api/connect?role=stage&key=correct-horse-battery`, { method: 'POST', headers })).json()).id;
+    const control = (await (await fetch(`${base}/api/connect?role=control&key=correct-horse-battery`, { method: 'POST', headers })).json()).id;
+    const poll = async (id) => (await fetch(`${base}/api/poll?id=${id}`)).json();
+
+    assert.equal((await poll(stage))[0].type, 'hello');
+    const statuses = await poll(control);
+    assert.equal(statuses.at(-1).stages, 1);
+
+    const waiting = poll(stage); // held open until there's news
+    await fetch(`${base}/api/send?id=${control}`, { method: 'POST', body: JSON.stringify({ type: 'say', text: 'Hello from the backup line!' }) });
+    const said = (await waiting).find((m) => m.type === 'say');
+    assert.equal(said.text, 'Hello from the backup line!');
+    assert.equal((await fetch(`${base}/api/send?id=${stage}`, { method: 'POST', body: JSON.stringify({ type: 'done', id: said.id }) })).status, 200);
+    assert.equal((await fetch(`${base}/api/poll?id=not-a-session`)).status, 410);
+  } finally {
+    p.kill();
+  }
+});
