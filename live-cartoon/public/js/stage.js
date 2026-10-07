@@ -6,7 +6,8 @@
 //   voice=Samantha           part of a browser voice name to use
 //   pitch=1.3  rate=1.05     browser voice pitch and speed
 
-import { getKey, askForKey, wsUrl } from './key.js';
+import { getKey, askForKey } from './key.js';
+import { openChannel, needsKey } from './channel.js';
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
@@ -225,32 +226,40 @@ function celebrate({ kind, name, gift, count }) {
 
 // ---------------------------------------------------------------- server connection
 
-let ws;
+let channel = null;
 let key = getKey();
 function send(msg) {
-  if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+  channel?.send(msg);
 }
 
-function connect() {
-  ws = new WebSocket(wsUrl('stage', key));
-  ws.onopen = () => { $('offline').hidden = true; };
-  ws.onclose = (e) => {
-    if (e.code === 4003) {
-      $('offline').hidden = true;
-      askForKey($('keyForm'), (k) => { key = k; connect(); }, Boolean(key));
-      return;
-    }
-    $('offline').hidden = false;
-    setTimeout(connect, 2000);
-  };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'hello') $('nameplate').textContent = msg.cartoonName;
-    else if (msg.type === 'think') think(msg);
-    else if (msg.type === 'say') say(msg);
-    else if (msg.type === 'stop' || msg.type === 'idle') { stopAll(); $('bubble').hidden = true; setEmotion('happy'); }
-    else if (msg.type === 'event') celebrate(msg);
-  };
+async function connect() {
+  // Online, ask for the key straight away instead of waiting for a refusal.
+  if (!key && await needsKey()) {
+    askForKey($('keyForm'), (k) => { key = k; connect(); });
+    return;
+  }
+  channel = openChannel('stage', key, {
+    onOpen: () => { $('offline').hidden = true; },
+    onClose: (code) => {
+      channel = null;
+      if (code === 4003) {
+        $('offline').hidden = true;
+        askForKey($('keyForm'), (k) => { key = k; connect(); }, Boolean(key));
+        return;
+      }
+      $('offline').hidden = false;
+      setTimeout(connect, 2000);
+    },
+    onMessage,
+  });
+}
+
+function onMessage(msg) {
+  if (msg.type === 'hello') $('nameplate').textContent = msg.cartoonName;
+  else if (msg.type === 'think') think(msg);
+  else if (msg.type === 'say') say(msg);
+  else if (msg.type === 'stop' || msg.type === 'idle') { stopAll(); $('bubble').hidden = true; setEmotion('happy'); }
+  else if (msg.type === 'event') celebrate(msg);
 }
 
 function start() {
