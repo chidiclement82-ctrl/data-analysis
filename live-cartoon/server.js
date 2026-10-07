@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 
 import { CommentQueue } from './src/filters.js';
-import { createBrain, describeError, cleanForSpeech } from './src/brain.js';
+import { createBrain, describeError, cleanForSpeech, claudeProvider, geminiProvider } from './src/brain.js';
 import { createTts } from './src/tts.js';
 import { TikTokLink } from './src/tiktok.js';
 
@@ -26,8 +26,9 @@ const config = {
   cartoonName: env.CARTOON_NAME || 'Bobo',
   hostName: env.HOST_NAME || env.TIKTOK_USERNAME || 'the host',
   persona: env.CARTOON_PERSONA || undefined,
-  model: env.CLAUDE_MODEL || 'claude-opus-5-5',
-  effort: env.CLAUDE_EFFORT || 'low',
+  // Which AI writes the replies: "gemini" or "claude". If unset, uses
+  // whichever one has a key (Gemini when only GEMINI_API_KEY is filled in).
+  provider: (env.AI_PROVIDER || (env.GEMINI_API_KEY && !env.ANTHROPIC_API_KEY ? 'gemini' : 'claude')).toLowerCase(),
   autoGapMs: (Number(env.AUTO_REPLY_GAP_SECONDS) || 4) * 1000,
   blocked: (env.BLOCKED_WORDS || '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean),
   thankFollows: env.THANK_FOLLOWS !== 'false',
@@ -41,7 +42,10 @@ if (!isLoopbackOnly && (env.CONTROL_KEY || '').length < 12) {
   process.exit(1);
 }
 
-const brain = createBrain(config);
+const ask = config.provider === 'gemini'
+  ? geminiProvider({ apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL || undefined })
+  : claudeProvider({ model: env.CLAUDE_MODEL || undefined, effort: env.CLAUDE_EFFORT || undefined });
+const brain = createBrain({ ...config, ask });
 const tts = createTts({ apiKey: env.ELEVENLABS_API_KEY, voiceId: env.ELEVENLABS_VOICE_ID });
 const tiktok = new TikTokLink({ username: config.username, signApiKey: env.EULER_API_KEY });
 const queue = new CommentQueue({ cartoonName: config.cartoonName, blocked: config.blocked });
@@ -292,7 +296,9 @@ server.listen(config.port, config.host, () => {
   console.log(`\n  ${config.cartoonName} is ready!\n`);
   console.log(`  Control panel:  ${base}/control`);
   console.log(`  Cartoon stage:  ${base}/stage   (capture this in TikTok LIVE Studio or OBS)\n`);
-  if (!env.ANTHROPIC_API_KEY) console.log('  ! ANTHROPIC_API_KEY is not set, so the cartoon can\'t answer yet. See README.md.\n');
+  const keyName = config.provider === 'gemini' ? 'GEMINI_API_KEY' : 'ANTHROPIC_API_KEY';
+  console.log(`  AI: ${config.provider === 'gemini' ? 'Google Gemini' : 'Claude'}`);
+  if (!env[keyName]) console.log(`  ! ${keyName} is not set, so the cartoon can't answer yet. See README.md.\n`);
   tiktok.start();
 });
 
