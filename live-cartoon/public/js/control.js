@@ -192,7 +192,7 @@ function connect() {
       askForKey($('keyForm'), (k) => { key = k; connect(); }, Boolean(key));
       return;
     }
-    pill.textContent = 'Server offline. Reconnecting…';
+    pill.textContent = `Can't reach the server (code ${e.code}). Reconnecting…`;
     setTimeout(connect, 2000);
   };
 }

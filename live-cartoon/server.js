@@ -261,19 +261,35 @@ function sameKey(a, b) {
   const hash = (s) => createHash('sha256').update(String(s)).digest();
   return timingSafeEqual(hash(a), hash(b));
 }
-function allowed(req, key) {
-  const host = req.headers.host || '';
+// Hosting proxies may add the default port (":443") to one header and not the other.
+const bareHost = (h) => String(h || '').toLowerCase().replace(/:(80|443)$/, '');
+function originHost(origin) {
+  try { return bareHost(new URL(origin).host); } catch { return null; }
+}
+
+// Returns null when allowed, otherwise the reason it isn't (for the logs).
+function refusal(req, key) {
+  const host = bareHost(req.headers.host);
   const origin = req.headers.origin;
-  if (origin && origin !== `http://${host}` && origin !== `https://${host}`) return false;
-  if (isLoopbackOnly) return LOOPBACK.has(host.replace(/:\d+$/, '')); // blocks DNS rebinding
-  return Boolean(key) && sameKey(key, env.CONTROL_KEY);
+  if (origin && originHost(origin) !== host) return `page address ${origin} doesn't match server ${host}`;
+  if (isLoopbackOnly) return LOOPBACK.has(host.replace(/:\d+$/, '')) ? null : `unexpected host ${host}`; // blocks DNS rebinding
+  if (!key) return 'no access key yet';
+  return sameKey(key, env.CONTROL_KEY) ? null : 'wrong access key';
 }
 
 const wss = new WebSocketServer({ server, path: '/ws' });
 wss.on('connection', (ws, req) => {
   const params = new URL(req.url, 'http://localhost').searchParams;
   const role = params.get('role') === 'control' ? 'control' : 'stage';
-  if (!allowed(req, params.get('key'))) return ws.close(4003, 'Not allowed');
+  ws.on('error', (err) => console.warn(`[ws] ${role} connection error:`, err.message)); // never crash the server
+  const why = refusal(req, params.get('key'));
+  if (why) {
+    console.log(`[ws] ${role} refused: ${why}`);
+    return ws.close(4003, 'Not allowed');
+  }
+  console.log(`[ws] ${role} connected`);
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
   sockets[role].add(ws);
   if (role === 'stage') send(ws, { type: 'hello', cartoonName: config.cartoonName });
   else send(ws, status());
@@ -285,11 +301,22 @@ wss.on('connection', (ws, req) => {
     if (role === 'control') onControlMessage(msg);
     else if (msg.type === 'done') finish(Number(msg.id), 0);
   });
-  ws.on('close', () => {
+  ws.on('close', (code) => {
+    console.log(`[ws] ${role} disconnected (${code})`);
     sockets[role].delete(ws);
     pushStatus();
   });
 });
+
+// Ping every page every 25 s. Hosting proxies close connections that stay
+// quiet, and a page that stops answering (phone asleep, lost signal) is dropped.
+setInterval(() => {
+  for (const ws of wss.clients) {
+    if (ws.isAlive === false) { ws.terminate(); continue; }
+    ws.isAlive = false;
+    try { ws.ping(); } catch { /* closing anyway */ }
+  }
+}, 25_000).unref();
 
 server.listen(config.port, config.host, () => {
   const base = env.PUBLIC_URL || env.RENDER_EXTERNAL_URL || `http://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}`;
@@ -301,6 +328,11 @@ server.listen(config.port, config.host, () => {
   if (!env[keyName]) console.log(`  ! ${keyName} is not set, so the cartoon can't answer yet. See README.md.\n`);
   tiktok.start();
 });
+
+// A hiccup in the TikTok connector or a network error must not take the
+// cartoon off air: log it and keep running.
+process.on('unhandledRejection', (err) => console.error('[error]', err));
+process.on('uncaughtException', (err) => console.error('[error] kept running after:', err));
 
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, async () => {
