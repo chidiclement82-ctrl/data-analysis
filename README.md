@@ -19,6 +19,7 @@ After that, every change pushed to `main` goes live automatically.
 | Everyone | `https://ogarider.name.ng/` | The homepage: one button, Order on WhatsApp |
 | Customers | `https://ogarider.name.ng/restaurants.html` | All restaurants; tap one to see its menu (not linked from the homepage; share the link directly) |
 | Customers | `https://ogarider.name.ng/order.html` | Order food on WhatsApp. Linked from the green button on the homepage |
+| Everyone | `https://ogarider.name.ng/market/` | **Tradesafe**, the escrow marketplace: buy and sell, with the money held until the buyer confirms delivery. Set up in [`market-server/README.md`](market-server/README.md) |
 | Admin | `https://ogarider.name.ng/admin.html` | Edit restaurants, dishes, prices and photos (not linked from the site; bookmark it) |
 
 ## Editing the menu (admin page)
@@ -128,6 +129,8 @@ assets/css/chat.css   design for the order page
 assets/js/home.js     homepage photo
 assets/js/restaurants.js  restaurant list and menus
 assets/js/order.js    order page and your WhatsApp number
+market/               Tradesafe escrow marketplace (site); support desk at market/#/admin
+market-server/        Tradesafe server: accounts, listings, escrow, Paystack
 admin.html            menu editor (admin)
 assets/js/admin.js    menu editor code
 assets/images/menu/   food and restaurant photos uploaded from the admin page

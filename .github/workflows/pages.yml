@@ -26,13 +26,14 @@ jobs:
         run: |
           mkdir _site
           # Every page (*.html) is published, so a new page can't be forgotten here.
-          cp -r *.html menu.json robots.txt sitemap.xml site.webmanifest .nojekyll assets flyer studio _site/
+          cp -r *.html menu.json robots.txt sitemap.xml site.webmanifest .nojekyll assets flyer studio market _site/
       - name: Make phones load the newest scripts and styles after each update
         run: |
           # Adds ?v=<commit> to our own .css/.js links, so a browser that still
           # remembers the old files fetches the new ones instead.
           v="${GITHUB_SHA::8}"
           sed -i -E "s#(href|src)=\"(assets/[^\"?]+\.(css|js))\"#\1=\"\2?v=$v\"#g" _site/*.html
+          sed -i -E "s#(href|src)=\"((css|js)/[^\"?]+\.(css|js))\"#\1=\"\2?v=$v\"#g" _site/market/index.html
           grep -o 'assets/[^"]*?v=[^"]*' _site/*.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
