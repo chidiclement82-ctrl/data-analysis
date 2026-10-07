@@ -26,6 +26,7 @@ function renderStatus(s) {
   pill.textContent = t.username ? `${TIKTOK_LABEL[t.state]} · @${t.username}` : TIKTOK_LABEL.off;
   pill.className = `pill ${TIKTOK_CLASS[t.state] || ''}`;
   $('tiktokDetail').textContent = t.detail || '';
+  $('linkForm').hidden = !t.username || t.state === 'live';
   $('viewers').hidden = !(t.state === 'live' && t.viewers);
   $('viewers').textContent = `👀 ${t.viewers}`;
 
@@ -273,6 +274,14 @@ $('reconnect').addEventListener('click', () => {
   btn.disabled = true;
   btn.textContent = '↻ Reconnecting…';
   setTimeout(() => { btn.disabled = false; btn.textContent = '↻ Reconnect to TikTok'; }, 4000);
+});
+
+$('linkForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const text = $('liveLink').value.trim();
+  if (!text) return;
+  send({ type: 'live-link', text });
+  $('liveLink').value = '';
 });
 
 function wire(inputId, buttonId, type, extra = {}) {

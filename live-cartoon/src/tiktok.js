@@ -7,6 +7,7 @@ import {
   TikTokLiveConnection, WebcastEvent, ControlEvent, UserOfflineError,
   SignatureRateLimitError, SignAPIError, PremiumFeatureError, InvalidUniqueIdError, ConnectTimeoutError,
 } from 'tiktok-live-connector';
+import { resolveRoomId } from './roomlink.js';
 
 const RETRY_MS = 20_000;
 
@@ -21,8 +22,24 @@ export function explain(err, username) {
   if (err instanceof PremiumFeatureError) return 'That TikTok connection needs a paid Euler Stream plan. Retrying with the free one…';
   if (err instanceof SignAPIError) return `The TikTok connection service refused (${msg.replace(/\.+$/, '')}). Adding a free EULER_API_KEY on Render usually fixes this. Retrying…`;
   if (err instanceof ConnectTimeoutError) return 'TikTok took too long to answer. Retrying…';
-  if (/room id/i.test(msg)) return `Couldn't find a LIVE for @${username}. Are you live, and is the username right? Checking again…`;
+  if (/room id/i.test(msg)) {
+    // Each way of looking up the LIVE failed; say why for each.
+    const reasons = (err?.config?.requestErrs || []).map(lookupReason).filter(Boolean);
+    const why = reasons.length ? ` (${[...new Set(reasons)].join('; ')})` : '';
+    return `Couldn't find a LIVE for @${username}${why}. Are you live, and is the username right? If you are, paste your LIVE link below. Checking again…`;
+  }
   return `Couldn't connect (${msg.replace(/\.+$/, '')}). Retrying…`;
+}
+
+function lookupReason(e) {
+  const m = String(e?.message || '');
+  if (/fetchRoomIdFromEuler|Euler/i.test(m)) {
+    if (/permission/i.test(m)) return "Euler Stream key can't look up rooms";
+    return 'Euler Stream lookup failed';
+  }
+  if (/SIGI_STATE|captcha|blocked|\b403\b|Forbidden/i.test(m)) return 'TikTok blocked the server';
+  if (/API/i.test(m)) return 'TikTok API look-up failed';
+  return null;
 }
 
 export class TikTokLink extends EventEmitter {
@@ -38,6 +55,7 @@ export class TikTokLink extends EventEmitter {
     this.viewers = 0;
     this.timer = null;
     this.conn = null;
+    this.roomId = null; // set from a pasted LIVE link; skips the username look-up
   }
 
   setState(state, detail = '') {
@@ -61,6 +79,18 @@ export class TikTokLink extends EventEmitter {
     this.connect();
   }
 
+  // Connect straight to the room in a pasted LIVE link (Share → Copy link).
+  async useLiveLink(link) {
+    this.setState('connecting', 'Reading your LIVE link…');
+    try {
+      this.roomId = await resolveRoomId(link);
+    } catch (err) {
+      return this.retry(err.message);
+    }
+    console.log('[tiktok] using room from LIVE link:', this.roomId);
+    this.connect();
+  }
+
   retry(detail) {
     this.setState('waiting', detail);
     clearTimeout(this.timer);
@@ -70,9 +100,11 @@ export class TikTokLink extends EventEmitter {
   async connect() {
     clearTimeout(this.timer);
     const attempt = ++this.attempt;
-    this.setState('connecting', `Looking for @${this.username}'s LIVE…`);
+    const roomId = this.roomId;
+    this.setState('connecting', roomId ? 'Connecting to the LIVE from your link…' : `Looking for @${this.username}'s LIVE…`);
     this.conn?.disconnect()?.catch?.(() => {}); // drop the previous stream's connection
-    const conn = this.createConnection(this.username, { signApiKey: this.signApiKey });
+    // With a room from a link, skip the room-info check too: it's another look-up TikTok may block.
+    const conn = this.createConnection(this.username || 'tiktok', { signApiKey: this.signApiKey, fetchRoomInfoOnConnect: !roomId });
     this.conn = conn;
     const current = () => this.attempt === attempt;
 
@@ -104,19 +136,28 @@ export class TikTokLink extends EventEmitter {
         this.emit('status', this.status());
       }
     });
-    conn.on(WebcastEvent.STREAM_END, () => { if (current()) this.retry('Your LIVE ended. Waiting for the next one…'); });
+    conn.on(WebcastEvent.STREAM_END, () => {
+      if (!current()) return;
+      this.roomId = null; // the next LIVE is a new room
+      this.retry('Your LIVE ended. Waiting for the next one…');
+    });
     conn.on(ControlEvent.DISCONNECTED, () => {
       if (current() && this.state === 'live') this.retry('Disconnected from TikTok. Reconnecting…');
     });
     conn.on(ControlEvent.ERROR, (e) => console.warn('[tiktok]', e?.info || e?.message || e));
 
     try {
-      await conn.connect();
+      await conn.connect(roomId || undefined);
       if (!current()) return conn.disconnect()?.catch?.(() => {}); // a newer attempt took over
       this.setState('live', `Connected to @${this.username}'s LIVE`);
     } catch (err) {
       if (!current()) return;
       console.warn('[tiktok] connect failed:', err?.name, err?.message);
+      for (const e of err?.config?.requestErrs || []) console.warn('[tiktok]   tried:', e?.message);
+      if (roomId) {
+        this.roomId = null; // the link's room didn't work (LIVE over?); go back to looking up by username
+        return this.retry(`Couldn't join the LIVE from that link (${String(err?.message || err).replace(/\.+$/, '')}). Copy a fresh link from your LIVE and try again.`);
+      }
       this.retry(explain(err, this.username));
     }
   }
