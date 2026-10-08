@@ -1,0 +1,30 @@
+name: Content factory
+
+on:
+  pull_request:
+    paths: ["content-factory/**", ".github/workflows/content-factory.yml"]
+  push:
+    branches: [main]
+    paths: ["content-factory/**", ".github/workflows/content-factory.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: content-factory
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: content-factory/package-lock.json
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test

@@ -1,0 +1,63 @@
+name: Daily Bobo videos
+
+# Every morning, write and render today's Bobo motivation videos and publish
+# them as a release (download page) with their captions.
+on:
+  schedule:
+    - cron: "0 4 * * *" # 05:00 in Lagos
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-videos
+  cancel-in-progress: false
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: content-factory
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: content-factory/package-lock.json
+      - name: Check the Gemini key
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::Add your free Gemini key as the GEMINI_API_KEY secret: Settings > Secrets and variables > Actions > New repository secret."
+            exit 1
+          fi
+      - name: Install tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Make today's videos
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BOBO_HANDLE: ${{ vars.BOBO_HANDLE || '@clem22145' }}
+          BOBO_VOICE: ${{ vars.BOBO_VOICE }}
+          VIDEOS_PER_DAY: ${{ vars.VIDEOS_PER_DAY || '3' }}
+        run: npm run make
+      - name: Publish to the download page
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DAY=$(date -u +%F)
+          TAG="bobo-$DAY"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" out/$DAY/*.mp4 out/$DAY/captions.md --clobber
+          else
+            gh release create "$TAG" out/$DAY/*.mp4 out/$DAY/captions.md \
+              --title "Bobo videos for $DAY" --notes-file out/$DAY/captions.md
+          fi
+          echo "### Videos ready: https://github.com/${{ github.repository }}/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
