@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bobo Scene</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=block" rel="stylesheet">
+<style>
+  /* One 1080×1920 video frame. The renderer sets the state for each frame
+     through window.scene.draw({...}) and takes a screenshot. */
+  :root {
+    --bg1: #1d1b4b; --bg2: #6a2c91; --accent: #ffcc33;
+    --skin: #8a5a3b; --skin-hi: #a8714c; --skin-lo: #6b4429;
+    --hair: #17120f; --lip: #5e2f22; --shirt: #ff7a1a; --shirt-lo: #d85f08;
+    --ink: #1a1220; --white: #fffaf2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+  #frame {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background: radial-gradient(120% 80% at 50% 25%, var(--bg2), var(--bg1));
+    font-family: "Montserrat", "Arial Black", Arial, sans-serif; color: var(--white);
+  }
+  .rays { position: absolute; inset: -40%; opacity: 0.12;
+    background: repeating-conic-gradient(from 0deg at 50% 45%, #fff 0 6deg, transparent 6deg 18deg); }
+  .series { position: absolute; top: 120px; left: 0; right: 0; text-align: center;
+    font-size: 44px; font-weight: 900; letter-spacing: 6px; color: var(--accent); text-transform: uppercase; }
+  .hook { position: absolute; top: 200px; left: 70px; right: 70px; text-align: center;
+    font-size: 78px; line-height: 1.08; font-weight: 900; text-shadow: 0 6px 0 rgb(0 0 0 / 0.35); }
+  .caption { position: absolute; left: 60px; right: 60px; top: 1330px; text-align: center;
+    font-size: 84px; line-height: 1.1; font-weight: 900; text-transform: uppercase;
+    -webkit-text-stroke: 10px var(--ink); paint-order: stroke fill; }
+  .caption .hot { color: var(--accent); }
+  .handle { position: absolute; bottom: 120px; left: 0; right: 0; text-align: center; font-size: 40px; font-weight: 800; opacity: 0.85; }
+  .ai { position: absolute; bottom: 70px; left: 0; right: 0; text-align: center; font-size: 28px; opacity: 0.6; }
+  #person { position: absolute; left: 90px; top: 520px; width: 900px; height: 1050px; }
+</style>
+</head>
+<body>
+<div id="frame">
+  <div class="rays" id="rays"></div>
+  <div class="series" id="series">Bobo's Daily Push</div>
+  <div class="hook" id="hook"></div>
+
+  <svg id="person" viewBox="0 0 600 700" aria-label="Bobo">
+    <defs>
+      <radialGradient id="skinG" cx="46%" cy="36%" r="72%">
+        <stop offset="0" stop-color="var(--skin-hi)"/><stop offset="0.6" stop-color="var(--skin)"/><stop offset="1" stop-color="var(--skin-lo)"/>
+      </radialGradient>
+      <radialGradient id="irisG" cx="50%" cy="45%" r="55%">
+        <stop offset="0" stop-color="#7a4a26"/><stop offset="0.7" stop-color="#4a2a17"/><stop offset="1" stop-color="#2a170c"/>
+      </radialGradient>
+      <linearGradient id="shirtG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="var(--shirt)"/><stop offset="1" stop-color="var(--shirt-lo)"/>
+      </linearGradient>
+      <linearGradient id="neckShade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#000" stop-opacity="0.35"/><stop offset="0.5" stop-color="#000" stop-opacity="0"/>
+      </linearGradient>
+      <pattern id="hairTex" width="10" height="10" patternUnits="userSpaceOnUse">
+        <rect width="10" height="10" fill="var(--hair)"/>
+        <circle cx="3" cy="3" r="2" fill="#2b221c"/><circle cx="8" cy="7" r="1.6" fill="#2b221c"/>
+      </pattern>
+      <clipPath id="faceClip"><path id="facePath2" d="M300 110 C 385 110 440 170 442 255 C 444 320 430 370 405 410 C 380 450 345 478 300 480 C 255 478 220 450 195 410 C 170 370 156 320 158 255 C 160 170 215 110 300 110 Z"/></clipPath>
+      <clipPath id="mouthClip"><path id="mouthClipPath"/></clipPath>
+    </defs>
+
+    <g id="body">
+      <!-- hoodie -->
+      <path d="M20 700 C 25 585, 120 520, 228 505 L 372 505 C 480 520, 575 585, 580 700 Z" fill="url(#shirtG)"/>
+      <path d="M215 508 C 230 575, 370 575, 385 508 C 360 530, 240 530, 215 508 Z" fill="#b84d05"/>
+      <path d="M120 640 C 140 610, 160 590, 190 575 M480 640 C 460 610, 440 590, 410 575" stroke="#c45606" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <path d="M262 552 C 258 590, 256 620, 254 650" stroke="var(--white)" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <path d="M338 552 C 342 590, 344 620, 346 650" stroke="var(--white)" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <rect x="248" y="648" width="12" height="22" rx="4" fill="#ddd"/><rect x="340" y="648" width="12" height="22" rx="4" fill="#ddd"/>
+      <!-- neck -->
+      <path d="M248 430 L 246 512 C 268 540, 332 540, 354 512 L 352 430 Z" fill="var(--skin-lo)"/>
+      <path d="M248 430 L 246 512 C 268 540, 332 540, 354 512 L 352 430 Z" fill="url(#neckShade)"/>
+    </g>
+
+    <g id="head">
+      <!-- ears -->
+      <path d="M160 248 C 132 240, 128 300, 150 318 C 160 326, 168 318, 168 300 Z" fill="var(--skin)"/>
+      <path d="M150 262 C 142 275, 146 296, 156 304" stroke="var(--skin-lo)" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M440 248 C 468 240, 472 300, 450 318 C 440 326, 432 318, 432 300 Z" fill="var(--skin)"/>
+      <path d="M450 262 C 458 275, 454 296, 444 304" stroke="var(--skin-lo)" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+      <!-- face with shading -->
+      <path d="M300 110 C 385 110 440 170 442 255 C 444 320 430 370 405 410 C 380 450 345 478 300 480 C 255 478 220 450 195 410 C 170 370 156 320 158 255 C 160 170 215 110 300 110 Z" fill="url(#skinG)"/>
+      <g clip-path="url(#faceClip)">
+        <ellipse cx="300" cy="200" rx="90" ry="40" fill="#fff" opacity="0.07"/>
+        <path d="M160 300 C 175 380, 210 440, 300 470 C 230 470, 175 420, 160 300 Z" fill="#000" opacity="0.12"/>
+        <path d="M440 300 C 425 380, 390 440, 300 470 C 370 470, 425 420, 440 300 Z" fill="#000" opacity="0.12"/>
+        <!-- short beard: jawline, moustache, chin -->
+        <path d="M168 330 C 185 410, 235 470, 300 478 C 365 470, 415 410, 432 330 C 420 400, 380 445, 340 452 C 320 440, 280 440, 260 452 C 220 445, 180 400, 168 330 Z" fill="var(--hair)" opacity="0.55"/>
+        <path d="M262 382 C 280 372, 320 372, 338 382 C 320 380, 280 380, 262 382 Z" fill="var(--hair)" opacity="0.7"/>
+        <path d="M270 382 C 285 376, 315 376, 330 382 L 330 388 C 315 384, 285 384, 270 388 Z" fill="var(--hair)" opacity="0.6"/>
+        <ellipse cx="300" cy="458" rx="30" ry="13" fill="var(--hair)" opacity="0.3"/>
+      </g>
+
+      <!-- hair: short, textured, with a clean hairline -->
+      <path d="M158 250 C 150 150 210 78 300 78 C 390 78 450 150 442 250 C 436 222 428 202 418 190 C 398 176 362 168 300 168 C 238 168 202 176 182 190 C 172 202 164 222 158 250 Z" fill="url(#hairTex)"/>
+      <path d="M182 190 C 202 176 238 168 300 168 C 362 168 398 176 418 190" stroke="#2b221c" stroke-width="3" fill="none" opacity="0.6"/>
+
+      <!-- brows (tapered) -->
+      <path id="browL" d="M200 222 C 220 204, 255 200, 278 210 C 279 216, 276 219, 272 218 C 250 212, 225 215, 206 228 Z" fill="var(--hair)"/>
+      <path id="browR" d="M400 222 C 380 204, 345 200, 322 210 C 321 216, 324 219, 328 218 C 350 212, 375 215, 394 228 Z" fill="var(--hair)"/>
+
+      <!-- eyes -->
+      <g id="eyes">
+        <path d="M204 266 Q 240 236 276 266 Q 240 290 204 266 Z" fill="var(--white)"/>
+        <path d="M324 266 Q 360 236 396 266 Q 360 290 324 266 Z" fill="var(--white)"/>
+        <g id="irises">
+          <circle cx="240" cy="264" r="16" fill="url(#irisG)"/><circle cx="240" cy="264" r="7" fill="#0d0704"/><circle cx="246" cy="258" r="4.5" fill="#fff"/><circle cx="235" cy="270" r="2" fill="#fff" opacity="0.6"/>
+          <circle cx="360" cy="264" r="16" fill="url(#irisG)"/><circle cx="360" cy="264" r="7" fill="#0d0704"/><circle cx="366" cy="258" r="4.5" fill="#fff"/><circle cx="355" cy="270" r="2" fill="#fff" opacity="0.6"/>
+        </g>
+        <!-- creases and lower lids -->
+        <path d="M206 254 Q 240 226 276 254" stroke="var(--skin-lo)" stroke-width="3" fill="none" opacity="0.8"/>
+        <path d="M324 254 Q 360 226 394 254" stroke="var(--skin-lo)" stroke-width="3" fill="none" opacity="0.8"/>
+        <path d="M212 274 Q 240 290 270 274" stroke="var(--skin-lo)" stroke-width="2.5" fill="none" opacity="0.6"/>
+        <path d="M330 274 Q 360 290 388 274" stroke="var(--skin-lo)" stroke-width="2.5" fill="none" opacity="0.6"/>
+        <!-- upper lids (lash line when open, closed lid when blinking) -->
+        <path id="lidL" stroke="#120c08" stroke-width="5" stroke-linecap="round"/>
+        <path id="lidR" stroke="#120c08" stroke-width="5" stroke-linecap="round"/>
+      </g>
+
+      <!-- nose -->
+      <path d="M292 270 C 290 300, 286 320, 280 336" stroke="var(--skin-lo)" stroke-width="3" fill="none" opacity="0.5"/>
+      <path d="M306 272 C 308 298, 310 318, 312 330" stroke="#fff" stroke-width="5" fill="none" opacity="0.12" stroke-linecap="round"/>
+      <path d="M272 344 C 266 356, 276 368, 290 364 C 295 370, 305 370, 310 364 C 324 368, 334 356, 328 344 C 322 352, 312 352, 306 348 L 294 348 C 288 352, 278 352, 272 344 Z" fill="var(--skin-lo)" opacity="0.75"/>
+      <ellipse cx="286" cy="358" rx="6" ry="3.5" fill="#3a2015"/><ellipse cx="314" cy="358" rx="6" ry="3.5" fill="#3a2015"/>
+
+      <!-- mouth -->
+      <g transform="translate(300 404)">
+        <path id="mouthIn" fill="#3a1612"/>
+        <g clip-path="url(#mouthClip)">
+          <rect x="-40" y="-6" width="80" height="14" rx="5" fill="var(--white)"/>
+          <ellipse id="tongue" cx="0" cy="30" rx="24" ry="12" fill="#c45a63"/>
+        </g>
+        <path id="lipUp" fill="#6b3426"/>
+        <path id="lipLo" fill="#8a4634"/>
+        <ellipse id="lipShine" cx="0" cy="14" rx="14" ry="3" fill="#fff" opacity="0.18"/>
+      </g>
+    </g>
+  </svg>
+
+  <div class="caption" id="caption"></div>
+  <div class="handle" id="handle">@yourhandle</div>
+  <div class="ai">AI-generated character</div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const eyeX = { L: 240, R: 360 };
+  // Open: just the upper lash line. Shut: the whole eye covered by skin.
+  const lidOpen = (side) => { const c = eyeX[side]; return `M${c - 36} 266 Q ${c} 236 ${c + 36} 266`; };
+  const lidShut = (side) => { const c = eyeX[side]; return `M${c - 38} 266 Q ${c} 236 ${c + 38} 266 Q ${c} 290 ${c - 38} 266 Z`; };
+  function setLid(id, side, shut) {
+    const el = document.getElementById(id);
+    el.setAttribute('d', shut ? lidShut(side) : lidOpen(side));
+    el.setAttribute('fill', shut ? 'var(--skin)' : 'none');
+  }
+
+  // Lips from how open the mouth is (0..1) and how much it smiles (-1..1).
+  function lips(open, smile) {
+    const c = -smile * 15;                // corners rise when smiling
+    const ub = 3;                         // bottom of the upper lip
+    const lt = ub + open * 40;            // top of the lower lip
+    const lb = lt + 15 + Math.max(smile, 0) * 4; // bottom of the lower lip
+    return {
+      up: `M -48 ${c} C -30 -12, -12 -15, 0 -9 C 12 -15, 30 -12, 48 ${c} Q 0 ${ub + 4} -48 ${c} Z`,
+      inside: `M -46 ${c} Q 0 ${ub + 2} 46 ${c} Q 0 ${lt + 2} -46 ${c} Z`,
+      lo: `M -46 ${c} Q 0 ${lt} 46 ${c} Q 0 ${lb + 6} -46 ${c} Z`,
+      shine: lt + 9,
+    };
+  }
+
+  window.scene = {
+    // state: { hook, caption (with *hot* words), series, handle, open, smile, blink, tilt, nod, browUp, look, t }
+    draw(s) {
+      if (s.series !== undefined) $('series').textContent = s.series;
+      if (s.hook !== undefined) $('hook').textContent = s.hook;
+      if (s.handle !== undefined) $('handle').textContent = s.handle;
+      if (s.caption !== undefined) {
+        $('caption').innerHTML = String(s.caption)
+          .replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
+          .replace(/\*([^*]+)\*/g, '<span class="hot">$1</span>');
+      }
+      const open = s.open ?? 0, smile = s.smile ?? 0.4;
+      const l = lips(open, smile);
+      $('lipUp').setAttribute('d', l.up);
+      $('lipLo').setAttribute('d', l.lo);
+      $('mouthIn').setAttribute('d', l.inside);
+      $('mouthClipPath').setAttribute('d', l.inside);
+      $('lipShine').setAttribute('cy', String(l.shine));
+      $('tongue').setAttribute('cy', String(14 + open * 24));
+      setLid('lidL', 'L', s.blink);
+      setLid('lidR', 'R', s.blink);
+      const up = (s.browUp ?? 0) * -10;
+      $('browL').setAttribute('transform', `translate(0 ${up})`);
+      $('browR').setAttribute('transform', `translate(0 ${up})`);
+      $('irises').setAttribute('transform', `translate(${(s.look ?? 0) * 6} 0)`);
+      $('head').setAttribute('transform', `rotate(${s.tilt ?? 0} 300 450) translate(0 ${(s.nod ?? 0) + (s.breath ?? 0) * 0.6})`);
+      $('body').setAttribute('transform', `translate(0 ${(s.breath ?? 0)})`);
+      $('rays').style.transform = `rotate(${(s.t ?? 0) * 4}deg)`;
+    },
+  };
+  window.scene.draw({ hook: '', caption: '', open: 0, smile: 0.4 });
+</script>
+</body>
+</html>
