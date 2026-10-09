@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Which Nigerian Food Are You? — Ogarider</title>
+  <meta name="description" content="7 questions. One dish. Find out which Nigerian food you are, then post your card on TikTok and tag your friends.">
+  <meta name="theme-color" content="#120c0a">
+  <link rel="canonical" href="https://ogarider.name.ng/quiz.html">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Ogarider">
+  <meta property="og:title" content="Which Nigerian Food Are You? 🍛">
+  <meta property="og:description" content="7 questions. One dish. Are you Jollof, Suya… or Garri? 😭">
+  <meta property="og:url" content="https://ogarider.name.ng/quiz.html">
+  <meta property="og:image" content="https://ogarider.name.ng/assets/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #120c0a;
+      --card: #1f1714;
+      --text: #fff7ec;
+      --muted: #c9b8a8;
+      --hot: #ff4d2e;
+      --gold: #ffc53d;
+      --green: #25d366;
+      --display: "Anton", Impact, "Arial Black", sans-serif;
+      --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(120% 80% at 50% 0%, #3a1a10 0%, var(--bg) 60%) fixed, var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    .app {
+      max-width: 480px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+    }
+    .screen { display: none; flex: 1; flex-direction: column; animation: pop .35s ease-out; }
+    .screen.active { display: flex; }
+    @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+    .brand { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: .02em; color: var(--muted); font-size: 14px; text-decoration: none; }
+    .brand img { width: 26px; height: 26px; }
+
+    /* ---------- Start ---------- */
+    .start { justify-content: center; text-align: center; gap: 18px; }
+    .emoji-rain { font-size: 44px; line-height: 1; display: flex; justify-content: center; gap: 6px; }
+    .emoji-rain span { display: inline-block; animation: bob 1.6s ease-in-out infinite; }
+    .emoji-rain span:nth-child(2) { animation-delay: .2s; }
+    .emoji-rain span:nth-child(3) { animation-delay: .4s; }
+    .emoji-rain span:nth-child(4) { animation-delay: .6s; }
+    .emoji-rain span:nth-child(5) { animation-delay: .8s; }
+    @keyframes bob { 50% { transform: translateY(-10px) rotate(-6deg); } }
+    h1 {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: clamp(52px, 15vw, 76px);
+      line-height: .95;
+      margin: 0;
+      text-transform: uppercase;
+    }
+    h1 .hl { color: var(--gold); display: block; }
+    .sub { color: var(--muted); font-size: 17px; margin: 0; }
+    .sub b { color: var(--text); }
+    .counter { font-size: 14px; color: var(--muted); }
+
+    .btn {
+      appearance: none; border: 0; cursor: pointer;
+      font: 800 19px/1 var(--body);
+      letter-spacing: .02em;
+      padding: 20px 24px;
+      border-radius: 18px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--hot), #ff8a1f);
+      box-shadow: 0 10px 30px rgba(255, 77, 46, .35), inset 0 -4px 0 rgba(0,0,0,.18);
+      transition: transform .12s ease;
+      width: 100%;
+      text-decoration: none;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn.pulse { animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 50% { box-shadow: 0 10px 46px rgba(255, 138, 31, .7), inset 0 -4px 0 rgba(0,0,0,.18); transform: scale(1.02); } }
+    .btn.ghost { background: transparent; border: 2px solid rgba(255,255,255,.18); box-shadow: none; font-size: 16px; padding: 16px; }
+    .btn.wa { background: var(--green); box-shadow: 0 10px 30px rgba(37, 211, 102, .3), inset 0 -4px 0 rgba(0,0,0,.15); }
+    .btn svg { width: 22px; height: 22px; flex: none; }
+
+    /* ---------- Question ---------- */
+    .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .step { font-weight: 800; color: var(--muted); font-size: 14px; }
+    .bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; margin-bottom: 26px; }
+    .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--hot)); border-radius: inherit; transition: width .4s ease; }
+    .q {
+      font-family: var(--display); font-weight: 400;
+      font-size: clamp(32px, 9vw, 42px); line-height: 1.05;
+      margin: 0 0 24px; text-transform: uppercase;
+    }
+    .answers { display: grid; gap: 12px; }
+    .answer {
+      appearance: none; cursor: pointer; text-align: left;
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 2px solid rgba(255,255,255,.08);
+      background: var(--card);
+      color: var(--text);
+      font: 700 17px/1.3 var(--body);
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .answer .e { font-size: 30px; line-height: 1; flex: none; }
+    .answer:hover { border-color: rgba(255,197,61,.5); }
+    .answer.picked { border-color: var(--gold); background: #3a2a12; transform: scale(1.02); }
+    .answers.locked .answer:not(.picked) { opacity: .35; }
+
+    /* ---------- Cooking ---------- */
+    .cooking { justify-content: center; align-items: center; text-align: center; gap: 22px; }
+    .pot { font-size: 96px; animation: shake .35s ease-in-out infinite; }
+    @keyframes shake { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+    .cook-line { font-family: var(--display); font-size: 30px; text-transform: uppercase; min-height: 2.2em; margin: 0; }
+
+    /* ---------- Result ---------- */
+    .result { gap: 16px; }
+    .result-card {
+      position: relative;
+      border-radius: 28px;
+      padding: 28px 22px 24px;
+      text-align: center;
+      overflow: hidden;
+      background: var(--res-bg, linear-gradient(160deg, #ff4d2e, #8a1c0c));
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+    }
+    .result-card::after {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.25), transparent 70%);
+      pointer-events: none;
+    }
+    .kicker { font-weight: 800; letter-spacing: .14em; font-size: 13px; text-transform: uppercase; opacity: .9; }
+    .big-emoji { font-size: 110px; line-height: 1.1; margin: 6px 0 2px; animation: drop .7s cubic-bezier(.2, 1.6, .4, 1); }
+    @keyframes drop { from { transform: translateY(-60px) scale(.3) rotate(-30deg); opacity: 0; } }
+    .food-name { font-family: var(--display); font-weight: 400; font-size: clamp(44px, 13vw, 60px); line-height: .95; text-transform: uppercase; margin: 0 0 10px; text-shadow: 0 4px 0 rgba(0,0,0,.2); }
+    .tagline { font-weight: 800; font-size: 18px; margin: 0 0 14px; }
+    .traits { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; }
+    .traits li { background: rgba(0,0,0,.25); padding: 7px 12px; border-radius: 99px; font-weight: 700; font-size: 14px; }
+    .roast { font-size: 16px; line-height: 1.45; margin: 0; background: rgba(0,0,0,.22); border-radius: 16px; padding: 12px 14px; }
+    .roast b { display: block; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; opacity: .8; margin-bottom: 2px; }
+
+    .bestie { background: var(--card); border-radius: 20px; padding: 14px 16px; display: flex; gap: 12px; align-items: center; font-size: 15px; color: var(--muted); }
+    .bestie .e { font-size: 34px; }
+    .bestie b { color: var(--text); }
+
+    .actions { display: grid; gap: 10px; }
+    .hint { text-align: center; color: var(--muted); font-size: 13px; margin: 0; }
+    .toast {
+      position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 30px);
+      background: #fff; color: #111; font-weight: 800; padding: 12px 18px; border-radius: 99px;
+      opacity: 0; transition: .25s ease; pointer-events: none; z-index: 20; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .socials { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .socials a { color: #fff; text-decoration: none; font-weight: 800; font-size: 13px; text-align: center; padding: 14px 4px; border-radius: 14px; }
+    canvas#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <div class="app">
+    <!-- START -->
+    <section class="screen start active" id="s-start">
+      <a class="brand" href="./" style="justify-content:center"><img src="assets/logo-mark.svg" alt=""> OGARIDER</a>
+      <div class="emoji-rain" aria-hidden="true"><span>🍛</span><span>🍢</span><span>🍲</span><span>🍩</span><span>🍌</span></div>
+      <h1>Which Nigerian food <span class="hl">are you?</span></h1>
+      <p class="sub"><b>7 questions.</b> One dish. Zero lies.<br>Your friends will argue about the result. 😭</p>
+      <button class="btn pulse" id="go">START THE QUIZ 🔥</button>
+      <p class="counter">Takes 60 seconds · post your card on TikTok</p>
+    </section>
+
+    <!-- QUESTIONS -->
+    <section class="screen" id="s-quiz">
+      <div class="top">
+        <a class="brand" href="./"><img src="assets/logo-mark.svg" alt=""> OGARIDER</a>
+        <span class="step" id="step">1 / 7</span>
+      </div>
+      <div class="bar"><i id="bar"></i></div>
+      <h2 class="q" id="q"></h2>
+      <div class="answers" id="answers"></div>
+    </section>
+
+    <!-- COOKING -->
+    <section class="screen cooking" id="s-cooking">
+      <div class="pot" aria-hidden="true">🍲</div>
+      <p class="cook-line" id="cook-line">Washing the rice…</p>
+    </section>
+
+    <!-- RESULT -->
+    <section class="screen result" id="s-result">
+      <div class="top" style="margin:0">
+        <a class="brand" href="./"><img src="assets/logo-mark.svg" alt=""> OGARIDER</a>
+        <span class="step">Your result</span>
+      </div>
+      <article class="result-card" id="card">
+        <div class="kicker">The food that is you</div>
+        <div class="big-emoji" id="r-emoji"></div>
+        <h2 class="food-name" id="r-name"></h2>
+        <p class="tagline" id="r-tag"></p>
+        <ul class="traits" id="r-traits"></ul>
+        <p class="roast"><b>The roast 🔥</b><span id="r-roast"></span></p>
+      </article>
+
+      <div class="bestie">
+        <span class="e" id="b-emoji"></span>
+        <span>Your food bestie is <b id="b-name"></b>. Tag the friend who's that one. 👇</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="save">📲 SAVE MY CARD TO POST</button>
+        <a class="btn wa" id="order" href="order.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span id="order-label">I'M HUNGRY NOW. ORDER</span></a>
+        <div class="socials" aria-label="Share your result">
+          <a id="sh-wa" target="_blank" rel="noopener" style="background:#25d366">WhatsApp</a>
+          <a id="sh-x" target="_blank" rel="noopener" style="background:#000;border:1px solid #333">X</a>
+          <a id="sh-fb" target="_blank" rel="noopener" style="background:#1877f2">Facebook</a>
+          <a id="sh-tg" target="_blank" rel="noopener" style="background:#229ed9">Telegram</a>
+        </div>
+        <button class="btn ghost" id="share">Challenge a friend 👀 (copy link)</button>
+        <button class="btn ghost" id="again">Take it again ↻</button>
+        <p class="hint">Post your card on TikTok, Instagram Stories or WhatsApp Status with <b>#WhichNigerianFood</b></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // EDIT: the dishes people can get. Keys are used by the questions below.
+    var FOODS = {
+      jollof: {
+        name: "Jollof Rice", emoji: "🍛",
+        tag: "Main character energy. Every party starts when you arrive.",
+        traits: ["Life of the party", "Confident", "Smells amazing"],
+        roast: "You've never been to a party you didn't talk about for 3 business days.",
+        bg: ["#ff4d2e", "#8a1c0c"], bestie: "dodo"
+      },
+      suya: {
+        name: "Suya", emoji: "🍢",
+        tag: "Spicy, mysterious, and best after dark.",
+        traits: ["Night owl", "A bit of a menace", "Unforgettable"],
+        roast: "You reply to texts at 2am and act surprised when people call you 'a lot'.",
+        bg: ["#c2410c", "#3b1206"], bestie: "pepper"
+      },
+      egusi: {
+        name: "Pounded Yam & Egusi", emoji: "🍲",
+        tag: "Old-school boss. Heavy, reliable, respected.",
+        traits: ["Leader", "Traditional", "Comes through"],
+        roast: "Your aunties already have you married. You're only allowed one opinion and it's 'it's not by force'.",
+        bg: ["#65a30d", "#1f3a07"], bestie: "amala"
+      },
+      puff: {
+        name: "Puff-Puff", emoji: "🍩",
+        tag: "Soft, sweet, and nobody can have just one of you.",
+        traits: ["Sweetheart", "Snack", "Instant mood booster"],
+        roast: "You say 'I'm fine' while eating your feelings in a nylon bag of sugar.",
+        bg: ["#f59e0b", "#7c3d06"], bestie: "jollof"
+      },
+      pepper: {
+        name: "Pepper Soup", emoji: "🌶️",
+        tag: "The healer. Comforting, but you will make people cry.",
+        traits: ["Honest", "Hits different", "Cures everything"],
+        roast: "You give the best advice and follow none of it.",
+        bg: ["#dc2626", "#450a0a"], bestie: "suya"
+      },
+      garri: {
+        name: "Garri", emoji: "🥣",
+        tag: "Broke but unbothered. You survive anything.",
+        traits: ["Resourceful", "Humble", "Built different"],
+        roast: "End of the month you become a scientist: water, sugar, groundnut, vibes.",
+        bg: ["#a8a29e", "#292524"], bestie: "moimoi"
+      },
+      dodo: {
+        name: "Dodo (Fried Plantain)", emoji: "🍌",
+        tag: "Literally everyone loves you. It's honestly annoying.",
+        traits: ["Sweet", "Goes with everything", "Golden"],
+        roast: "You've never had an enemy in your life and you think that makes you humble.",
+        bg: ["#eab308", "#713f12"], bestie: "puff"
+      },
+      moimoi: {
+        name: "Moi Moi", emoji: "🫘",
+        tag: "Low-key the best one here. Underrated and you know it.",
+        traits: ["Quietly elite", "Loyal", "Many layers"],
+        roast: "You say 'I don't mind' about everything and then remember it for 7 years.",
+        bg: ["#ea580c", "#431407"], bestie: "garri"
+      },
+      amala: {
+        name: "Amala & Ewedu", emoji: "🟤",
+        tag: "Chaotic. Misunderstood. Iconic.",
+        traits: ["Unfiltered", "Loud", "Pure culture"],
+        roast: "People either love you or are scared of you. There's no in between.",
+        bg: ["#57534e", "#0c0a09"], bestie: "egusi"
+      }
+    };
+
+    // EDIT: the questions. Each answer gives points to one or more dishes.
+    var QUESTIONS = [
+      { q: "It's Friday night. Where are you?", a: [
+        ["🎉", "At the owambe, front row, dancing", { jollof: 2, amala: 1 }],
+        ["🌃", "Outside till 3am, ask no questions", { suya: 2, pepper: 1 }],
+        ["🛌", "In bed. Netflix. Do not call me.", { moimoi: 2, puff: 1 }],
+        ["💸", "Calculating how to survive till month end", { garri: 3 }]
+      ]},
+      { q: "Your phone is at 3%. You text…", a: [
+        ["❤️", "My person, obviously", { dodo: 2, puff: 1 }],
+        ["👵", "Mummy. She worries.", { egusi: 2, moimoi: 1 }],
+        ["😈", "My ex. 'U up?'", { suya: 2, amala: 1 }],
+        ["🫠", "Nobody. Let it die with dignity.", { garri: 2, pepper: 1 }]
+      ]},
+      { q: "Pick a superpower:", a: [
+        ["👑", "Everybody instantly likes me", { dodo: 2, jollof: 1 }],
+        ["🔥", "I can make anyone cry with one sentence", { pepper: 2, amala: 1 }],
+        ["💰", "Turning ₦500 into a full meal", { garri: 2, moimoi: 1 }],
+        ["🧠", "Always knowing what to do", { egusi: 2, moimoi: 1 }]
+      ]},
+      { q: "Your group chat role is…", a: [
+        ["📢", "The one who starts the drama", { amala: 2, suya: 1 }],
+        ["🧸", "The therapist", { pepper: 2, puff: 1 }],
+        ["👀", "Silent reader. Seen everything.", { moimoi: 2, garri: 1 }],
+        ["⭐", "Main character, all voice notes", { jollof: 3 }]
+      ]},
+      { q: "Pick a vibe:", a: [
+        ["🌶️", "Spicy", { suya: 1, pepper: 2 }],
+        ["🍯", "Sweet", { puff: 2, dodo: 1 }],
+        ["🥁", "Loud", { amala: 2, jollof: 1 }],
+        ["🏛️", "Classic", { egusi: 2, moimoi: 1 }]
+      ]},
+      { q: "Someone eats your food in the fridge. You…", a: [
+        ["⚔️", "Declare war. On the family WhatsApp.", { amala: 2, pepper: 1 }],
+        ["🙂", "Say nothing. Never forget.", { moimoi: 3 }],
+        ["😂", "Laugh it off. More for next time.", { dodo: 2, puff: 1 }],
+        ["🕵️", "Investigate. Interview suspects.", { suya: 1, egusi: 2 }]
+      ]},
+      { q: "Last one: what's your toxic trait?", a: [
+        ["🪞", "Thinking every party is about me", { jollof: 2, dodo: 1 }],
+        ["⏰", "'I'm on my way' (I'm in the shower)", { suya: 2, puff: 1 }],
+        ["🫡", "I can survive on vibes alone", { garri: 2, egusi: 1 }],
+        ["🗣️", "Too honest. Way too honest.", { pepper: 2, amala: 1 }]
+      ]}
+    ];
+
+    var COOK_LINES = ["Washing the rice…", "Blending the pepper…", "Adding Maggi…", "Asking your mum…", "Tasting…", "OMG. 😳"];
+
+    var $ = function (id) { return document.getElementById(id); };
+    var scores, current, resultKey;
+
+    function show(id) {
+      document.querySelectorAll(".screen").forEach(function (s) { s.classList.toggle("active", s.id === id); });
+      window.scrollTo(0, 0);
+    }
+
+    function buzz(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
+
+    function start() {
+      scores = {};
+      Object.keys(FOODS).forEach(function (k) { scores[k] = 0; });
+      current = 0;
+      renderQuestion();
+      show("s-quiz");
+    }
+
+    function renderQuestion() {
+      var item = QUESTIONS[current];
+      $("step").textContent = (current + 1) + " / " + QUESTIONS.length;
+      $("bar").style.width = (current / QUESTIONS.length * 100) + "%";
+      $("q").textContent = item.q;
+      var box = $("answers");
+      box.className = "answers";
+      box.innerHTML = "";
+      item.a.forEach(function (ans) {
+        var b = document.createElement("button");
+        b.className = "answer";
+        b.type = "button";
+        var e = document.createElement("span");
+        e.className = "e"; e.textContent = ans[0];
+        var t = document.createElement("span");
+        t.textContent = ans[1];
+        b.appendChild(e); b.appendChild(t);
+        b.addEventListener("click", function () { pick(b, ans[2]); });
+        box.appendChild(b);
+      });
+      var s = $("s-quiz");
+      s.style.animation = "none"; void s.offsetWidth; s.style.animation = "";
+    }
+
+    function pick(btn, points) {
+      var box = $("answers");
+      if (box.classList.contains("locked")) return;
+      box.classList.add("locked");
+      btn.classList.add("picked");
+      buzz(15);
+      Object.keys(points).forEach(function (k) { scores[k] += points[k]; });
+      setTimeout(function () {
+        current++;
+        if (current < QUESTIONS.length) renderQuestion();
+        else cook();
+      }, 380);
+    }
+
+    function cook() {
+      $("bar").style.width = "100%";
+      show("s-cooking");
+      var i = 0;
+      $("cook-line").textContent = COOK_LINES[0];
+      var t = setInterval(function () {
+        i++;
+        if (i < COOK_LINES.length) { $("cook-line").textContent = COOK_LINES[i]; buzz(10); }
+        else { clearInterval(t); reveal(); }
+      }, 520);
+    }
+
+    function winner() {
+      var best = -1, picks = [];
+      Object.keys(scores).forEach(function (k) {
+        if (scores[k] > best) { best = scores[k]; picks = [k]; }
+        else if (scores[k] === best) picks.push(k);
+      });
+      return picks[Math.floor(Math.random() * picks.length)];
+    }
+
+    function reveal() {
+      resultKey = winner();
+      var f = FOODS[resultKey], b = FOODS[f.bestie];
+      $("card").style.setProperty("--res-bg", "linear-gradient(160deg," + f.bg[0] + "," + f.bg[1] + ")");
+      $("r-emoji").textContent = f.emoji;
+      $("r-name").textContent = f.name;
+      $("r-tag").textContent = f.tag;
+      $("r-roast").textContent = f.roast;
+      var ul = $("r-traits"); ul.innerHTML = "";
+      f.traits.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+      $("b-emoji").textContent = b.emoji;
+      $("b-name").textContent = b.name;
+      document.title = "I'm " + f.name + " " + f.emoji + " — Which Nigerian Food Are You?";
+      var url = location.origin + location.pathname;
+      var msg = "I got " + f.name + " " + f.emoji + " 😭 Which Nigerian food are YOU? #WhichNigerianFood";
+      var eu = encodeURIComponent(url), em = encodeURIComponent(msg);
+      $("sh-wa").href = "https://wa.me/?text=" + encodeURIComponent(msg + " " + url);
+      $("sh-x").href = "https://twitter.com/intent/tweet?text=" + em + "&url=" + eu;
+      $("sh-fb").href = "https://www.facebook.com/sharer/sharer.php?u=" + eu;
+      $("sh-tg").href = "https://t.me/share/url?url=" + eu + "&text=" + em;
+      show("s-result");
+      buzz([30, 40, 60]);
+      confetti(f.emoji);
+    }
+
+    // ---------- Confetti (emoji + colour) ----------
+    function confetti(emoji) {
+      var c = $("confetti");
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      c.width = innerWidth * dpr; c.height = innerHeight * dpr;
+      var ctx = c.getContext("2d");
+      ctx.scale(dpr, dpr);
+      var colors = ["#ffc53d", "#ff4d2e", "#25d366", "#ffffff", "#ff8a1f"];
+      var parts = [];
+      for (var i = 0; i < 140; i++) {
+        parts.push({
+          x: innerWidth / 2, y: innerHeight * 0.35,
+          vx: (Math.random() - 0.5) * 16, vy: -Math.random() * 16 - 4,
+          r: Math.random() * 6 + 4, rot: Math.random() * 6, vr: (Math.random() - .5) * .3,
+          c: colors[i % colors.length], emoji: i % 9 === 0
+        });
+      }
+      var frames = 0;
+      (function tick() {
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        parts.forEach(function (p) {
+          p.vy += 0.42; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+          if (p.emoji) { ctx.font = "26px serif"; ctx.fillText(emoji, -13, 9); }
+          else { ctx.fillStyle = p.c; ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); }
+          ctx.restore();
+        });
+        if (++frames < 200) requestAnimationFrame(tick);
+        else ctx.clearRect(0, 0, innerWidth, innerHeight);
+      })();
+    }
+
+    // ---------- 9:16 card for TikTok (1080 x 1920) ----------
+    function wrap(ctx, text, x, y, maxW, lh) {
+      var words = text.split(" "), line = "", lines = [];
+      words.forEach(function (w) {
+        var test = line ? line + " " + w : w;
+        if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+        else line = test;
+      });
+      if (line) lines.push(line);
+      lines.forEach(function (l, i) { ctx.fillText(l, x, y + i * lh); });
+      return y + lines.length * lh;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+
+    function drawCard() {
+      var f = FOODS[resultKey];
+      var W = 1080, H = 1920;
+      var c = document.createElement("canvas");
+      c.width = W; c.height = H;
+      var ctx = c.getContext("2d");
+      var g = ctx.createLinearGradient(0, 0, W * 0.4, H);
+      g.addColorStop(0, f.bg[0]); g.addColorStop(1, f.bg[1]);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      var glow = ctx.createRadialGradient(W / 2, 520, 50, W / 2, 520, 700);
+      glow.addColorStop(0, "rgba(255,255,255,.32)"); glow.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#fff";
+      ctx.font = "800 44px Inter, sans-serif";
+      ctx.fillText("WHICH NIGERIAN FOOD ARE YOU?", W / 2, 190);
+
+      ctx.font = "330px serif";
+      ctx.fillText(f.emoji, W / 2, 620);
+
+      ctx.font = "800 46px Inter, sans-serif";
+      ctx.globalAlpha = .85; ctx.fillText("I'M", W / 2, 760); ctx.globalAlpha = 1;
+      ctx.font = "150px Anton, Impact, sans-serif";
+      var y = wrap(ctx, f.name.toUpperCase(), W / 2, 900, W - 120, 150);
+
+      ctx.font = "800 46px Inter, sans-serif";
+      y = wrap(ctx, f.tag, W / 2, y + 30, W - 160, 62);
+
+      ctx.font = "700 38px Inter, sans-serif";
+      var tx = f.traits.join("  •  ");
+      ctx.fillText(tx, W / 2, y + 60);
+
+      var boxY = y + 130;
+      ctx.font = "500 42px Inter, sans-serif";
+      var measure = document.createElement("canvas").getContext("2d");
+      measure.font = ctx.font;
+      var roastLines = Math.ceil(measure.measureText(f.roast).width / (W - 260)) + 1;
+      var boxH = 130 + roastLines * 58;
+      ctx.fillStyle = "rgba(0,0,0,.28)";
+      roundRect(ctx, 80, boxY, W - 160, boxH, 44); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.font = "800 34px Inter, sans-serif";
+      ctx.fillText("THE ROAST 🔥", W / 2, boxY + 70);
+      ctx.font = "500 42px Inter, sans-serif";
+      wrap(ctx, f.roast, W / 2, boxY + 135, W - 260, 58);
+
+      ctx.font = "800 44px Inter, sans-serif";
+      ctx.fillText("Tag your " + FOODS[f.bestie].name + " friend 👇", W / 2, H - 230);
+      ctx.globalAlpha = .9;
+      ctx.font = "700 38px Inter, sans-serif";
+      ctx.fillText("ogarider.name.ng/quiz  •  #WhichNigerianFood", W / 2, H - 150);
+      ctx.globalAlpha = 1;
+      return c;
+    }
+
+    function toast(msg) {
+      var t = $("toast"); t.textContent = msg; t.classList.add("show");
+      clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove("show"); }, 2400);
+    }
+
+    function saveCard() {
+      var f = FOODS[resultKey];
+      var file = "im-" + f.name.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "") + ".png";
+      var go = function () {
+        drawCard().toBlob(function (blob) {
+          if (!blob) return toast("Couldn't make the card 😢");
+          var shareFile = window.File ? new File([blob], file, { type: "image/png" }) : null;
+          if (shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+            navigator.share({ files: [shareFile], title: "I'm " + f.name + " " + f.emoji, text: "Which Nigerian food are you? #WhichNigerianFood" })
+              .catch(function () {});
+            return;
+          }
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob); a.download = file;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+          toast("Saved! Now post it on TikTok 🎉");
+        }, "image/png");
+      };
+      // Wait for the web fonts so the card looks right.
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else go();
+    }
+
+    function shareLink() {
+      var f = FOODS[resultKey];
+      var url = location.origin + location.pathname;
+      var text = "I got " + f.name + " " + f.emoji + " 😭 Which Nigerian food are YOU?";
+      if (navigator.share) { navigator.share({ title: "Which Nigerian Food Are You?", text: text, url: url }).catch(function () {}); return; }
+      var full = text + " " + url;
+      if (navigator.clipboard) navigator.clipboard.writeText(full).then(function () { toast("Link copied! Send it 👀"); }, function () { prompt("Copy this:", full); });
+      else prompt("Copy this:", full);
+    }
+
+    $("go").addEventListener("click", start);
+    $("again").addEventListener("click", start);
+    $("save").addEventListener("click", saveCard);
+    $("share").addEventListener("click", shareLink);
+  })();
+  </script>
+</body>
+</html>

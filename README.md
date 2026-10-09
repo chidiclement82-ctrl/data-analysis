@@ -6,6 +6,17 @@ Live address, once GitHub Pages is switched on: **https://ogarider.name.ng/**
 
 > **Also in this repository:** [`live-cartoon/`](live-cartoon/README.md), an AI cartoon co-host for TikTok LIVE that answers your chat and your guests' questions out loud.
 
+## Viral quiz: "Which Nigerian Food Are You?"
+
+**Link:** `https://ogarider.name.ng/quiz.html`
+
+A 60-second, 7-question personality quiz built to be shared. Players get one of 9 dishes (Jollof, Suya, Egusi, Puff-Puff, Pepper Soup, Garri, Dodo, Moi Moi, Amala), with a roast line and a "food bestie" to tag. Then they can:
+- **Save a 9:16 card** sized for TikTok, Instagram Stories/Reels and WhatsApp Status (on phones it opens the share sheet straight away).
+- Share in one tap to **WhatsApp, X, Facebook or Telegram**, or copy a challenge link.
+- Tap **Order** to land on `order.html`, which turns quiz traffic into orders.
+
+Post your own card with **#WhichNigerianFood** and put the quiz link in your TikTok/Instagram bio. To change the dishes, questions or roasts, edit `FOODS` and `QUESTIONS` near the bottom of [`quiz.html`](quiz.html) (marked `EDIT`).
+
 ## Put it online (one-time setup)
 
 1. Merge the pull request into `main`.
