@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tradesafe: buy and sell with escrow</title>
+  <meta name="description" content="Buy and sell online without fear. Your money is held safely until you confirm the item arrived.">
+  <meta name="theme-color" content="#0a7d4f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230a7d4f' d='M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z'/%3E%3Cpath fill='none' stroke='white' stroke-width='2' d='m8.5 12 2.5 2.5 4.5-5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/market.css">
+</head>
+<body>
+  <header class="top">
+    <div class="top-in">
+      <a class="logo" href="#/">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" style="color:var(--brand)" d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z"/><path fill="none" stroke="#fff" stroke-width="2" d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+        <span>Tradesafe</span>
+      </a>
+      <nav class="nav" id="nav">
+        <a href="#/" data-r="">Shop</a>
+        <a href="#/orders" data-r="orders">Orders</a>
+        <a href="#/account" data-r="account">Account</a>
+        <a href="#/sell" data-r="sell" class="cta">Sell</a>
+      </nav>
+    </div>
+  </header>
+  <main id="app" aria-live="polite"></main>
+  <p class="foot">Payments by Paystack. Tradesafe holds your money until you confirm delivery. · <a href="#/how">How escrow works</a></p>
+  <script src="js/config.js"></script>
+  <script src="js/market.js"></script>
+</body>
+</html>
