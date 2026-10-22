@@ -22,6 +22,19 @@ After that, every change pushed to `main` goes live automatically.
 | Customers | `https://ogarider.name.ng/restaurants.html` | All restaurants; tap one to see its menu (not linked from the homepage; share the link directly) |
 | Customers | `https://ogarider.name.ng/order.html` | Order food on WhatsApp. Linked from the green button on the homepage |
 | Admin | `https://ogarider.name.ng/admin.html` | Edit restaurants, dishes, prices and photos (not linked from the site; bookmark it) |
+| Anyone | `https://ogarider.name.ng/secret.html` | Send an end-to-end encrypted secret message by link (not linked from the site) |
+
+## Secret messages (end-to-end encrypted)
+
+[`secret.html`](secret.html) lets anyone write a private message and get a link to send it. Only someone with the link can read it.
+
+- The message is encrypted in the browser with AES-256-GCM before it goes anywhere.
+- The encrypted message and its key go in the link after the `#`. Browsers never send that part to a server, so GitHub Pages only ever serves an empty page.
+- The page's security policy forbids it from contacting any server (`connect-src 'none'`) or loading outside scripts.
+- Optional password: the key is then made from the password (PBKDF2-SHA256, 600,000 rounds) and isn't in the link. Share the password some other way.
+- Nothing is stored, so a message can't be deleted after it's read. The link *is* the message.
+
+The code is in [`assets/js/secret.js`](assets/js/secret.js).
 
 ## Editing the menu (admin page)
 
