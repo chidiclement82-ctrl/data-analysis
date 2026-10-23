@@ -30,6 +30,28 @@
     </section>
 
     <!-- This device has no team key yet -->
+    <!-- First time ever: one screen turns the chat on -->
+    <section class="app-state" id="state-quick" hidden>
+      <form class="app-card start-form" id="quick-form" novalidate>
+        <p class="eyebrow">Welcome</p>
+        <h1>Turn on your chat</h1>
+        <p>Fill in these three boxes once. After that, customers can start chatting with you.</p>
+        <label><span>Your first name <span class="muted">(customers see it on your replies)</span></span>
+          <input name="agent" autocomplete="given-name" maxlength="40" required>
+        </label>
+        <label><span>Team password <span class="muted">(the one you were given)</span></span>
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <label><span>Make up a secret phrase <span class="muted">(a few words, e.g. "blue mango river lamp")</span></span>
+          <input name="phrase" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" minlength="12" required>
+        </label>
+        <p class="small-print muted">Write the secret phrase down somewhere safe. Your phone will also save a small backup file. You need both to open your chats on another phone.</p>
+        <p class="form-status" id="quick-status" role="status" aria-live="polite"></p>
+        <button class="btn" type="submit" id="quick-btn">Turn on the chat</button>
+        <button class="link-btn" type="button" id="quick-restore">I already set it up on another phone</button>
+      </form>
+    </section>
+
     <section class="app-state" id="state-setup" hidden>
       <div class="app-card start-form">
         <p class="eyebrow">Team inbox</p>
@@ -96,6 +118,8 @@
             <button type="button" role="tab" data-filter="all" aria-selected="false">All</button>
           </div>
           <input type="search" id="inbox-search" placeholder="Search name, order or words" aria-label="Search chats">
+          <p class="share-link">Customer link: <a id="customer-link" target="_blank" rel="noopener"></a>
+            <button class="btn btn-small btn-outline" type="button" id="copy-link">Copy</button></p>
           <p class="inbox-live" id="inbox-live" role="status"></p>
         </div>
         <ul class="conv-list" id="conv-list"></ul>
