@@ -75,7 +75,7 @@ The code is in [`public/assets/e2ee.js`](public/assets/e2ee.js), using the brows
 
 | Variable | What it does |
 |---|---|
-| `AGENT_PASSWORD` | Team password for `/team`. Without it customers can still write, but nobody can sign in. |
+| `AGENT_PASSWORD` | Team password for `/team`. On Netlify it's optional: without it, the first person to open `/team` chooses the team password there (stored only as a scrypt hash), and nobody can claim it again. |
 | `BRAND_NAME` | The name at the top of the chat and on the team's replies. Default `Secure Support`. |
 | `REPLY_TIME` | The line under the name. Default "We usually reply within a few minutes". |
 | `CONTACT_URL`, `CONTACT_LABEL` | Optional button at the top right, e.g. `tel:+2348012345678` and `Call us` (`https:`, `tel:` and `mailto:` links). |

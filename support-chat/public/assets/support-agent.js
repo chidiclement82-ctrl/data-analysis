@@ -61,8 +61,16 @@ async function init() {
     console.error(err);
     say("restore-status", "This browser won't store keys (private browsing?). Use a normal window.", "error");
   }
-  // Nobody has turned the chat on yet: the one-screen setup.
-  if (!team) return show(config.teamKey ? "setup" : "quick");
+  // Nobody has turned the chat on yet: the one-screen setup. If no team
+  // password exists yet either, this person chooses it.
+  if (!team && !config.teamKey) {
+    if (config.needsSetup) {
+      $("quick-pass-label").innerHTML = 'Choose a team password <span class="muted">(at least 8 characters; you\'ll sign in with it)</span>';
+      $("quick-form").elements.password.autocomplete = "new-password";
+    }
+    return show("quick");
+  }
+  if (!team) return show("setup");
   teamKeyId = await e2ee.keyId(team.publicJwk);
   next();
 }
@@ -113,13 +121,15 @@ $("quick-form").addEventListener("submit", async (e) => {
   const password = form.elements.password.value;
   const phrase = form.elements.phrase.value.trim();
   if (!agent) return say("quick-status", "Add your first name.", "error");
-  if (!password) return say("quick-status", "Type the team password.", "error");
+  if (!password) return say("quick-status", config.needsSetup ? "Choose a team password." : "Type the team password.", "error");
+  if (config.needsSetup && password.length < 8) return say("quick-status", "Make the team password at least 8 characters.", "error");
   if (phrase.length < 12) return say("quick-status", "Make the secret phrase a bit longer: three or four words.", "error");
   $("quick-btn").disabled = true;
-  say("quick-status", "Checking the password…");
+  say("quick-status", config.needsSetup ? "Saving your team password…" : "Checking the password…");
   try {
     relay.setToken(null);
-    const { token, expiresIn } = await relay.api("/api/agent/login", { method: "POST", body: { password } });
+    const { token, expiresIn } = await relay.api(config.needsSetup ? "/api/agent/setup" : "/api/agent/login", { method: "POST", body: { password } });
+    config.needsSetup = false;
     relay.setToken(token);
     ls.set(NAME_KEY, agent);
     ls.set(SESSION_KEY, JSON.stringify({ token, exp: Date.now() + expiresIn - 60000 }));

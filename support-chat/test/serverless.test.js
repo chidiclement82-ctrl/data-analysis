@@ -163,3 +163,34 @@ test('serverless: TEAM_KEY fixes the key, and oversized messages are refused', a
   const huge = { v: 1, id: e2ee.randomId(), conv: id, from: 'customer', ts: 1, iv: 'AAAAAAAAAAAAAAAA', ct: 'A'.repeat(3_000_000) };
   assert.equal((await s.call(`/api/conversations/${id}/messages`, { token, method: 'POST', body: huge })).status, 413);
 });
+
+test('serverless: without AGENT_PASSWORD, the first person on /team chooses the password, once', async () => {
+  let t = 1_800_000_000_000;
+  const store = memoryStore();
+  const api = createServerlessApi({ store, env: {}, now: () => t });
+  const call = async (path, { token, method = 'GET', body } = {}) => {
+    const headers = token ? { authorization: 'Bearer ' + token } : {};
+    const res = await api.fetch(new Request(base + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), '5.6.7.8');
+    return { status: res.status, json: await res.json() };
+  };
+  assert.equal((await call('/config.json')).json.needsSetup, true);
+  assert.equal((await call('/api/agent/login', { method: 'POST', body: { password: 'anything' } })).status, 503);
+  assert.equal((await call('/api/agent/setup', { method: 'POST', body: { password: 'short' } })).status, 400);
+
+  const setup = await call('/api/agent/setup', { method: 'POST', body: { password: 'our team password' } });
+  assert.equal(setup.status, 201);
+  assert.equal((await call('/api/agent/conversations', { token: setup.json.token })).status, 200);
+  assert.equal((await call('/config.json')).json.needsSetup, false);
+  assert.ok(!JSON.stringify(store.data.get('team-auth')).includes('our team password'));
+
+  // Nobody can claim it again, and the chosen password is the one that works.
+  assert.equal((await call('/api/agent/setup', { method: 'POST', body: { password: 'attacker password' } })).status, 409);
+  assert.equal((await call('/api/agent/login', { method: 'POST', body: { password: 'attacker password' } })).status, 401);
+  const login = await call('/api/agent/login', { method: 'POST', body: { password: 'our team password' } });
+  assert.equal(login.status, 200);
+
+  // Tokens are checked by any instance sharing the store.
+  const other = createServerlessApi({ store, env: {}, now: () => t });
+  const res = await other.fetch(new Request(base + '/api/agent/conversations', { headers: { authorization: 'Bearer ' + login.json.token } }));
+  assert.equal(res.status, 200);
+});
