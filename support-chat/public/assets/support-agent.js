@@ -21,7 +21,7 @@ const DEFAULT_QUICK = [
 ];
 
 const keyStore = e2ee.idbStore("secure-chat-team");
-const STATES = ["loading", "setup", "publish", "login", "inbox"];
+const STATES = ["loading", "quick", "setup", "publish", "login", "inbox"];
 
 let config = {};
 let relay = null;
@@ -61,7 +61,8 @@ async function init() {
     console.error(err);
     say("restore-status", "This browser won't store keys (private browsing?). Use a normal window.", "error");
   }
-  if (!team) return show("setup");
+  // Nobody has turned the chat on yet: the one-screen setup.
+  if (!team) return show(config.teamKey ? "setup" : "quick");
   teamKeyId = await e2ee.keyId(team.publicJwk);
   next();
 }
@@ -84,6 +85,67 @@ function showLogin() {
   show("login");
   (form.elements.agent.value ? form.elements.password : form.elements.agent).focus();
 }
+
+// The link to share with customers, shown in the empty inbox.
+const customerUrl = location.origin + "/";
+$("customer-link").href = customerUrl;
+$("customer-link").textContent = customerUrl.replace(/^https?:\/\//, "");
+$("copy-link").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(customerUrl);
+    $("copy-link").textContent = "Copied ✓";
+  } catch (_) {
+    $("copy-link").textContent = "Copy failed";
+  }
+  setTimeout(() => { $("copy-link").textContent = "Copy"; }, 2000);
+});
+
+// First-time setup on one screen ----------------------------------------------
+// Checks the team password first, then makes the team key, saves its backup,
+// stores it on this device, gives the server its public half and opens the inbox.
+
+$("quick-restore").addEventListener("click", () => show("setup"));
+
+$("quick-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const agent = form.elements.agent.value.trim();
+  const password = form.elements.password.value;
+  const phrase = form.elements.phrase.value.trim();
+  if (!agent) return say("quick-status", "Add your first name.", "error");
+  if (!password) return say("quick-status", "Type the team password.", "error");
+  if (phrase.length < 12) return say("quick-status", "Make the secret phrase a bit longer: three or four words.", "error");
+  $("quick-btn").disabled = true;
+  say("quick-status", "Checking the password…");
+  try {
+    relay.setToken(null);
+    const { token, expiresIn } = await relay.api("/api/agent/login", { method: "POST", body: { password } });
+    relay.setToken(token);
+    ls.set(NAME_KEY, agent);
+    ls.set(SESSION_KEY, JSON.stringify({ token, exp: Date.now() + expiresIn - 60000 }));
+
+    say("quick-status", "Making your secure key… (a few seconds)");
+    const fresh = await e2ee.generateKeyPair(true);
+    lastBackup = await e2ee.exportBackup(fresh.privateKey, fresh.publicJwk, phrase);
+    const restored = await e2ee.importBackup(lastBackup, phrase);
+    await keyStore.set("teamKey", restored);
+    team = restored;
+    teamKeyId = await e2ee.keyId(team.publicJwk);
+    downloadBackup();
+
+    say("quick-status", "Turning on the chat…");
+    await relay.api("/api/agent/team-key", { method: "POST", body: { publicKey: team.publicJwk } });
+    config = await loadConfig();
+    form.elements.password.value = "";
+    form.elements.phrase.value = "";
+    say("quick-status", "");
+    openInbox();
+  } catch (err) {
+    say("quick-status", err.status === 401 ? "That team password isn't right." : err.status ? err.message : "Couldn't reach the server. Check your internet and try again.", "error");
+  } finally {
+    $("quick-btn").disabled = false;
+  }
+});
 
 // Team key: restore or create --------------------------------------------------
 

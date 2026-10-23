@@ -186,3 +186,6 @@
   .lock-btn { font-size: 0; gap: 0; }
   .lock-btn span { font-size: 0.95rem; }
 }
+.share-link { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0; font-size: 0.82rem; color: var(--ink-soft); }
+.share-link .btn-small { padding: 5px 12px; font-size: 0.78rem; }
+.share-link a { font-weight: 600; word-break: break-all; }
