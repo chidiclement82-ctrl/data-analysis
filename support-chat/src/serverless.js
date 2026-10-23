@@ -9,6 +9,10 @@
 // changed" markers are new keys too.
 //
 //   team-key                       the team's public key (set from /team)
+//   team-auth                      the team password, scrypt-hashed, and the
+//                                  secret that signs sign-ins (when the
+//                                  password was chosen on /team, not set
+//                                  as AGENT_PASSWORD)
 //   meta/<chat>                    customer key, token hash, status, created
 //   msg/<chat>/<seq>-<msgId>       one sealed message
 //   ids/<chat>/<msgId>             its seq (so a retried message isn't added twice)
@@ -16,7 +20,8 @@
 //   typing/<chat>/<role>           when they last typed
 //   act/<chat>/<time>              when the chat last changed (newest wins)
 
-import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomInt, scrypt, timingSafeEqual } from 'node:crypto';
+import { promisify } from 'node:util';
 import { keyId } from '../public/assets/e2ee.js';
 import { validPublicKey, validEnvelope } from './relay.js';
 
@@ -25,6 +30,8 @@ const B64 = /^[A-Za-z0-9_-]+$/;
 const CHAT_ID = /^[A-Za-z0-9_-]{16,64}$/;
 const sha = (s) => createHash('sha256').update(s).digest();
 const pad = (n, w) => String(n).padStart(w, '0');
+const scryptAsync = promisify(scrypt);
+const SCRYPT = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
 
 export function createServerlessApi({ store, env = {}, now = () => Date.now() }) {
   const config = {
@@ -51,17 +58,31 @@ export function createServerlessApi({ store, env = {}, now = () => Date.now() })
     return ++b.count <= limit;
   }
 
-  // Team sign-in tokens are signed, so any instance can check them.
-  const sessionKey = () => sha('secure-chat session|' + config.agentPassword);
-  function agentToken() {
+  // The team password: AGENT_PASSWORD if set, otherwise the one chosen on
+  // /team the first time (stored only as a scrypt hash). Sign-in tokens are
+  // signed, so any instance can check them.
+  async function auth() {
+    if (config.agentPassword) return { key: sha('secure-chat session|' + config.agentPassword), record: null };
+    const record = await store.get('team-auth', { type: 'json' });
+    return record ? { key: Buffer.from(record.secret, 'base64url'), record } : null;
+  }
+  async function passwordMatches(password, a) {
+    if (typeof password !== 'string' || !password) return false;
+    if (!a.record) return timingSafeEqual(sha(password), sha(config.agentPassword));
+    const got = await scryptAsync(password.normalize('NFKC'), Buffer.from(a.record.salt, 'base64url'), 32, SCRYPT);
+    return timingSafeEqual(got, Buffer.from(a.record.hash, 'base64url'));
+  }
+  function agentToken(a) {
     const exp = now() + SESSION_MS;
-    const sig = createHmac('sha256', sessionKey()).update('agent|' + exp).digest('base64url');
+    const sig = createHmac('sha256', a.key).update('agent|' + exp).digest('base64url');
     return `a.${exp}.${sig}`;
   }
-  function validAgentToken(token) {
+  async function validAgentToken(token) {
     const [, exp, sig] = token.split('.');
-    if (!config.agentPassword || !exp || !sig || !(Number(exp) > now())) return false;
-    const want = createHmac('sha256', sessionKey()).update('agent|' + exp).digest();
+    if (!exp || !sig || !(Number(exp) > now())) return false;
+    const a = await auth();
+    if (!a) return false;
+    const want = createHmac('sha256', a.key).update('agent|' + exp).digest();
     const got = Buffer.from(sig, 'base64url');
     return got.length === want.length && timingSafeEqual(got, want);
   }
@@ -75,7 +96,7 @@ export function createServerlessApi({ store, env = {}, now = () => Date.now() })
     const m = /^Bearer\s+(\S+)$/i.exec(req.headers.get('authorization') || '');
     if (!m) return null;
     const value = m[1];
-    if (value.startsWith('a.')) return validAgentToken(value) ? { role: 'agent' } : null;
+    if (value.startsWith('a.')) return (await validAgentToken(value)) ? { role: 'agent' } : null;
     if (value.startsWith('c.')) {
       const [, id, secret] = value.split('.');
       if (!id || !secret || !CHAT_ID.test(id)) return null;
@@ -187,19 +208,35 @@ export function createServerlessApi({ store, env = {}, now = () => Date.now() })
 
     if (path === '/config.json' && req.method === 'GET') {
       const team = await teamKey();
-      return json(200, { ...config.brand, retentionDays: config.retentionDays, teamKey: team.key, teamKeyId: team.id, teamKeyPinned: Boolean(config.pinnedTeamKey), live: false });
+      const needsSetup = !(await auth());
+      return json(200, { ...config.brand, retentionDays: config.retentionDays, teamKey: team.key, teamKeyId: team.id, teamKeyPinned: Boolean(config.pinnedTeamKey), needsSetup, live: false });
     }
 
     // No event stream here: the pages fall back to checking every few seconds.
     if (path === '/api/events') return json(404, { error: 'No live stream on this host.', polling: true });
 
-    if (path === '/api/agent/login' && req.method === 'POST') {
-      if (!config.agentPassword) return json(503, { error: 'AGENT_PASSWORD is not set yet.' });
-      if (!allow('login:' + ip, 10, 15 * 60000)) return json(429, { error: 'Too many tries. Wait 15 minutes.' });
+    // First time only, when AGENT_PASSWORD isn't set: whoever turns the chat
+    // on chooses the team password. After that it can't be claimed again.
+    if (path === '/api/agent/setup' && req.method === 'POST') {
+      if (!allow('setup:' + ip, 10, 15 * 60000)) return json(429, { error: 'Too many tries. Wait 15 minutes.' });
+      if (await auth()) return json(409, { error: 'This chat is already set up. Sign in with the team password.' });
       const { password } = await body(req, 4096);
-      const ok = typeof password === 'string' && timingSafeEqual(sha(password), sha(config.agentPassword));
-      if (!ok) return json(401, { error: "That password isn't right." });
-      return json(200, { token: agentToken(), expiresIn: SESSION_MS });
+      if (typeof password !== 'string' || password.length < 8) return json(400, { error: 'Choose a team password of at least 8 characters.' });
+      const salt = randomBytes(16);
+      const hash = await scryptAsync(password.normalize('NFKC'), salt, 32, SCRYPT);
+      const record = { salt: salt.toString('base64url'), hash: hash.toString('base64url'), secret: randomBytes(32).toString('base64url'), at: now() };
+      const saved = await store.setJSON('team-auth', record, { onlyIfNew: true });
+      if (saved && saved.modified === false) return json(409, { error: 'This chat is already set up. Sign in with the team password.' });
+      return json(201, { token: agentToken({ key: Buffer.from(record.secret, 'base64url') }), expiresIn: SESSION_MS });
+    }
+
+    if (path === '/api/agent/login' && req.method === 'POST') {
+      if (!allow('login:' + ip, 10, 15 * 60000)) return json(429, { error: 'Too many tries. Wait 15 minutes.' });
+      const a = await auth();
+      if (!a) return json(503, { error: "The chat isn't set up yet. Open /team to set it up." });
+      const { password } = await body(req, 4096);
+      if (!(await passwordMatches(password, a))) return json(401, { error: "That password isn't right." });
+      return json(200, { token: agentToken(a), expiresIn: SESSION_MS });
     }
 
     if (path === '/api/agent/logout' && req.method === 'POST') return json(200, { ok: true });
