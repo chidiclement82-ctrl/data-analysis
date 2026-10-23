@@ -54,7 +54,7 @@ export function createRelay(options = {}) {
     agentPassword: options.agentPassword || '',
     pinnedTeamKey: options.teamKey || null, // TEAM_KEY: fixes the team key; the inbox can't change it
     brand: {
-      brandName: options.brandName || 'Secure Support',
+      brandName: options.brandName || 'Service',
       replyTime: options.replyTime || 'We usually reply within a few minutes',
       contactUrl: options.contactUrl || '',
       contactLabel: options.contactLabel || '',

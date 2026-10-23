@@ -38,7 +38,7 @@ export function createServerlessApi({ store, env = {}, now = () => Date.now() })
     agentPassword: env.AGENT_PASSWORD || '',
     pinnedTeamKey: env.TEAM_KEY ? JSON.parse(env.TEAM_KEY) : null,
     brand: {
-      brandName: env.BRAND_NAME || 'Secure Support',
+      brandName: env.BRAND_NAME || 'Service',
       replyTime: env.REPLY_TIME || 'We usually reply within a few minutes',
       contactUrl: env.CONTACT_URL || '',
       contactLabel: env.CONTACT_LABEL || '',

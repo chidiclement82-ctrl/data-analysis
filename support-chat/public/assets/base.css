@@ -1,19 +1,20 @@
-/* Secure chat: base styles. Change the brand colours in :root. */
+/* Service chat: base styles. Change the brand colours in :root (light blue). */
 
 :root {
-  --ink: #12202b;
-  --ink-soft: #4b5b67;
-  --cream: #eef3f5;
-  --paper: #fbfdfe;
-  --sand: #dde6ea;
-  --ember: #0f7a6c;
-  --ember-dark: #0a5e53;
-  --gold: #4fd1b5;
-  --line: rgba(18, 32, 43, 0.12);
+  --ink: #0f2a3d;
+  --ink-soft: #4a6273;
+  --cream: #eef7fe;
+  --paper: #fbfdff;
+  --sand: #dbeefb;
+  --ember: #1a7fc4;
+  --ember-dark: #13649c;
+  --gold: #7cc8f8;
+  --sky: #bfe3fb;
+  --line: rgba(15, 42, 61, 0.12);
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --radius: 14px;
-  --shadow: 0 10px 30px rgba(18, 32, 43, 0.1);
+  --shadow: 0 10px 30px rgba(15, 42, 61, 0.1);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -41,7 +42,7 @@ p { margin: 0 0 1em; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-small { padding: 9px 16px; font-size: 0.85rem; }
 .btn-outline { background: transparent; color: var(--ember-dark); }
-.btn-outline:hover { background: rgba(15, 122, 108, 0.08); }
+.btn-outline:hover { background: rgba(26, 127, 196, 0.08); }
 .link-btn { background: none; border: 0; padding: 0; color: var(--ember-dark); font: 500 0.9rem var(--font-body); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; justify-self: center; }
 .icon-btn {
   width: 36px; height: 36px; flex: none; display: grid; place-items: center;
@@ -52,17 +53,17 @@ p { margin: 0 0 1em; }
 
 /* Page frame */
 .app-page { height: 100vh; height: 100dvh; display: flex; flex-direction: column; background: var(--cream); overflow: hidden; }
-.app-header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 56px; padding: 0 16px; background: var(--ink); }
-.brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font: 700 1.1rem var(--font-display); white-space: nowrap; min-width: 0; }
+.app-header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 56px; padding: 0 16px; background: var(--sky); }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 700 1.1rem var(--font-display); white-space: nowrap; min-width: 0; }
 .brand span { overflow: hidden; text-overflow: ellipsis; }
 .brand-mark { width: 30px; height: 30px; flex: none; }
 .app-header-actions { display: flex; gap: 8px; }
 .app-header-link {
-  font: 500 0.85rem var(--font-body); color: #fff; text-decoration: none; white-space: nowrap;
-  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2);
+  font: 500 0.85rem var(--font-body); color: var(--ink); text-decoration: none; white-space: nowrap;
+  background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(15, 42, 61, 0.15);
   border-radius: 999px; padding: 7px 14px; cursor: pointer;
 }
-.app-header-link:hover { background: rgba(255, 255, 255, 0.16); }
+.app-header-link:hover { background: #fff; }
 .app-header-link[hidden] { display: none; }
 .app-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .app-state { flex: 1; overflow-y: auto; display: grid; place-items: center; padding: 24px 16px; }
@@ -79,7 +80,7 @@ p { margin: 0 0 1em; }
   font: 400 1rem var(--font-body); color: var(--ink); width: 100%;
   border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #fff;
 }
-.start-form input:focus, .start-form textarea:focus { outline: none; border-color: var(--ember); box-shadow: 0 0 0 3px rgba(15, 122, 108, 0.18); }
+.start-form input:focus, .start-form textarea:focus { outline: none; border-color: var(--ember); box-shadow: 0 0 0 3px rgba(26, 127, 196, 0.2); }
 .start-form [aria-invalid] { border-color: #c0392b; }
 .form-status { margin: 0; min-height: 1.4em; font-size: 0.9rem; }
 .form-status.error { color: #b3261e; }

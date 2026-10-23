@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Secure chat</title>
+  <title>Service</title>
   <meta name="description" content="Chat with our team. End-to-end encrypted: only you and the team can read it.">
-  <meta name="theme-color" content="#12202b">
+  <meta name="theme-color" content="#bfe3fb">
   <meta name="referrer" content="no-referrer">
   <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/base.css">
@@ -15,7 +15,7 @@
   <header class="app-header">
     <a class="brand" href="/">
       <img class="brand-mark" src="/assets/logo.svg" alt="" width="30" height="30">
-      <span data-brand>Secure Support</span>
+      <span data-brand>Service</span>
     </a>
     <a class="app-header-link" id="contact-link" hidden rel="noopener"></a>
   </header>
@@ -32,30 +32,10 @@
       </div>
     </section>
 
-    <section class="app-state" id="state-start" hidden>
-      <form class="app-card start-form" id="start-form" novalidate>
-        <p class="eyebrow">Customer support</p>
-        <h1>How can we help?</h1>
-        <p class="e2ee-pill"><span aria-hidden="true">🔒</span> <span>End-to-end encrypted. Only you and the <span data-brand>Secure Support</span> team can read this chat. Not even the chat server can.</span></p>
-        <label>Your name
-          <input name="name" autocomplete="name" maxlength="80" required>
-        </label>
-        <label><span>Order number <span class="muted">(if it's about an order)</span></span>
-          <input name="order" maxlength="40" inputmode="text" autocomplete="off" placeholder="e.g. 1042">
-        </label>
-        <label>Your message
-          <textarea name="message" rows="4" maxlength="4000" required placeholder="Tell us what happened, or ask us anything."></textarea>
-        </label>
-        <p class="form-status" id="start-status" role="status" aria-live="polite"></p>
-        <button class="btn" type="submit" id="start-btn">Start secure chat</button>
-        <p class="small-print muted">We keep this chat for <span id="retention">30</span> days after your last message, sealed. You can delete it any time.</p>
-      </form>
-    </section>
-
     <section class="chat" id="state-chat" hidden>
       <div class="chat-bar">
         <div class="chat-who">
-          <strong data-brand>Secure Support</strong>
+          <strong>Chat with us</strong>
           <span class="chat-sub" id="chat-sub">We usually reply within a few minutes</span>
         </div>
         <button class="lock-btn" type="button" id="lock-btn" aria-haspopup="dialog">
@@ -74,7 +54,7 @@
           <input type="file" accept="image/*" id="photo-input" hidden>
           <span aria-hidden="true">📷</span><span class="sr-only">Send a photo</span>
         </label>
-        <textarea id="composer-text" rows="1" maxlength="4000" placeholder="Write a message" aria-label="Message"></textarea>
+        <textarea id="composer-text" rows="1" maxlength="4000" placeholder="Type a message" aria-label="Message"></textarea>
         <button class="composer-send" type="submit" aria-label="Send">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>
         </button>

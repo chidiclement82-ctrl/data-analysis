@@ -396,7 +396,7 @@ function profileOf(c) {
 
 function nameOf(c) {
   if (!c.key) return "Locked chat";
-  return profileOf(c).name || "Customer";
+  return profileOf(c).name || "Customer " + c.summary.id.slice(0, 4).toUpperCase();
 }
 
 function unread(c) {
