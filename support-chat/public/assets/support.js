@@ -1,4 +1,4 @@
-/* Customer support chat (support.html), end-to-end encrypted.
+/* Customer chat page (/), end-to-end encrypted.
 
    The customer's browser makes its own key pair for each chat and keeps the
    private half in IndexedDB, where page scripts can use it but can't read it
@@ -8,7 +8,7 @@
 import * as e2ee from "./e2ee.js";
 import { $, el, loadConfig, relayClient, photoPayload, renderMessages, sortMessages, autosize } from "./support-common.js";
 
-const store = e2ee.idbStore("ogarider-support");
+const store = e2ee.idbStore("secure-chat");
 const STATES = ["loading", "unavailable", "start", "chat"];
 
 let config = null;
@@ -42,7 +42,7 @@ function draw() {
   renderMessages($("chat-log"), sortMessages([...items.values()]), {
     me: "customer",
     readUpTo: readByTeam,
-    labels: { them: config.teamName || "Ogarider" },
+    labels: { them: config.brandName },
     onRetry: (item) => { item.failed = false; item.pending = true; draw(); flushOutbox(); },
   });
 }
@@ -56,9 +56,14 @@ async function init() {
     console.error(err);
     return show("unavailable");
   }
-  if (!config.relayUrl || !config.teamKey) return show("unavailable");
-  relay = relayClient(config.relayUrl);
-  if (config.teamName) $("team-name").textContent = config.teamName;
+  document.title = config.brandName + " · Secure chat";
+  if (config.contactUrl && /^(https?:|tel:|mailto:)/.test(config.contactUrl)) {
+    $("contact-link").href = config.contactUrl;
+    $("contact-link").textContent = config.contactLabel || "Contact us";
+    $("contact-link").hidden = false;
+  }
+  if (!config.teamKey) return show("unavailable");
+  relay = relayClient("");
   if (config.replyTime) $("chat-sub").textContent = config.replyTime;
   if (config.retentionDays) $("retention").textContent = config.retentionDays;
 
@@ -66,7 +71,7 @@ async function init() {
     chat = await store.get("chat");
   } catch (err) {
     console.error(err);
-    $("unavailable-text").textContent = "This browser won't let the page store a chat key (private browsing can do this). Try a normal window, or call us on 0705 994 6531.";
+    $("unavailable-text").textContent = "This browser won't let the page store a chat key (private browsing can do this). Please try a normal window.";
     return show("unavailable");
   }
   if (chat) return openChat();
@@ -314,7 +319,7 @@ $("menu-btn").addEventListener("click", (e) => {
 document.addEventListener("click", () => { menu.hidden = true; $("menu-btn").setAttribute("aria-expanded", "false"); });
 
 $("delete-chat-btn").addEventListener("click", async () => {
-  if (!confirm("Delete this chat for you and for the Ogarider team? This can't be undone.")) return;
+  if (!confirm("Delete this chat for you and for the team? This can't be undone.")) return;
   try {
     await relay.api(`/api/conversations/${chat.id}`, { method: "DELETE" });
   } catch (err) {

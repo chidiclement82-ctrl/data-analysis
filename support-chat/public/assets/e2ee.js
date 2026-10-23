@@ -1,12 +1,12 @@
-/* End-to-end encryption for the support chat (support.html, support-agent.html).
+/* End-to-end encryption for the support chat (the customer page and the team inbox).
 
    Only the customer's browser and the support team's browsers hold the keys.
    The relay server stores and forwards sealed envelopes it cannot open.
 
    - Keys: ECDH on P-256. Each customer conversation gets a brand-new key pair,
-     made in the customer's browser. The support team has one key pair; its
-     public half is published in support.json on this website (not by the
-     relay), so the relay can't swap in a key of its own.
+     made in the customer's browser. The support team has one key pair; only
+     its public half is ever given to the server. Each chat remembers the team
+     key it started with, and the safety number below exposes any swap.
    - Message key: ECDH shared secret -> HKDF-SHA-256 (salted with the
      conversation id) -> AES-256-GCM.
    - Every message: fresh random 96-bit IV. The conversation id, the sender
@@ -26,7 +26,7 @@ const enc = new TextEncoder();
 const dec = new TextDecoder();
 
 export const VERSION = 1;
-const LABEL = "ogarider-support/v" + VERSION;
+const LABEL = "secure-chat/v" + VERSION;
 const ECDH = { name: "ECDH", namedCurve: "P-256" };
 const BACKUP_ITERATIONS = 600000;
 
@@ -195,7 +195,7 @@ export async function exportBackup(privateKey, publicJwk, passphrase) {
     enc.encode(JSON.stringify({ d: jwk.d })),
   );
   return {
-    kind: "ogarider-support-key-backup",
+    kind: "secure-chat-team-key-backup",
     v: VERSION,
     publicKey: pub,
     kdf: { name: "PBKDF2", hash: "SHA-256", iterations: BACKUP_ITERATIONS, salt: toB64(salt) },
@@ -206,7 +206,7 @@ export async function exportBackup(privateKey, publicJwk, passphrase) {
 
 // Returns { privateKey (non-extractable), publicJwk }. Throws "wrong passphrase".
 export async function importBackup(backup, passphrase) {
-  if (!backup || backup.kind !== "ogarider-support-key-backup" || backup.v !== VERSION) throw new Error("not a support key backup");
+  if (!backup || backup.kind !== "secure-chat-team-key-backup" || backup.v !== VERSION) throw new Error("not a support key backup");
   const pub = cleanPublicJwk(backup.publicKey);
   const iterations = backup.kdf && backup.kdf.iterations;
   if (!Number.isInteger(iterations) || iterations < 100000 || iterations > 10000000) throw new Error("not a support key backup");

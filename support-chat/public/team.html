@@ -3,25 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Support inbox — Ogarider</title>
-  <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#1c1512">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob: data:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Team inbox</title>
+  <meta name="description" content="Team inbox for the secure chat.">
+  <meta name="theme-color" content="#12202b">
   <meta name="referrer" content="no-referrer">
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/chat.css">
-  <link rel="stylesheet" href="assets/css/support.css">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/base.css">
+  <link rel="stylesheet" href="/assets/support.css">
 </head>
 <body class="app-page">
   <header class="app-header">
-    <a class="brand" href="./">
-      <img class="brand-mark" src="assets/logo-mark.svg" alt="" width="34" height="34">
-      <span>Oga<em>rider</em></span>
+    <a class="brand" href="/team">
+      <img class="brand-mark" src="/assets/logo.svg" alt="" width="30" height="30">
+      <span data-brand>Secure Support</span>
     </a>
     <div class="app-header-actions">
       <button class="app-header-link" type="button" id="settings-btn" hidden>Settings</button>
@@ -37,7 +32,7 @@
     <!-- This device has no team key yet -->
     <section class="app-state" id="state-setup" hidden>
       <div class="app-card start-form">
-        <p class="eyebrow">Support inbox</p>
+        <p class="eyebrow">Team inbox</p>
         <h1>Unlock this device</h1>
         <p>Customer chats are end-to-end encrypted. To read them here, load the team key backup file and type its passphrase.</p>
         <label>Team key backup file
@@ -49,7 +44,7 @@
         <p class="form-status" id="restore-status" role="status" aria-live="polite"></p>
         <button class="btn" type="button" id="restore-btn">Unlock</button>
 
-        <details class="token-help" id="create-key">
+        <details class="help" id="create-key">
           <summary>First time? Create the team key</summary>
           <p>Do this <strong>once</strong>, on one device. You'll get a backup file to unlock your other phones and computers. Keep it, and the passphrase, safe: anyone with both can read customer chats, and if you lose both, old chats can't be opened again.</p>
           <label>Choose a passphrase (at least 12 characters, a few words is best)
@@ -64,39 +59,27 @@
       </div>
     </section>
 
-    <!-- The team key exists here but isn't the one the website publishes -->
+    <!-- Signed in, but the server's team key isn't this device's -->
     <section class="app-state" id="state-publish" hidden>
       <div class="app-card start-form">
         <p class="eyebrow">One more step</p>
-        <h1>Publish the team key</h1>
-        <p id="publish-why">Customers' browsers lock messages for the key published in <code>support.json</code> on the website. Publish this device's key so new chats come to you.</p>
-        <p>Key fingerprint: <span class="safety safety-inline" id="publish-fp"></span></p>
-        <label>Chat server address (from Render)
-          <input type="url" id="publish-relay" placeholder="https://support-chat.onrender.com" inputmode="url" autocomplete="off">
-        </label>
-        <label><span>GitHub access token <span class="muted">(the same one as the menu admin page)</span></span>
-          <input type="password" id="publish-token" autocomplete="off" placeholder="ghp_…">
-        </label>
+        <h1>Turn on the chat</h1>
+        <p id="publish-why">Customers' browsers lock their messages for the team key the server hands out. Make this device's key the team key so customers can start chats.</p>
+        <p>Team key fingerprint: <span class="safety safety-inline" id="publish-fp"></span></p>
         <p class="form-status" id="publish-status" role="status" aria-live="polite"></p>
-        <button class="btn" type="button" id="publish-btn">Publish to the website</button>
+        <button class="btn" type="button" id="publish-btn">Use this key for the chat</button>
         <button class="link-btn" type="button" id="backup-again-btn" hidden>Download the backup file again</button>
-        <details class="token-help">
-          <summary>Rather do it by hand?</summary>
-          <p>Replace the contents of <code>support.json</code> in the repository with:</p>
-          <textarea class="code-box" id="publish-json" rows="10" readonly></textarea>
-        </details>
-        <button class="link-btn" type="button" id="publish-skip">Skip for now</button>
       </div>
     </section>
 
     <section class="app-state" id="state-login" hidden>
       <form class="app-card start-form" id="login-form" novalidate>
-        <p class="eyebrow">Support inbox</p>
+        <p class="eyebrow">Team inbox</p>
         <h1>Sign in</h1>
         <label><span>Your first name <span class="muted">(customers see it on your replies)</span></span>
           <input name="agent" autocomplete="given-name" maxlength="40" required>
         </label>
-        <label><span>Team password <span class="muted">(AGENT_PASSWORD on the chat server)</span></span>
+        <label><span>Team password <span class="muted">(AGENT_PASSWORD on the server)</span></span>
           <input name="password" type="password" autocomplete="current-password" required>
         </label>
         <p class="form-status" id="login-status" role="status" aria-live="polite"></p>
@@ -167,16 +150,16 @@
       <label><span>Quick replies <span class="muted">(one per line, tap to drop into a reply)</span></span>
         <textarea name="quick" rows="6"></textarea>
       </label>
-      <label class="admin-check"><input type="checkbox" name="sound"> Play a sound for new messages</label>
+      <label class="check"><input type="checkbox" name="sound"> Play a sound for new messages</label>
       <button class="btn btn-outline btn-small" type="button" id="notify-btn">Turn on notifications</button>
       <p class="small-print muted">Team key fingerprint: <span class="safety safety-inline" id="settings-fp"></span></p>
-      <div class="admin-actions">
+      <div class="actions">
         <button class="btn" value="save">Save</button>
         <button class="link-btn danger" type="button" id="forget-key-btn">Remove the team key from this device</button>
       </div>
     </form>
   </dialog>
 
-  <script type="module" src="assets/js/support-agent.js"></script>
+  <script type="module" src="/assets/support-agent.js"></script>
 </body>
 </html>

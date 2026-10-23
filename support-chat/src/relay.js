@@ -1,11 +1,23 @@
-// The support chat relay: a small HTTP API plus a live event stream.
-// It passes sealed envelopes between customers and the support team and keeps
-// them until the chat is deleted or goes quiet for RETENTION_DAYS. It holds no
-// keys and cannot read messages (see ../../assets/js/e2ee.js).
+// The secure chat server: the customer page (/), the team inbox (/team), a
+// small HTTP API and a live event stream. It passes sealed envelopes between
+// customers and the team and keeps them until the chat is deleted or goes
+// quiet for RETENTION_DAYS. It never holds a private key and cannot read
+// messages (see ../public/assets/e2ee.js).
 
 import { createServer } from 'node:http';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
+import { join, extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createStore } from './store.js';
+import { keyId } from '../public/assets/e2ee.js';
+
+const PUBLIC_DIR = fileURLToPath(new URL('../public/', import.meta.url));
+const PAGES = { '/': 'index.html', '/index.html': 'index.html', '/team': 'team.html', '/team.html': 'team.html' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+// The pages may only load files from this server and talk to this server.
+const PAGE_CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
 const ID = /^[A-Za-z0-9_-]{16,64}$/;
 const B64 = /^[A-Za-z0-9_-]+$/;
@@ -29,7 +41,13 @@ export function validPublicKey(jwk) {
 export function createRelay(options = {}) {
   const config = {
     agentPassword: options.agentPassword || '',
-    agentKeyId: options.agentKeyId || '',
+    pinnedTeamKey: options.teamKey || null, // TEAM_KEY: fixes the team key; the inbox can't change it
+    brand: {
+      brandName: options.brandName || 'Secure Support',
+      replyTime: options.replyTime || 'We usually reply within a few minutes',
+      contactUrl: options.contactUrl || '',
+      contactLabel: options.contactLabel || '',
+    },
     allowedOrigins: options.allowedOrigins || [],
     maxMessageBytes: options.maxMessageBytes || 2_500_000,
     retentionDays: options.retentionDays || 30,
@@ -40,6 +58,26 @@ export function createRelay(options = {}) {
   const sessions = new Map(); // sha(agent token) hex -> expiry
   const streams = new Set();  // { res, role, conv }
   const buckets = new Map();  // rate limits: key -> { count, reset }
+
+  // The team's public key: from TEAM_KEY, else set once from the team inbox
+  // and kept in DATA_DIR/team-key.json.
+  const teamKeyFile = config.dataDir ? join(config.dataDir, 'team-key.json') : null;
+  let team = { key: null, id: null };
+  async function setTeamKey(jwk, save) {
+    team = { key: jwk, id: await keyId(jwk) };
+    if (save && teamKeyFile) {
+      await mkdir(config.dataDir, { recursive: true });
+      await writeFile(teamKeyFile + '.tmp', JSON.stringify(jwk));
+      await rename(teamKeyFile + '.tmp', teamKeyFile);
+    }
+  }
+  let saved = null;
+  if (!config.pinnedTeamKey && teamKeyFile) {
+    try { saved = JSON.parse(readFileSync(teamKeyFile, 'utf8')); } catch { /* none yet */ }
+  }
+  const startKey = config.pinnedTeamKey || saved;
+  if (startKey && !validPublicKey(startKey)) throw new Error('TEAM_KEY is not a P-256 public key (JSON with kty, crv, x, y).');
+  const ready = startKey ? setTeamKey(startKey, false) : Promise.resolve();
 
   // Rate limits ------------------------------------------------------------
   function allow(key, limit, windowMs) {
@@ -88,10 +126,13 @@ export function createRelay(options = {}) {
     return req.socket.remoteAddress || '?';
   }
 
-  function originAllowed(origin) {
+  // Our own pages, plus any websites listed in ALLOWED_ORIGINS.
+  function originAllowed(req) {
+    const origin = req.headers.origin;
     if (!origin) return true; // not a browser page (curl, server, tests)
-    if (config.allowedOrigins.includes('*') || config.allowedOrigins.includes(origin)) return true;
-    return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) && config.allowedOrigins.includes('localhost');
+    const host = (config.trustProxy && req.headers['x-forwarded-host']) || req.headers.host;
+    try { if (new URL(origin).host === host) return true; } catch { return false; }
+    return config.allowedOrigins.includes('*') || config.allowedOrigins.includes(origin);
   }
 
   function headers(req) {
@@ -103,7 +144,7 @@ export function createRelay(options = {}) {
       Vary: 'Origin',
     };
     const origin = req.headers.origin;
-    if (origin && originAllowed(origin)) {
+    if (origin && originAllowed(req)) {
       h['Access-Control-Allow-Origin'] = origin;
       h['Access-Control-Allow-Headers'] = 'Authorization, Content-Type';
       h['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS';
@@ -168,17 +209,37 @@ export function createRelay(options = {}) {
     const path = url.pathname;
     const ip = clientIp(req);
 
-    if (req.headers.origin && !originAllowed(req.headers.origin)) {
-      return reply(req, res, 403, { error: 'This website may not use the support chat.' });
+    if (!originAllowed(req)) {
+      return reply(req, res, 403, { error: 'This website may not use the chat.' });
     }
+    await ready;
     if (req.method === 'OPTIONS') {
       res.writeHead(204, headers(req));
       return res.end();
     }
 
     if (path === '/healthz') return reply(req, res, 200, { ok: true });
-    if (path === '/') {
-      return reply(req, res, 200, { service: 'Ogarider support chat relay', note: 'Open support.html on the website to chat.' });
+
+    // Pages and their files ------------------------------------------------
+    if (req.method === 'GET' && (PAGES[path] || /^\/assets\/[a-z0-9-]+\.(js|css|svg|png)$/.test(path))) {
+      const file = join(PUBLIC_DIR, PAGES[path] || path.slice(1));
+      let body;
+      try { body = await readFile(file); } catch { return reply(req, res, 404, { error: 'Not found.' }); }
+      res.writeHead(200, {
+        'Content-Type': TYPES[extname(file)],
+        'Cache-Control': 'no-cache',
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'no-referrer',
+        'Content-Security-Policy': PAGE_CSP,
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+        ...(config.trustProxy ? { 'Strict-Transport-Security': 'max-age=31536000' } : {}),
+      });
+      return res.end(body);
+    }
+
+    if (path === '/config.json' && req.method === 'GET') {
+      return reply(req, res, 200, { ...config.brand, retentionDays: config.retentionDays, teamKey: team.key, teamKeyId: team.id, teamKeyPinned: Boolean(config.pinnedTeamKey) });
     }
 
     // Team sign-in ---------------------------------------------------------
@@ -201,6 +262,17 @@ export function createRelay(options = {}) {
       return reply(req, res, 200, { ok: true });
     }
 
+    // The team inbox sets the team's public key (the first time, or after
+    // making a new one). Only signed-in team members can.
+    if (path === '/api/agent/team-key' && req.method === 'POST') {
+      if (caller?.role !== 'agent') return reply(req, res, 401, { error: 'Sign in again.' });
+      if (config.pinnedTeamKey) return reply(req, res, 409, { error: 'The team key is fixed by TEAM_KEY on the server.' });
+      const body = await readJson(req, 4096);
+      if (!validPublicKey(body.publicKey)) return reply(req, res, 400, { error: 'Bad key.' });
+      await setTeamKey(body.publicKey, true);
+      return reply(req, res, 200, { teamKeyId: team.id });
+    }
+
     if (path === '/api/agent/conversations' && req.method === 'GET') {
       if (caller?.role !== 'agent') return reply(req, res, 401, { error: 'Sign in again.' });
       return reply(req, res, 200, { conversations: store.list().map(store.summary) });
@@ -214,8 +286,9 @@ export function createRelay(options = {}) {
       if (typeof body.agentKeyId !== 'string' || !B64.test(body.agentKeyId) || body.agentKeyId.length !== 43) {
         return reply(req, res, 400, { error: 'Bad team key id.' });
       }
-      if (config.agentKeyId && body.agentKeyId !== config.agentKeyId) {
-        return reply(req, res, 409, { error: "The support team's security key has changed. Reload the page." });
+      if (!team.id) return reply(req, res, 503, { error: "The chat isn't set up yet." });
+      if (body.agentKeyId !== team.id) {
+        return reply(req, res, 409, { error: "The team's security key has changed. Reload the page." });
       }
       const id = randomBytes(16).toString('base64url');
       const secret = token();
@@ -304,6 +377,8 @@ export function createRelay(options = {}) {
 
   const server = createServer((req, res) => {
     handle(req, res).catch((err) => {
+      // The rest of a too-big upload is never read, so this connection can't be reused.
+      if (err.status === 413 && !res.headersSent) res.setHeader('Connection', 'close');
       if (!res.headersSent) reply(req, res, err.status || 500, { error: err.status ? err.message : 'Something went wrong.' });
       else res.end();
       if (!err.status) console.error(err);
@@ -313,7 +388,7 @@ export function createRelay(options = {}) {
   server.on('close', () => {
     clearInterval(ping);
     clearInterval(housekeeping);
-    store.flush();
+    try { store.flush(); } catch (err) { console.error("Couldn't save chats on shutdown:", err.message); }
   });
 
   // Close open event streams too, so server.close() can finish.

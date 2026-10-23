@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import * as e2ee from '../../assets/js/e2ee.js';
+import * as e2ee from '../public/assets/e2ee.js';
 import { createRelay } from '../src/relay.js';
 import { createStore } from '../src/store.js';
 
@@ -14,7 +14,7 @@ before(async () => {
   dataDir = mkdtempSync(join(tmpdir(), 'support-chat-'));
   team = await e2ee.generateKeyPair();
   teamKeyId = await e2ee.keyId(team.publicJwk);
-  relay = createRelay({ agentPassword: PASSWORD, agentKeyId: teamKeyId, allowedOrigins: ['https://ogarider.name.ng'], dataDir });
+  relay = createRelay({ agentPassword: PASSWORD, teamKey: team.publicJwk, brandName: 'Test Shop', allowedOrigins: ['https://partner.example'], dataDir });
   await new Promise((r) => relay.server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${relay.server.address().port}`;
 });
@@ -74,11 +74,32 @@ async function events(token, count, names) {
   return done;
 }
 
-test('health check and website-only access', async () => {
+test('health check, and only our own pages (or listed sites) may use the API', async () => {
   assert.equal((await api('/healthz')).status, 200);
-  const ok = await api('/healthz', { origin: 'https://ogarider.name.ng' });
-  assert.equal(ok.headers.get('access-control-allow-origin'), 'https://ogarider.name.ng');
+  assert.equal((await api('/healthz', { origin: base })).status, 200);
+  const ok = await api('/healthz', { origin: 'https://partner.example' });
+  assert.equal(ok.headers.get('access-control-allow-origin'), 'https://partner.example');
   assert.equal((await api('/healthz', { origin: 'https://evil.example' })).status, 403);
+});
+
+test('serves the customer page, the team inbox and their files with a strict policy', async () => {
+  for (const [path, text] of [['/', 'Start secure chat'], ['/team', 'Team inbox'], ['/assets/e2ee.js', 'AES-GCM'], ['/assets/base.css', ':root']]) {
+    const res = await fetch(base + path);
+    assert.equal(res.status, 200, path);
+    assert.match(res.headers.get('content-security-policy'), /script-src 'self'/);
+    assert.ok((await res.text()).includes(text), path);
+  }
+  assert.equal((await fetch(base + '/assets/nope.js')).status, 404);
+  assert.equal((await fetch(base + '/assets/../src/relay.js')).status, 404);
+  assert.equal((await fetch(base + '/%2e%2e/package.json')).status, 404);
+});
+
+test('settings for the pages: name and the team key', async () => {
+  const cfg = await (await api('/config.json')).json();
+  assert.equal(cfg.brandName, 'Test Shop');
+  assert.deepEqual(cfg.teamKey, team.publicJwk);
+  assert.equal(cfg.teamKeyId, teamKeyId);
+  assert.equal(cfg.teamKeyPinned, true);
 });
 
 test('team sign-in needs the right password', async () => {
@@ -166,6 +187,42 @@ test('oversized messages are refused', async () => {
   const c = await newCustomer();
   const huge = { v: 1, id: e2ee.randomId(), conv: c.id, from: 'customer', ts: Date.now(), iv: 'AAAAAAAAAAAAAAAA', ct: 'A'.repeat(3_000_000) };
   assert.equal((await api(`/api/conversations/${c.id}/messages`, { token: c.token, method: 'POST', body: huge })).status, 413);
+  // ...and the next request still works.
+  assert.equal((await api('/healthz')).status, 200);
+  await agentLogin();
+});
+
+test('the team key can be set from the inbox (signed in only) unless TEAM_KEY fixes it', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'support-key-'));
+  const r = createRelay({ agentPassword: PASSWORD, dataDir: dir });
+  await new Promise((ok) => r.server.listen(0, '127.0.0.1', ok));
+  const b = `http://127.0.0.1:${r.server.address().port}`;
+  const post = (path, body, token) => fetch(b + path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
+  try {
+    assert.equal((await (await fetch(b + '/config.json')).json()).teamKey, null);
+    const customer = await e2ee.generateKeyPair();
+    assert.equal((await post('/api/conversations', { customerKey: customer.publicJwk, agentKeyId: teamKeyId })).status, 503);
+    assert.equal((await post('/api/agent/team-key', { publicKey: team.publicJwk })).status, 401);
+    const { token } = await (await post('/api/agent/login', { password: PASSWORD })).json();
+    assert.equal((await post('/api/agent/team-key', { publicKey: { ...team.publicJwk, d: 'x' } }, token)).status, 400);
+    assert.equal((await post('/api/agent/team-key', { publicKey: team.publicJwk }, token)).status, 200);
+    assert.equal((await (await fetch(b + '/config.json')).json()).teamKeyId, teamKeyId);
+    assert.equal((await post('/api/conversations', { customerKey: customer.publicJwk, agentKeyId: teamKeyId })).status, 201);
+  } finally {
+    r.server.closeAllConnections(); await new Promise((ok) => r.server.close(ok));
+  }
+  // Kept across restarts.
+  const again = createRelay({ dataDir: dir });
+  await new Promise((ok) => again.server.listen(0, '127.0.0.1', ok));
+  const cfg = await (await fetch(`http://127.0.0.1:${again.server.address().port}/config.json`)).json();
+  assert.equal(cfg.teamKeyId, teamKeyId);
+  again.server.closeAllConnections(); await new Promise((ok) => again.server.close(ok));
+  rmSync(dir, { recursive: true, force: true });
+
+  // Fixed by TEAM_KEY: the inbox can't change it.
+  const agent = await agentLogin();
+  const other = await e2ee.generateKeyPair();
+  assert.equal((await api('/api/agent/team-key', { token: agent, method: 'POST', body: { publicKey: other.publicJwk } })).status, 409);
 });
 
 test('chats survive a restart and old ones are pruned', async () => {

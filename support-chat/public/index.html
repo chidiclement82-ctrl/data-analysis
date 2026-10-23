@@ -3,31 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Chat with us — Ogarider</title>
-  <meta name="description" content="Chat with the Ogarider team about your order. End-to-end encrypted: only you and our team can read it.">
-  <meta name="theme-color" content="#1c1512">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob: data:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Secure chat</title>
+  <meta name="description" content="Chat with our team. End-to-end encrypted: only you and the team can read it.">
+  <meta name="theme-color" content="#12202b">
   <meta name="referrer" content="no-referrer">
-  <link rel="canonical" href="https://ogarider.name.ng/support.html">
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
-  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="manifest" href="site.webmanifest">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/chat.css">
-  <link rel="stylesheet" href="assets/css/support.css">
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/base.css">
+  <link rel="stylesheet" href="/assets/support.css">
 </head>
 <body class="app-page">
   <header class="app-header">
-    <a class="brand" href="./">
-      <img class="brand-mark" src="assets/logo-mark.svg" alt="" width="34" height="34">
-      <span>Oga<em>rider</em></span>
+    <a class="brand" href="/">
+      <img class="brand-mark" src="/assets/logo.svg" alt="" width="30" height="30">
+      <span data-brand>Secure Support</span>
     </a>
-    <!-- EDIT: phone number -->
-    <a class="app-header-link" href="tel:+2347059946531">Call us</a>
+    <a class="app-header-link" id="contact-link" hidden rel="noopener"></a>
   </header>
 
   <main class="app-main" id="main">
@@ -37,9 +27,8 @@
 
     <section class="app-state" id="state-unavailable" hidden>
       <div class="app-card">
-        <h1>Chat is coming soon</h1>
-        <p id="unavailable-text">In the meantime, call us on <a href="tel:+2347059946531">0705 994 6531</a> or <a href="order.html">order on WhatsApp</a>.</p>
-        <a class="btn" href="./">Back to the website</a>
+        <h1>Chat isn't open yet</h1>
+        <p id="unavailable-text">The team is still setting up this chat. Please check back soon.</p>
       </div>
     </section>
 
@@ -47,7 +36,7 @@
       <form class="app-card start-form" id="start-form" novalidate>
         <p class="eyebrow">Customer support</p>
         <h1>How can we help?</h1>
-        <p class="e2ee-pill"><span aria-hidden="true">🔒</span> End-to-end encrypted. Only you and the Ogarider team can read this chat. Not even our chat server can.</p>
+        <p class="e2ee-pill"><span aria-hidden="true">🔒</span> <span>End-to-end encrypted. Only you and the <span data-brand>Secure Support</span> team can read this chat. Not even the chat server can.</span></p>
         <label>Your name
           <input name="name" autocomplete="name" maxlength="80" required>
         </label>
@@ -66,7 +55,7 @@
     <section class="chat" id="state-chat" hidden>
       <div class="chat-bar">
         <div class="chat-who">
-          <strong id="team-name">Ogarider support</strong>
+          <strong data-brand>Secure Support</strong>
           <span class="chat-sub" id="chat-sub">We usually reply within a few minutes</span>
         </div>
         <button class="lock-btn" type="button" id="lock-btn" aria-haspopup="dialog">
@@ -79,7 +68,7 @@
       </div>
       <p class="chat-banner" id="chat-banner" role="status" aria-live="polite" hidden></p>
       <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-label="Messages"></div>
-      <p class="chat-typing" id="chat-typing" aria-live="polite" hidden>Ogarider is typing…</p>
+      <p class="chat-typing" id="chat-typing" aria-live="polite" hidden>Typing…</p>
       <form class="composer" id="composer" autocomplete="off">
         <label class="composer-attach" title="Send a photo">
           <input type="file" accept="image/*" id="photo-input" hidden>
@@ -95,13 +84,13 @@
 
   <dialog class="sheet" id="lock-dialog" aria-labelledby="lock-title">
     <h2 id="lock-title">This chat is end-to-end encrypted</h2>
-    <p>Your messages and photos are locked on this phone before they leave it, and only the Ogarider support team can unlock them. Our chat server only ever passes along sealed messages it can't open.</p>
-    <p><strong>Want to be sure?</strong> Ask us on the phone to read out the safety number on our screen. If it matches yours, nobody is listening in.</p>
+    <p>Your messages and photos are locked on this phone before they leave it, and only the team can unlock them. Our chat server only ever passes along sealed messages it can't open.</p>
+    <p><strong>Want to be sure?</strong> Ask the team (on a call or in person) to read out the safety number on their screen. If it matches yours, nobody is listening in.</p>
     <p class="safety" id="safety-number">…</p>
     <p class="small-print muted">This chat lives in this browser. If you clear your browsing data, it can't be opened again.</p>
     <form method="dialog"><button class="btn">Close</button></form>
   </dialog>
 
-  <script type="module" src="assets/js/support.js"></script>
+  <script type="module" src="/assets/support.js"></script>
 </body>
 </html>

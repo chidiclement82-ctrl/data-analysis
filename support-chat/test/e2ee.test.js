@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as e2ee from '../../assets/js/e2ee.js';
+import * as e2ee from '../public/assets/e2ee.js';
 
 async function pairUp() {
   const team = await e2ee.generateKeyPair();

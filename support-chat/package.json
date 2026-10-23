@@ -1,8 +1,8 @@
 {
-  "name": "support-chat",
+  "name": "secure-chat",
   "version": "1.0.0",
   "private": true,
-  "description": "Relay for the Ogarider end-to-end encrypted customer support chat. It only ever handles sealed messages.",
+  "description": "An end-to-end encrypted customer support chat with its own link: customer page, team inbox and a server that only ever handles sealed messages.",
   "type": "module",
   "main": "server.js",
   "scripts": {

@@ -1,4 +1,4 @@
-/* Shared by support.html (customers) and support-agent.html (the team):
+/* Shared by the customer page (/) and the team inbox (/team):
    talking to the relay, the live event stream, photos, and drawing messages. */
 
 import { toB64, fromB64 } from "./e2ee.js";
@@ -12,12 +12,14 @@ export function el(tag, className, text) {
   return node;
 }
 
-// support.json: where the relay is and the team's public key. It is served by
-// this website (from the repository), never by the relay.
+// The chat's name, contact link and the team's public key, from the server's
+// settings. Fills in every [data-brand] on the page.
 export async function loadConfig() {
-  const res = await fetch("support.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("support.json " + res.status);
-  return res.json();
+  const res = await fetch("/config.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("config.json " + res.status);
+  const config = await res.json();
+  document.querySelectorAll("[data-brand]").forEach((n) => { n.textContent = config.brandName; });
+  return config;
 }
 
 // Relay API ------------------------------------------------------------------

@@ -1,4 +1,4 @@
-/* Support chat: support.html (customers) and support-agent.html (team) */
+/* Secure chat: the chat, the team inbox and dialogs */
 
 .e2ee-pill {
   display: flex; gap: 8px; align-items: flex-start;
@@ -62,7 +62,7 @@
   background: #fff; box-shadow: 0 1px 2px rgba(28, 21, 18, 0.08);
   overflow-wrap: anywhere;
 }
-.msg-me .msg-bubble { background: #ffe3d3; border-bottom-right-radius: 4px; }
+.msg-me .msg-bubble { background: #d6f1ea; border-bottom-right-radius: 4px; }
 .msg-them .msg-bubble { border-bottom-left-radius: 4px; }
 .msg-locked { background: #fde8e6 !important; color: #8a1c13; }
 .msg-by { font-size: 0.74rem; font-weight: 600; color: var(--ember-dark); margin-bottom: 2px; }
@@ -94,7 +94,7 @@
   font: 400 1rem/1.4 var(--font-body); color: var(--ink);
   border: 1px solid var(--line); border-radius: 22px; padding: 10px 16px; background: #fff;
 }
-.composer textarea:focus { outline: none; border-color: var(--ember); box-shadow: 0 0 0 3px rgba(196, 80, 42, 0.18); }
+.composer textarea:focus { outline: none; border-color: var(--ember); box-shadow: 0 0 0 3px rgba(15, 122, 108, 0.18); }
 .composer-attach, .composer-send {
   flex: none; width: 44px; height: 44px; border-radius: 50%;
   display: grid; place-items: center; cursor: pointer; font-size: 1.2rem;
@@ -159,7 +159,7 @@
   font-family: var(--font-body);
 }
 .conv:hover { background: var(--cream); }
-.conv.is-selected { background: #ffe9dc; }
+.conv.is-selected { background: #d6f1ea; }
 .conv.is-locked { opacity: 0.6; }
 .conv-top, .conv-bottom { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .conv-name { flex: 1; min-width: 0; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

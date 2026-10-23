@@ -1,4 +1,4 @@
-/* Support inbox for the Ogarider team (support-agent.html).
+/* Team inbox (/team) for the secure chat.
 
    The team key's private half is kept on each staff device in IndexedDB,
    where scripts can use it but can't read it out. It arrives there by
@@ -8,15 +8,10 @@
 import * as e2ee from "./e2ee.js";
 import { $, el, loadConfig, relayClient, photoPayload, renderMessages, sortMessages, autosize, preview, timeOf, dayOf } from "./support-common.js";
 
-const OWNER = "chidiclement82-ctrl";
-const REPO = "data-analysis";
-const BRANCH = "main";
-const GITHUB_TOKEN_KEY = "menu-admin-token"; // shared with admin.html
 const SESSION_KEY = "support-agent-session";
 const NAME_KEY = "support-agent-name";
 const QUICK_KEY = "support-quick-replies";
 const SOUND_KEY = "support-sound";
-const SKIP_PUBLISH_KEY = "support-skip-publish"; // { keyId, relay } when publishing was skipped
 const DEFAULT_QUICK = [
   "Hi! Thanks for reaching out, I'm looking into this now.",
   "Could you send us your order number, please?",
@@ -25,7 +20,7 @@ const DEFAULT_QUICK = [
   "Is there anything else we can help with?",
 ];
 
-const keyStore = e2ee.idbStore("ogarider-support-team");
+const keyStore = e2ee.idbStore("secure-chat-team");
 const STATES = ["loading", "setup", "publish", "login", "inbox"];
 
 let config = {};
@@ -59,6 +54,7 @@ function say(id, text, type) {
 
 async function init() {
   try { config = await loadConfig(); } catch (_) { config = {}; }
+  relay = relayClient("");
   try {
     team = await keyStore.get("teamKey");
   } catch (err) {
@@ -70,20 +66,16 @@ async function init() {
   next();
 }
 
-// After the key is in place: make sure it's published, then sign in.
+// After the key is in place: sign in, then make sure the server hands out
+// this key to customers.
 async function next() {
-  const published = config.teamKey ? await e2ee.keyId(config.teamKey).catch(() => null) : null;
-  let skipped = null;
-  try { skipped = JSON.parse(ls.get(SKIP_PUBLISH_KEY) || "null"); } catch (_) { /* ignore */ }
-  if (skipped && skipped.keyId !== teamKeyId) skipped = null;
-  if ((published !== teamKeyId || !config.relayUrl) && !skipped) return showPublish(published);
-  relay = relayClient((skipped && skipped.relay) || config.relayUrl);
-  const saved = JSON.parse(ls.get(SESSION_KEY) || "null");
-  if (saved && saved.exp > Date.now() && saved.relay === relay.base) {
+  if (!relay.token) {
+    const saved = JSON.parse(ls.get(SESSION_KEY) || "null");
+    if (!saved || saved.exp <= Date.now()) return showLogin();
     relay.setToken(saved.token);
-    return openInbox();
   }
-  showLogin();
+  if (config.teamKeyId !== teamKeyId) return showPublish();
+  openInbox();
 }
 
 function showLogin() {
@@ -122,7 +114,7 @@ $("create-btn").addEventListener("click", async () => {
   const pass = $("new-pass").value;
   if (pass.length < 12) return say("create-status", "Use at least 12 characters. A few random words works well.", "error");
   if (pass !== $("new-pass2").value) return say("create-status", "The two passphrases don't match.", "error");
-  if (config.teamKey && !confirm("The website already has a team key. Making a new one means chats sealed for the old key can only be read on devices that still have it. Continue?")) return;
+  if (config.teamKey && !confirm("This chat already has a team key. Making a new one means chats sealed for the old key can only be read on devices that still have it. Usually you want to unlock with the backup file instead. Continue?")) return;
   say("create-status", "Creating… (this takes a few seconds)");
   $("create-btn").disabled = true;
   try {
@@ -150,7 +142,7 @@ function downloadBackup() {
   const blob = new Blob([JSON.stringify(lastBackup, null, 2)], { type: "application/json" });
   const a = el("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "ogarider-support-team-key.json";
+  a.download = "secure-chat-team-key.json";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -158,86 +150,33 @@ function downloadBackup() {
 }
 $("backup-again-btn").addEventListener("click", downloadBackup);
 
-// Publishing the public key to support.json ----------------------------------
+// Making this device's key the one customers use --------------------------
 
-function publishedConfig(relayUrl) {
-  return {
-    relayUrl: relayUrl.replace(/\/+$/, ""),
-    teamName: config.teamName || "Ogarider support",
-    replyTime: config.replyTime || "We usually reply within a few minutes",
-    retentionDays: config.retentionDays || 30,
-    teamKey: team.publicJwk,
-    teamKeyId,
-  };
-}
-
-async function showPublish(published) {
-  $("publish-why").textContent = !config.teamKey
-    ? "Customers' browsers lock messages for the key published in support.json on the website. Publish this device's key so customers can start chats."
-    : published !== teamKeyId
-      ? "The website publishes a different team key from the one on this device. Chats sealed for that key won't open here. Publish this key if it's the new team key; otherwise restore the right backup."
-      : "Add the chat server's address so customers' browsers know where to send messages.";
+async function showPublish() {
   $("publish-fp").textContent = await e2ee.keyFingerprint(team.publicJwk);
-  $("publish-relay").value = config.relayUrl || "";
-  $("publish-token").value = ls.get(GITHUB_TOKEN_KEY) || "";
   $("backup-again-btn").hidden = !lastBackup;
-  updatePublishJson();
+  say("publish-status", "");
+  $("publish-btn").hidden = Boolean(config.teamKeyPinned);
+  $("publish-why").textContent = config.teamKeyPinned
+    ? "The server's TEAM_KEY setting is a different key from this device's, so chats won't open here. Unlock with the matching backup file, or set TEAM_KEY on the server to: " + JSON.stringify(team.publicJwk)
+    : !config.teamKey
+      ? "Customers' browsers lock their messages for the team key the server hands out. Make this device's key the team key to open the chat."
+      : "Warning: the server hands out a different team key from the one on this device. If you didn't just make a new key, someone may have changed it. Check with your team, or unlock with the right backup file. Use this key only if it's the new team key.";
   show("publish");
 }
 
-function updatePublishJson() {
-  $("publish-json").value = JSON.stringify(publishedConfig($("publish-relay").value.trim()), null, 2) + "\n";
-}
-$("publish-relay").addEventListener("input", updatePublishJson);
-
 $("publish-btn").addEventListener("click", async () => {
-  const relayUrl = $("publish-relay").value.trim();
-  const token = $("publish-token").value.trim();
-  if (!/^https:\/\/[^\s/]+/.test(relayUrl) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/.test(relayUrl)) {
-    return say("publish-status", "Paste the chat server's https:// address.", "error");
-  }
-  if (!token) return say("publish-status", "Paste your GitHub access token.", "error");
-  say("publish-status", "Checking the chat server…");
+  if (config.teamKey && !confirm("Replace the team key? New chats will use this device's key.")) return;
+  say("publish-status", "Saving…");
   try {
-    const res = await fetch(relayUrl.replace(/\/+$/, "") + "/healthz");
-    if (!res.ok) throw new Error();
-  } catch (_) {
-    return say("publish-status", "Couldn't reach the chat server at that address. Check it, and that ALLOWED_ORIGINS includes this website.", "error");
-  }
-  say("publish-status", "Publishing…");
-  const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/support.json`;
-  const headers = { Accept: "application/vnd.github+json", Authorization: "Bearer " + token };
-  try {
-    let sha;
-    const current = await fetch(api + "?ref=" + BRANCH, { headers, cache: "no-store" });
-    if (current.status === 401) throw new Error("That GitHub token isn't valid.");
-    if (current.ok) sha = (await current.json()).sha;
-    const body = JSON.stringify(publishedConfig(relayUrl), null, 2) + "\n";
-    const bytes = new TextEncoder().encode(body);
-    let bin = "";
-    bytes.forEach((b) => { bin += String.fromCharCode(b); });
-    const put = await fetch(api, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({ message: "Support chat: publish team key", content: btoa(bin), branch: BRANCH, sha }),
-    });
-    if (put.status === 401 || put.status === 403 || put.status === 404) throw new Error("That GitHub token can't change this website.");
-    if (!put.ok) throw new Error("GitHub said " + put.status);
-    ls.set(GITHUB_TOKEN_KEY, token);
-    config = publishedConfig(relayUrl);
-    ls.del(SKIP_PUBLISH_KEY);
-    say("publish-status", "Published. The website picks it up in about a minute.", "success");
-    setTimeout(next, 1200);
+    await relay.api("/api/agent/team-key", { method: "POST", body: { publicKey: team.publicJwk } });
+    config = await loadConfig();
+    say("publish-status", "Done. Customers can chat now.", "success");
+    setTimeout(next, 600);
   } catch (err) {
-    say("publish-status", err.message || "Couldn't publish.", "error");
+    if (err.status === 401) return signedOut("Your sign-in ran out. Sign in again.");
+    say("publish-status", err.message || "Couldn't save the key.", "error");
   }
-});
-
-$("publish-skip").addEventListener("click", () => {
-  const relayUrl = $("publish-relay").value.trim();
-  if (!relayUrl) return say("publish-status", "Add the chat server's address first, so the inbox knows where to connect.", "error");
-  ls.set(SKIP_PUBLISH_KEY, JSON.stringify({ keyId: teamKeyId, relay: relayUrl }));
-  next();
 });
 
 // Signing in ---------------------------------------------------------------------
@@ -255,12 +194,12 @@ $("login-form").addEventListener("submit", async (e) => {
     const { token, expiresIn } = await relay.api("/api/agent/login", { method: "POST", body: { password } });
     relay.setToken(token);
     ls.set(NAME_KEY, agent);
-    ls.set(SESSION_KEY, JSON.stringify({ token, exp: Date.now() + expiresIn - 60000, relay: relay.base }));
+    ls.set(SESSION_KEY, JSON.stringify({ token, exp: Date.now() + expiresIn - 60000 }));
     form.elements.password.value = "";
     say("login-status", "");
-    openInbox();
+    next();
   } catch (err) {
-    say("login-status", err.status ? err.message : "Couldn't reach the chat server.", "error");
+    say("login-status", err.status ? err.message : "Couldn't reach the server.", "error");
   }
 });
 
@@ -414,7 +353,7 @@ function drawList() {
     list.appendChild(li);
   }
   const total = all.reduce((sum, c) => sum + unread(c), 0);
-  document.title = (total ? `(${total}) ` : "") + "Support inbox — Ogarider";
+  document.title = (total ? `(${total}) ` : "") + "Team inbox · " + (config.brandName || "Secure chat");
 }
 
 document.querySelectorAll(".inbox-tabs [data-filter]").forEach((tab) => {

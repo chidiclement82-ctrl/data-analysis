@@ -4,7 +4,7 @@ A fast, mobile-friendly restaurant website built with plain HTML, CSS and JavaSc
 
 Live address, once GitHub Pages is switched on: **https://ogarider.name.ng/**
 
-> **Also in this repository:** [`live-cartoon/`](live-cartoon/README.md), an AI cartoon co-host for TikTok LIVE that answers your chat and your guests' questions out loud, and [`support-chat/`](support-chat/README.md), an end-to-end encrypted customer support chat.
+> **Also in this repository:** [`live-cartoon/`](live-cartoon/README.md), an AI cartoon co-host for TikTok LIVE that answers your chat and your guests' questions out loud.
 
 ## Put it online (one-time setup)
 
@@ -21,8 +21,6 @@ After that, every change pushed to `main` goes live automatically.
 | Everyone | `https://ogarider.name.ng/` | The homepage: one button, Order on WhatsApp |
 | Customers | `https://ogarider.name.ng/restaurants.html` | All restaurants; tap one to see its menu (not linked from the homepage; share the link directly) |
 | Customers | `https://ogarider.name.ng/order.html` | Order food on WhatsApp. Linked from the green button on the homepage |
-| Customers | `https://ogarider.name.ng/support.html` | End-to-end encrypted chat with the team (see [support-chat](support-chat/README.md)) |
-| Team | `https://ogarider.name.ng/support-agent.html` | The support inbox (not linked from the site; bookmark it) |
 | Admin | `https://ogarider.name.ng/admin.html` | Edit restaurants, dishes, prices and photos (not linked from the site; bookmark it) |
 
 ## Editing the menu (admin page)

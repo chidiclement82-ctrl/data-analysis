@@ -1,11 +1,11 @@
-name: Support chat
+name: Secure chat
 
 on:
   pull_request:
-    paths: ["support-chat/**", "assets/js/e2ee.js", ".github/workflows/support-chat.yml"]
+    paths: ["support-chat/**", ".github/workflows/support-chat.yml"]
   push:
     branches: [main]
-    paths: ["support-chat/**", "assets/js/e2ee.js", ".github/workflows/support-chat.yml"]
+    paths: ["support-chat/**", ".github/workflows/support-chat.yml"]
   workflow_dispatch:
 
 permissions:
