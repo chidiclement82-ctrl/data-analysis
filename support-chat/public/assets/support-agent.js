@@ -214,6 +214,8 @@ function signedOut(message) {
   ls.del(SESSION_KEY);
   relay.setToken(null);
   convs.clear();
+  listedAt = 0;
+  loadedOnce = false;
   selected = null;
   showLogin();
   if (message) say("login-status", message, "error");
@@ -234,22 +236,42 @@ async function openInbox() {
   renderQuickReplies();
 }
 
-async function refreshList() {
-  const { conversations } = await relay.api("/api/agent/conversations");
-  const seen = new Set();
-  for (const summary of conversations) {
-    seen.add(summary.id);
-    await upsert(summary);
+// Fetches the chat list and any new messages. On hosts that support it
+// (?since=), only chats changed since the last check come back in full.
+let listedAt = 0;
+let loadedOnce = false; // after the first load, new chats alert too
+let listing = null;
+function refreshList() {
+  if (!listing) listing = doRefresh().finally(() => { listing = null; });
+  return listing;
+}
+async function doRefresh() {
+  const data = await relay.api("/api/agent/conversations" + (listedAt ? "?since=" + listedAt : ""));
+  const all = new Set(data.ids || data.conversations.map((s) => s.id));
+  const changed = [];
+  for (const summary of data.conversations) {
+    const known = convs.get(summary.id);
+    const isNew = !known;
+    const c = await upsert(summary);
+    if (isNew || !Number.isFinite(summary.lastSeq) || summary.lastSeq > c.lastSeq) changed.push({ c, isNew });
+    if (summary.typing && data.now - summary.typing.customer < 6000) c.typingUntil = Date.now() + 6000 - (data.now - summary.typing.customer);
   }
-  for (const id of [...convs.keys()]) if (!seen.has(id)) convs.delete(id);
+  for (const id of [...convs.keys()]) if (!all.has(id)) convs.delete(id);
+  // Overlap a little, in case a change landed while we were asking.
+  if (data.now) listedAt = data.now - 3000;
   // Load messages a few chats at a time.
-  const todo = [...convs.values()];
+  const todo = [...changed];
   await Promise.all(Array.from({ length: 4 }, async () => {
-    for (let c = todo.shift(); c; c = todo.shift()) await sync(c);
+    for (let t = todo.shift(); t; t = todo.shift()) {
+      const fresh = await sync(t.c);
+      // New customer messages found by checking (no live stream): alert like a live one.
+      if (!t.isNew || loadedOnce) for (const item of fresh) if (item.from === "customer") alertNew(t.c, item);
+    }
   }));
+  loadedOnce = true;
   drawList();
   if (selected && !convs.has(selected)) closeChat();
-  if (selected) drawChat();
+  if (selected) { drawChat(); markRead(); }
 }
 
 async function upsert(summary) {
@@ -279,16 +301,19 @@ async function addMessage(c, env) {
   return !had;
 }
 
+// Returns the messages that are new to this device.
 async function sync(c) {
+  const fresh = [];
   try {
     const data = await relay.api(`/api/conversations/${c.summary.id}/messages?after=${c.lastSeq}`);
-    for (const env of data.messages) await addMessage(c, env);
+    for (const env of data.messages) if (await addMessage(c, env)) fresh.push(c.items.get(env.id));
     c.summary.read = data.read;
     c.summary.status = data.status;
   } catch (err) {
     if (err.status === 404) convs.delete(c.summary.id);
     else throw err;
   }
+  return fresh;
 }
 
 function profileOf(c) {
@@ -576,8 +601,14 @@ $("delete-chat-btn").addEventListener("click", async () => {
 // Live updates and alerts -----------------------------------------------------------------------
 
 function onStatus(state) {
-  if (state === "live") {
+  if (state === "tick") {
+    refreshList().then(() => { $("inbox-live").textContent = ""; }, (err) => {
+      if (err.status === 401) signedOut("Your sign-in ran out. Sign in again.");
+      else $("inbox-live").textContent = "Can't reach the server. Retrying…";
+    });
+  } else if (state === "live") {
     $("inbox-live").textContent = "";
+    listedAt = 0;
     refreshList().catch(() => {});
   } else if (state === "offline") {
     $("inbox-live").textContent = "Reconnecting…";

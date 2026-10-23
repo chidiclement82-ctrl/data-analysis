@@ -36,6 +36,24 @@ The chat's name and the optional contact button (for example **Call us**) come f
 
 **Adding another staff phone or computer:** open `/team` on it, choose the backup file, type the passphrase, then sign in. (Send the file and passphrase separately, never in the same message.)
 
+## Or host it on Netlify (free plan works)
+
+This folder is also a ready Netlify project ([`netlify.toml`](netlify.toml)): the pages are served from `public/`, the API runs as a Netlify Function ([`netlify/functions/api.mjs`](netlify/functions/api.mjs)) and chats are kept in Netlify Blobs. Netlify has no always-open connection, so the pages check for news every 4 seconds while on screen (every 30 seconds in the background). Everything else works the same. A nightly function deletes chats older than `RETENTION_DAYS`.
+
+1. Netlify → **Add new project → Import an existing project** → GitHub → this repository. Set **Base directory** to `support-chat`. Leave the build command empty.
+2. **Project configuration → Environment variables**: add `AGENT_PASSWORD` (a long password for your team) and `BRAND_NAME`. Optionally add `CONTACT_URL`/`CONTACT_LABEL`. Then redeploy.
+3. **Project configuration → Access & security → Visitor access**: make sure the production site is **not** behind team login or a password, or customers won't get in.
+4. Open your Netlify address + `/team` and set up the team key as described above.
+
+## Your own domain (e.g. `chat.yourbusiness.com`)
+
+Buy the domain from any registrar, then:
+
+- **Netlify:** **Domain management → Add a domain**, then follow the DNS steps it shows (usually one `CNAME` record pointing to `<your-project>.netlify.app`). HTTPS is set up for you.
+- **Render:** the service → **Settings → Custom Domains → Add**, then add the `CNAME` record it shows at your registrar. HTTPS is automatic.
+
+The team inbox is then at `https://<your domain>/team`. Moving the address doesn't affect the encryption, but each browser keeps its keys per address: open `/team` on the new address and unlock it with the backup file once. Customers' unfinished chats on the old address stay there.
+
 ## How the encryption works
 
 The code is in [`public/assets/e2ee.js`](public/assets/e2ee.js), using the browser's built-in Web Crypto:
