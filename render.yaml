@@ -39,3 +39,35 @@ services:
         sync: false
       - key: EULER_API_KEY
         sync: false
+
+  # The relay for the end-to-end encrypted support chat (support.html).
+  # It only stores sealed messages. See support-chat/README.md.
+  - type: web
+    name: support-chat
+    runtime: node
+    # "starter" keeps chats on a disk and stays awake so customers' messages
+    # arrive straight away.
+    plan: starter
+    rootDir: support-chat
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    disk:
+      name: support-chat-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATA_DIR
+        value: /var/data
+      # The team's password for the support inbox. Render makes up a long
+      # random one; find it under Environment after the first deploy.
+      - key: AGENT_PASSWORD
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: https://ogarider.name.ng
+      - key: RETENTION_DAYS
+        value: "30"

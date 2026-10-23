@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chat with us — Ogarider</title>
+  <meta name="description" content="Chat with the Ogarider team about your order. End-to-end encrypted: only you and our team can read it.">
+  <meta name="theme-color" content="#1c1512">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob: data:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <link rel="canonical" href="https://ogarider.name.ng/support.html">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/chat.css">
+  <link rel="stylesheet" href="assets/css/support.css">
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <a class="brand" href="./">
+      <img class="brand-mark" src="assets/logo-mark.svg" alt="" width="34" height="34">
+      <span>Oga<em>rider</em></span>
+    </a>
+    <!-- EDIT: phone number -->
+    <a class="app-header-link" href="tel:+2347059946531">Call us</a>
+  </header>
+
+  <main class="app-main" id="main">
+    <section class="app-state" id="state-loading">
+      <p class="muted">Opening a secure chat…</p>
+    </section>
+
+    <section class="app-state" id="state-unavailable" hidden>
+      <div class="app-card">
+        <h1>Chat is coming soon</h1>
+        <p id="unavailable-text">In the meantime, call us on <a href="tel:+2347059946531">0705 994 6531</a> or <a href="order.html">order on WhatsApp</a>.</p>
+        <a class="btn" href="./">Back to the website</a>
+      </div>
+    </section>
+
+    <section class="app-state" id="state-start" hidden>
+      <form class="app-card start-form" id="start-form" novalidate>
+        <p class="eyebrow">Customer support</p>
+        <h1>How can we help?</h1>
+        <p class="e2ee-pill"><span aria-hidden="true">🔒</span> End-to-end encrypted. Only you and the Ogarider team can read this chat. Not even our chat server can.</p>
+        <label>Your name
+          <input name="name" autocomplete="name" maxlength="80" required>
+        </label>
+        <label><span>Order number <span class="muted">(if it's about an order)</span></span>
+          <input name="order" maxlength="40" inputmode="text" autocomplete="off" placeholder="e.g. 1042">
+        </label>
+        <label>Your message
+          <textarea name="message" rows="4" maxlength="4000" required placeholder="Tell us what happened, or ask us anything."></textarea>
+        </label>
+        <p class="form-status" id="start-status" role="status" aria-live="polite"></p>
+        <button class="btn" type="submit" id="start-btn">Start secure chat</button>
+        <p class="small-print muted">We keep this chat for <span id="retention">30</span> days after your last message, sealed. You can delete it any time.</p>
+      </form>
+    </section>
+
+    <section class="chat" id="state-chat" hidden>
+      <div class="chat-bar">
+        <div class="chat-who">
+          <strong id="team-name">Ogarider support</strong>
+          <span class="chat-sub" id="chat-sub">We usually reply within a few minutes</span>
+        </div>
+        <button class="lock-btn" type="button" id="lock-btn" aria-haspopup="dialog">
+          <span aria-hidden="true">🔒</span> Encrypted
+        </button>
+        <button class="icon-btn" type="button" id="menu-btn" aria-label="Chat options" aria-haspopup="true" aria-expanded="false">⋯</button>
+        <div class="chat-menu" id="chat-menu" hidden>
+          <button type="button" id="delete-chat-btn" class="danger">Delete this chat</button>
+        </div>
+      </div>
+      <p class="chat-banner" id="chat-banner" role="status" aria-live="polite" hidden></p>
+      <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-label="Messages"></div>
+      <p class="chat-typing" id="chat-typing" aria-live="polite" hidden>Ogarider is typing…</p>
+      <form class="composer" id="composer" autocomplete="off">
+        <label class="composer-attach" title="Send a photo">
+          <input type="file" accept="image/*" id="photo-input" hidden>
+          <span aria-hidden="true">📷</span><span class="sr-only">Send a photo</span>
+        </label>
+        <textarea id="composer-text" rows="1" maxlength="4000" placeholder="Write a message" aria-label="Message"></textarea>
+        <button class="composer-send" type="submit" aria-label="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <dialog class="sheet" id="lock-dialog" aria-labelledby="lock-title">
+    <h2 id="lock-title">This chat is end-to-end encrypted</h2>
+    <p>Your messages and photos are locked on this phone before they leave it, and only the Ogarider support team can unlock them. Our chat server only ever passes along sealed messages it can't open.</p>
+    <p><strong>Want to be sure?</strong> Ask us on the phone to read out the safety number on our screen. If it matches yours, nobody is listening in.</p>
+    <p class="safety" id="safety-number">…</p>
+    <p class="small-print muted">This chat lives in this browser. If you clear your browsing data, it can't be opened again.</p>
+    <form method="dialog"><button class="btn">Close</button></form>
+  </dialog>
+
+  <script type="module" src="assets/js/support.js"></script>
+</body>
+</html>

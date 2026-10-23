@@ -1,0 +1,15 @@
+{
+  "name": "support-chat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Relay for the Ogarider end-to-end encrypted customer support chat. It only ever handles sealed messages.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20.12"
+  }
+}
