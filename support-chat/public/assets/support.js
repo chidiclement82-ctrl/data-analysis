@@ -9,7 +9,8 @@ import * as e2ee from "./e2ee.js";
 import { $, el, loadConfig, relayClient, photoPayload, renderMessages, sortMessages, autosize } from "./support-common.js";
 
 const store = e2ee.idbStore("secure-chat");
-const STATES = ["loading", "unavailable", "start", "chat"];
+const STATES = ["loading", "unavailable", "chat"];
+const WELCOME = "Hi! 👋 How can we help you today?";
 
 let config = null;
 let relay = null;
@@ -39,13 +40,16 @@ function banner(text, action) {
   b.hidden = !text;
 }
 
+// The team's greeting always comes first, like opening any chat app.
 function draw() {
-  renderMessages($("chat-log"), sortMessages([...items.values()]), {
+  const welcome = { id: "welcome", from: "agent", ts: chat ? chat.createdAt : Date.now(), payload: { type: "text", text: WELCOME } };
+  renderMessages($("chat-log"), [welcome, ...sortMessages([...items.values()])], {
     me: "customer",
     readUpTo: readByTeam,
     labels: { them: config.brandName },
     onRetry: (item) => { item.failed = false; item.pending = true; draw(); flushOutbox(); },
   });
+  $("chat-log").prepend(el("div", "msg-note", "🔒 Messages are end-to-end encrypted. Only you and the team can read them."));
 }
 
 // Start ----------------------------------------------------------------------
@@ -57,7 +61,7 @@ async function init() {
     console.error(err);
     return show("unavailable");
   }
-  document.title = config.brandName + " · Secure chat";
+  document.title = config.brandName;
   if (config.contactUrl && /^(https?:|tel:|mailto:)/.test(config.contactUrl)) {
     $("contact-link").href = config.contactUrl;
     $("contact-link").textContent = config.contactLabel || "Contact us";
@@ -66,7 +70,6 @@ async function init() {
   if (!config.teamKey) return show("unavailable");
   relay = relayClient("");
   if (config.replyTime) $("chat-sub").textContent = config.replyTime;
-  if (config.retentionDays) $("retention").textContent = config.retentionDays;
 
   try {
     chat = await store.get("chat");
@@ -76,46 +79,50 @@ async function init() {
     return show("unavailable");
   }
   if (chat) return openChat();
-  show("start");
+  showEmptyChat();
 }
 
-$("start-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  const name = form.elements.name.value.trim();
-  const order = form.elements.order.value.trim();
-  const text = form.elements.message.value.trim();
-  const status = $("start-status");
-  form.querySelectorAll("[aria-invalid]").forEach((n) => n.removeAttribute("aria-invalid"));
-  if (!name) { form.elements.name.setAttribute("aria-invalid", "true"); form.elements.name.focus(); status.textContent = "Please add your name."; status.className = "form-status error"; return; }
-  if (!text) { form.elements.message.setAttribute("aria-invalid", "true"); form.elements.message.focus(); status.textContent = "Please write your message."; status.className = "form-status error"; return; }
+// No chat yet: the chat screen with the greeting. The first message starts it.
+function showEmptyChat(note) {
+  items = new Map();
+  readByTeam = 0;
+  show("chat");
+  $("composer").hidden = false;
+  $("menu-btn").hidden = true;
+  banner(note || "");
+  draw();
+}
 
-  $("start-btn").disabled = true;
-  status.textContent = "Locking your chat…";
-  status.className = "form-status";
-  try {
-    const teamKey = e2ee.cleanPublicJwk(config.teamKey);
-    const teamKeyId = await e2ee.keyId(teamKey);
-    const mine = await e2ee.generateKeyPair();
-    relay.setToken(null);
-    const { id, token } = await relay.api("/api/conversations", { method: "POST", body: { customerKey: mine.publicJwk, agentKeyId: teamKeyId } });
-    chat = { id, token, privateKey: mine.privateKey, publicJwk: mine.publicJwk, teamKey, teamKeyId, createdAt: Date.now() };
-    await store.set("chat", chat);
-    await store.set("outbox", []);
-    await openChat({ quiet: true });
-    await send({ type: "profile", name, order, page: "support" });
-    await send({ type: "text", text });
-    form.reset();
-    status.textContent = "";
-  } catch (err) {
-    console.error(err);
-    status.textContent = err.status === 429 ? err.message : "Couldn't start the chat. Check your internet connection and try again.";
-    status.className = "form-status error";
-    if (chat && !key) { chat = null; await store.del("chat").catch(() => {}); }
-  } finally {
-    $("start-btn").disabled = false;
+// Makes this chat's key pair and registers the chat with the server.
+async function startChat() {
+  const teamKey = e2ee.cleanPublicJwk(config.teamKey);
+  const teamKeyId = await e2ee.keyId(teamKey);
+  const mine = await e2ee.generateKeyPair();
+  relay.setToken(null);
+  const { id, token } = await relay.api("/api/conversations", { method: "POST", body: { customerKey: mine.publicJwk, agentKeyId: teamKeyId } });
+  chat = { id, token, privateKey: mine.privateKey, publicJwk: mine.publicJwk, teamKey, teamKeyId, createdAt: Date.now() };
+  await store.set("chat", chat);
+  await store.set("outbox", []);
+  await openChat({ quiet: true });
+}
+
+// Starts the chat first if needed, then sends.
+let starting = null;
+async function sendStarting(payload) {
+  if (!chat) {
+    try {
+      starting ||= startChat().finally(() => { starting = null; });
+      await starting;
+    } catch (err) {
+      console.error(err);
+      if (chat && !key) { chat = null; await store.del("chat").catch(() => {}); }
+      banner(err.status === 429 ? err.message : "Couldn't send. Check your internet connection and try again.");
+      return false;
+    }
   }
-});
+  await send(payload);
+  return true;
+}
 
 // The chat -------------------------------------------------------------------
 
@@ -126,6 +133,7 @@ async function openChat({ quiet } = {}) {
   readByTeam = 0;
   lastSeq = 0;
   show("chat");
+  $("menu-btn").hidden = false;
   banner("");
 
   for (const pending of (await store.get("outbox")) || []) {
@@ -281,11 +289,11 @@ const fit = autosize(text);
 $("composer").addEventListener("submit", async (e) => {
   e.preventDefault();
   const value = text.value.trim();
-  if (!value || !chat) return;
+  if (!value) return;
   text.value = "";
   fit();
   text.focus();
-  await send({ type: "text", text: value });
+  if (!(await sendStarting({ type: "text", text: value })) && !text.value) { text.value = value; fit(); }
 });
 
 text.addEventListener("keydown", (e) => {
@@ -305,9 +313,9 @@ text.addEventListener("input", () => {
 $("photo-input").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   e.target.value = "";
-  if (!file || !chat) return;
+  if (!file) return;
   try {
-    await send(await photoPayload(file));
+    await sendStarting(await photoPayload(file));
   } catch (err) {
     banner(err.message || "That photo couldn't be sent.");
   }
@@ -316,7 +324,7 @@ $("photo-input").addEventListener("change", async (e) => {
 // Security info, menu, deleting ------------------------------------------------
 
 $("lock-btn").addEventListener("click", async () => {
-  $("safety-number").textContent = await e2ee.safetyNumber(chat.publicJwk, chat.teamKey);
+  $("safety-number").textContent = chat ? await e2ee.safetyNumber(chat.publicJwk, chat.teamKey) : "Your safety number appears after your first message.";
   $("lock-dialog").showModal();
 });
 
@@ -347,16 +355,13 @@ async function forgetChat() {
   readSent = 0;
   await store.del("chat");
   await store.del("outbox");
-  $("chat-log").textContent = "";
-  show("start");
+  showEmptyChat();
 }
 
 async function chatGone() {
   if (!chat) return;
   await forgetChat();
-  const status = $("start-status");
-  status.textContent = "Your previous chat has ended and was deleted. You can start a new one.";
-  status.className = "form-status";
+  banner("Your previous chat has ended and was deleted. Write below to start a new one.");
 }
 
 init();

@@ -83,7 +83,7 @@ test('health check, and only our own pages (or listed sites) may use the API', a
 });
 
 test('serves the customer page, the team inbox and their files with a strict policy', async () => {
-  for (const [path, text] of [['/', 'Start secure chat'], ['/team', 'Team inbox'], ['/assets/e2ee.js', 'AES-GCM'], ['/assets/base.css', ':root']]) {
+  for (const [path, text] of [['/', 'composer-text'], ['/team', 'Team inbox'], ['/assets/e2ee.js', 'AES-GCM'], ['/assets/base.css', ':root']]) {
     const res = await fetch(base + path);
     assert.equal(res.status, 200, path);
     assert.match(res.headers.get('content-security-policy'), /script-src 'self'/);
