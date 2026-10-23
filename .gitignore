@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Support chat relay: saved (encrypted) chats when run locally
+support-chat/data/

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Team inbox</title>
+  <meta name="description" content="Team inbox for the secure chat.">
+  <meta name="theme-color" content="#12202b">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/base.css">
+  <link rel="stylesheet" href="/assets/support.css">
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <a class="brand" href="/team">
+      <img class="brand-mark" src="/assets/logo.svg" alt="" width="30" height="30">
+      <span data-brand>Secure Support</span>
+    </a>
+    <div class="app-header-actions">
+      <button class="app-header-link" type="button" id="settings-btn" hidden>Settings</button>
+      <button class="app-header-link" type="button" id="signout-btn" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main class="app-main" id="main">
+    <section class="app-state" id="state-loading">
+      <p class="muted">Loading…</p>
+    </section>
+
+    <!-- This device has no team key yet -->
+    <section class="app-state" id="state-setup" hidden>
+      <div class="app-card start-form">
+        <p class="eyebrow">Team inbox</p>
+        <h1>Unlock this device</h1>
+        <p>Customer chats are end-to-end encrypted. To read them here, load the team key backup file and type its passphrase.</p>
+        <label>Team key backup file
+          <input type="file" id="backup-file" accept=".json,application/json">
+        </label>
+        <label>Passphrase
+          <input type="password" id="backup-pass" autocomplete="current-password">
+        </label>
+        <p class="form-status" id="restore-status" role="status" aria-live="polite"></p>
+        <button class="btn" type="button" id="restore-btn">Unlock</button>
+
+        <details class="help" id="create-key">
+          <summary>First time? Create the team key</summary>
+          <p>Do this <strong>once</strong>, on one device. You'll get a backup file to unlock your other phones and computers. Keep it, and the passphrase, safe: anyone with both can read customer chats, and if you lose both, old chats can't be opened again.</p>
+          <label>Choose a passphrase (at least 12 characters, a few words is best)
+            <input type="password" id="new-pass" autocomplete="new-password" minlength="12">
+          </label>
+          <label>Type it again
+            <input type="password" id="new-pass2" autocomplete="new-password">
+          </label>
+          <p class="form-status" id="create-status" role="status" aria-live="polite"></p>
+          <button class="btn btn-outline" type="button" id="create-btn">Create the team key</button>
+        </details>
+      </div>
+    </section>
+
+    <!-- Signed in, but the server's team key isn't this device's -->
+    <section class="app-state" id="state-publish" hidden>
+      <div class="app-card start-form">
+        <p class="eyebrow">One more step</p>
+        <h1>Turn on the chat</h1>
+        <p id="publish-why">Customers' browsers lock their messages for the team key the server hands out. Make this device's key the team key so customers can start chats.</p>
+        <p>Team key fingerprint: <span class="safety safety-inline" id="publish-fp"></span></p>
+        <p class="form-status" id="publish-status" role="status" aria-live="polite"></p>
+        <button class="btn" type="button" id="publish-btn">Use this key for the chat</button>
+        <button class="link-btn" type="button" id="backup-again-btn" hidden>Download the backup file again</button>
+      </div>
+    </section>
+
+    <section class="app-state" id="state-login" hidden>
+      <form class="app-card start-form" id="login-form" novalidate>
+        <p class="eyebrow">Team inbox</p>
+        <h1>Sign in</h1>
+        <label><span>Your first name <span class="muted">(customers see it on your replies)</span></span>
+          <input name="agent" autocomplete="given-name" maxlength="40" required>
+        </label>
+        <label><span>Team password <span class="muted">(AGENT_PASSWORD on the server)</span></span>
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <p class="form-status" id="login-status" role="status" aria-live="polite"></p>
+        <button class="btn" type="submit">Sign in</button>
+      </form>
+    </section>
+
+    <section class="inbox" id="state-inbox" hidden>
+      <aside class="inbox-list" aria-label="Chats">
+        <div class="inbox-tools">
+          <div class="inbox-tabs" role="tablist">
+            <button type="button" role="tab" data-filter="open" aria-selected="true">Open <span class="count" id="count-open"></span></button>
+            <button type="button" role="tab" data-filter="closed" aria-selected="false">Solved</button>
+            <button type="button" role="tab" data-filter="all" aria-selected="false">All</button>
+          </div>
+          <input type="search" id="inbox-search" placeholder="Search name, order or words" aria-label="Search chats">
+          <p class="inbox-live" id="inbox-live" role="status"></p>
+        </div>
+        <ul class="conv-list" id="conv-list"></ul>
+      </aside>
+
+      <section class="chat inbox-chat" id="inbox-chat" aria-live="polite">
+        <div class="inbox-empty" id="inbox-empty">
+          <p class="e2ee-pill"><span aria-hidden="true">🔒</span> Chats are end-to-end encrypted. They're unlocked on this device only.</p>
+          <p class="muted">Pick a chat on the left.</p>
+        </div>
+        <div class="chat-bar" id="chat-bar" hidden>
+          <button class="icon-btn back-btn" type="button" id="back-btn" aria-label="Back to chats">←</button>
+          <div class="chat-who">
+            <strong id="chat-name"></strong>
+            <span class="chat-sub" id="chat-sub"></span>
+          </div>
+          <button class="lock-btn" type="button" id="lock-btn"><span aria-hidden="true">🔒</span> Verify</button>
+          <button class="btn btn-small" type="button" id="solve-btn">Mark solved</button>
+          <button class="icon-btn" type="button" id="menu-btn" aria-label="More" aria-haspopup="true" aria-expanded="false">⋯</button>
+          <div class="chat-menu" id="chat-menu" hidden>
+            <button type="button" id="delete-chat-btn" class="danger">Delete chat</button>
+          </div>
+        </div>
+        <p class="chat-banner" id="chat-banner" hidden></p>
+        <div class="chat-log" id="chat-log" role="log" aria-label="Messages" hidden></div>
+        <p class="chat-typing" id="chat-typing" hidden>Customer is typing…</p>
+        <div class="quick-replies" id="quick-replies" hidden></div>
+        <form class="composer" id="composer" autocomplete="off" hidden>
+          <label class="composer-attach" title="Send a photo">
+            <input type="file" accept="image/*" id="photo-input" hidden>
+            <span aria-hidden="true">📷</span><span class="sr-only">Send a photo</span>
+          </label>
+          <textarea id="composer-text" rows="1" maxlength="4000" placeholder="Reply" aria-label="Reply"></textarea>
+          <button class="composer-send" type="submit" aria-label="Send">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>
+          </button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <dialog class="sheet" id="lock-dialog" aria-labelledby="lock-title">
+    <h2 id="lock-title">Safety number</h2>
+    <p>If a customer wants to check nobody is listening in, read this out to them on the phone. It should match the number on their screen exactly.</p>
+    <p class="safety" id="safety-number">…</p>
+    <form method="dialog"><button class="btn">Close</button></form>
+  </dialog>
+
+  <dialog class="sheet" id="settings-dialog" aria-labelledby="settings-title">
+    <h2 id="settings-title">Settings</h2>
+    <form class="start-form" id="settings-form" method="dialog">
+      <label><span>Quick replies <span class="muted">(one per line, tap to drop into a reply)</span></span>
+        <textarea name="quick" rows="6"></textarea>
+      </label>
+      <label class="check"><input type="checkbox" name="sound"> Play a sound for new messages</label>
+      <button class="btn btn-outline btn-small" type="button" id="notify-btn">Turn on notifications</button>
+      <p class="small-print muted">Team key fingerprint: <span class="safety safety-inline" id="settings-fp"></span></p>
+      <div class="actions">
+        <button class="btn" value="save">Save</button>
+        <button class="link-btn danger" type="button" id="forget-key-btn">Remove the team key from this device</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/assets/support-agent.js"></script>
+</body>
+</html>
