@@ -219,3 +219,7 @@ __marimo__/
 
 # Support chat relay: saved (encrypted) chats when run locally
 support-chat/data/
+
+# Netlify local state
+support-chat/.netlify/
+support-chat/node_modules/

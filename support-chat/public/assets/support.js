@@ -21,6 +21,7 @@ let lastSeq = 0;
 let stopListening = null;
 let typingTimer = null;
 let lastTypingSent = 0;
+const SOLVED = "The team marked this chat as solved. Write again any time if you need more help.";
 
 function show(name) {
   STATES.forEach((s) => { $("state-" + s).hidden = s !== name; });
@@ -167,7 +168,10 @@ async function sync() {
     const data = await relay.api(`/api/conversations/${chat.id}/messages?after=${lastSeq}`);
     for (const env of data.messages) await addMessage(env);
     readByTeam = data.read.agent;
-    if (data.status === "closed") banner("The team marked this chat as solved. Write again any time if you need more help.");
+    if (data.status === "closed") banner(SOLVED);
+    else if ($("chat-banner").textContent === SOLVED) banner("");
+    else if ($("chat-banner").textContent.startsWith("You're offline")) banner("");
+    if (data.typing && data.now - data.typing.agent < 6000) showTyping(6000 - (data.now - data.typing.agent));
     draw();
     markRead();
   } catch (err) {
@@ -176,8 +180,16 @@ async function sync() {
   }
 }
 
+function showTyping(ms) {
+  $("chat-typing").hidden = false;
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => { $("chat-typing").hidden = true; }, ms);
+}
+
 function onStatus(state) {
-  if (state === "live") {
+  if (state === "tick") {
+    if (chat) sync().then(flushOutbox);
+  } else if (state === "live") {
     if ($("chat-banner").textContent.startsWith("You're offline")) banner("");
     sync().then(flushOutbox);
   } else if (state === "offline") {
@@ -198,11 +210,9 @@ async function onEvent(event, data) {
     readByTeam = Math.max(readByTeam, data.seq);
     draw();
   } else if (event === "typing" && data.role === "agent") {
-    $("chat-typing").hidden = false;
-    clearTimeout(typingTimer);
-    typingTimer = setTimeout(() => { $("chat-typing").hidden = true; }, 5000);
+    showTyping(5000);
   } else if (event === "status") {
-    if (data.status === "closed") banner("The team marked this chat as solved. Write again any time if you need more help.");
+    if (data.status === "closed") banner(SOLVED);
     else banner("");
   } else if (event === "deleted") {
     chatGone();

@@ -11,5 +11,8 @@
   },
   "engines": {
     "node": ">=20.12"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.6"
   }
 }

@@ -38,6 +38,17 @@ export function validPublicKey(jwk) {
     && B64.test(jwk.x) && jwk.x.length === 43 && B64.test(jwk.y) && jwk.y.length === 43;
 }
 
+export function validEnvelope(env, conv, from) {
+  return env && typeof env === 'object'
+    && env.v === 1
+    && typeof env.id === 'string' && ID.test(env.id)
+    && env.conv === conv
+    && env.from === from
+    && Number.isSafeInteger(env.ts) && env.ts > 0
+    && typeof env.iv === 'string' && B64.test(env.iv) && env.iv.length === 16
+    && typeof env.ct === 'string' && B64.test(env.ct) && env.ct.length >= 22;
+}
+
 export function createRelay(options = {}) {
   const config = {
     agentPassword: options.agentPassword || '',
@@ -192,16 +203,7 @@ export function createRelay(options = {}) {
     return null;
   }
 
-  function validEnvelope(env, conv, from) {
-    return env && typeof env === 'object'
-      && env.v === 1
-      && typeof env.id === 'string' && ID.test(env.id)
-      && env.conv === conv
-      && env.from === from
-      && Number.isSafeInteger(env.ts) && env.ts > 0
-      && typeof env.iv === 'string' && B64.test(env.iv) && env.iv.length === 16
-      && typeof env.ct === 'string' && B64.test(env.ct) && env.ct.length >= 22;
-  }
+
 
   // Routes -----------------------------------------------------------------
   async function handle(req, res) {

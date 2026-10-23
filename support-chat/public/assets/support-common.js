@@ -54,7 +54,8 @@ export function relayClient(baseUrl) {
         ctrl = new AbortController();
         try {
           const res = await fetch(base + "/api/events", { headers: { Authorization: "Bearer " + token }, signal: ctrl.signal, cache: "no-store" });
-          if (res.status === 401 || res.status === 404) { onStatus("unauthorized"); return; }
+          if (res.status === 404) return poll(onStatus);
+          if (res.status === 401) { onStatus("unauthorized"); return; }
           if (!res.ok || !res.body) throw new Error("stream " + res.status);
           const reader = res.body.getReader();
           const decoder = new TextDecoder();
@@ -87,6 +88,21 @@ export function relayClient(baseUrl) {
       }
     })();
     return () => { stopped = true; if (ctrl) ctrl.abort(); };
+
+    // Hosts without a live stream (serverless): ask for news every few
+    // seconds while the page is on screen, less often in the background.
+    async function poll() {
+      let wake = null;
+      const onVisible = () => { if (document.visibilityState === "visible" && wake) wake(); };
+      document.addEventListener("visibilitychange", onVisible);
+      while (!stopped) {
+        onStatus("tick");
+        const ms = document.visibilityState === "visible" ? 4000 : 30000;
+        await new Promise((r) => { wake = r; setTimeout(r, ms); });
+        wake = null;
+      }
+      document.removeEventListener("visibilitychange", onVisible);
+    }
   }
 
   return {
