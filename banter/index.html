@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banter FC — Football Banter for Everyone</title>
+  <meta name="description" content="Roast your rivals, blame the ref, test if your mate is a glory hunter and make your own fan card. Football banter, all in good fun.">
+  <meta name="theme-color" content="#0b3d2e">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Banter FC — every fan gets cooked equally">
+  <meta property="og:description" content="Roast machine, excuse generator, glory hunter test and fan cards. Pick your club and start the banter.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%BD%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/banter.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="pitch-lines" aria-hidden="true"></div>
+    <div class="wrap hero-inner">
+      <p class="kicker">⚽ The home of friendly football wahala</p>
+      <h1>BANTER <span>FC</span></h1>
+      <p class="lede">Where every fan gets cooked equally. Pick your club, roast your rivals, blame the ref, and share it with the group chat.</p>
+      <label class="club-pick">
+        <span>I support</span>
+        <select id="myClub" aria-label="Your club"></select>
+      </label>
+      <nav class="quick-nav" aria-label="Sections">
+        <a href="#roast">🔥 Roast</a>
+        <a href="#excuse">🤕 Excuses</a>
+        <a href="#meter">🍾 Bottle-o-meter</a>
+        <a href="#quiz">🕵️ Glory hunter test</a>
+        <a href="#card">🪪 Fan card</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Roast machine -->
+    <section class="panel" id="roast">
+      <h2>🔥 Roast Machine</h2>
+      <p class="hint">Choose a rival and let the machine cook.</p>
+      <div class="row">
+        <label class="field"><span>Roast</span><select id="rivalClub" aria-label="Rival club"></select></label>
+        <button class="btn btn-fire" id="roastBtn" type="button">Cook them 🔥</button>
+      </div>
+      <blockquote class="output" id="roastOut" aria-live="polite">Pick a rival and press the button. No mercy (but no insults about real people either).</blockquote>
+      <div class="share-row" data-share="roastOut"></div>
+    </section>
+
+    <!-- Excuse generator -->
+    <section class="panel" id="excuse">
+      <h2>🤕 Why We Lost: Excuse Generator</h2>
+      <p class="hint">Your team lost again? Don't worry. We have an excuse for every occasion.</p>
+      <button class="btn" id="excuseBtn" type="button">Give me an excuse</button>
+      <blockquote class="output" id="excuseOut" aria-live="polite">Press the button for a premium, certified excuse.</blockquote>
+      <div class="share-row" data-share="excuseOut"></div>
+    </section>
+
+    <!-- Bottle-o-meter -->
+    <section class="panel" id="meter">
+      <h2>🍾 Bottle-o-meter</h2>
+      <p class="hint">Scientifically measures how likely a club is to bottle it this season. Results are 100% made up.</p>
+      <div class="row">
+        <label class="field"><span>Test</span><select id="meterClub" aria-label="Club to test"></select></label>
+        <button class="btn" id="meterBtn" type="button">Run the test 🧪</button>
+      </div>
+      <div class="gauge" aria-hidden="true"><div class="gauge-fill" id="gaugeFill"></div></div>
+      <p class="gauge-reading" id="meterOut" aria-live="polite">Waiting for a club…</p>
+      <div class="share-row" data-share="meterOut"></div>
+    </section>
+
+    <!-- Glory hunter test -->
+    <section class="panel" id="quiz">
+      <h2>🕵️ Are You a Glory Hunter?</h2>
+      <p class="hint">Five honest questions. Answer for yourself, or for that one friend.</p>
+      <form id="quizForm"></form>
+      <blockquote class="output" id="quizOut" aria-live="polite" hidden></blockquote>
+      <div class="share-row" data-share="quizOut"></div>
+    </section>
+
+    <!-- Fan card -->
+    <section class="panel" id="card">
+      <h2>🪪 Make Your Fan Card</h2>
+      <p class="hint">Your official Banter FC ID. Download it and post it on your status.</p>
+      <div class="row">
+        <label class="field"><span>Your name</span><input id="fanName" type="text" maxlength="20" placeholder="e.g. Chidi"></label>
+        <button class="btn" id="cardBtn" type="button">Make my card</button>
+      </div>
+      <canvas id="fanCanvas" width="1080" height="1350" aria-label="Your fan card"></canvas>
+      <div class="share-row">
+        <a class="btn btn-ghost" id="cardDownload" download="banter-fc-fan-card.png" href="#">⬇️ Download card</a>
+      </div>
+    </section>
+
+    <section class="panel rules">
+      <h2>📜 House Rules</h2>
+      <ul>
+        <li>Banter is about <strong>football</strong>, never about someone's family, skin, religion or tribe.</li>
+        <li>If your mate is not laughing, it's not banter. Stop.</li>
+        <li>What happens on matchday stays on matchday. Shake hands after.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <p>Banter FC · made for laughs · no club, player or league is involved with this page.</p>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="js/banter.js" defer></script>
+</body>
+</html>
