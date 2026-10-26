@@ -1,0 +1,188 @@
+/* Banter FC — page styles. Change colours in :root below. */
+
+:root {
+  --grass: #0b3d2e;
+  --grass-2: #12583f;
+  --chalk: #f5f7f2;
+  --ink: #10201a;
+  --muted: #55665e;
+  --card: #ffffff;
+  --line: rgba(16, 32, 26, 0.12);
+  --fire: #ff5a1f;
+  --gold: #ffc531;
+  --radius: 18px;
+  --display: "Bungee", "Impact", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--chalk);
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { width: min(760px, 100% - 32px); margin-inline: auto; }
+
+/* Hero: a little football pitch */
+.hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background:
+    repeating-linear-gradient(90deg, var(--grass) 0 60px, var(--grass-2) 60px 120px);
+  padding: 56px 0 40px;
+}
+.pitch-lines {
+  position: absolute; inset: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  pointer-events: none;
+}
+.pitch-lines::before {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 180px; height: 180px; transform: translate(-50%, -50%);
+  border: 3px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
+}
+.pitch-lines::after {
+  content: ""; position: absolute; left: 50%; top: 0; bottom: 0;
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+}
+.hero-inner { position: relative; text-align: center; }
+.kicker { margin: 0 0 8px; font-weight: 600; opacity: 0.9; }
+h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(3rem, 14vw, 6.5rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+}
+h1 span { color: var(--gold); }
+.lede { max-width: 34em; margin: 16px auto 22px; font-size: 1.05rem; }
+
+.club-pick {
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  padding: 10px 14px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3); font-weight: 800;
+}
+.club-pick select { min-width: 190px; }
+
+.quick-nav {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 22px;
+}
+.quick-nav a {
+  color: #fff; text-decoration: none; font-weight: 600; font-size: 0.92rem;
+  padding: 7px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.14);
+}
+.quick-nav a:hover { background: rgba(255, 255, 255, 0.28); }
+
+/* Panels */
+main { padding: 28px 0 8px; }
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(16, 32, 26, 0.06);
+  scroll-margin-top: 16px;
+}
+h2 { margin: 0 0 4px; font-family: var(--display); font-weight: 400; font-size: 1.45rem; line-height: 1.2; }
+.hint { margin: 0 0 16px; color: var(--muted); }
+
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.field { display: grid; gap: 4px; flex: 1 1 200px; font-weight: 600; font-size: 0.9rem; }
+
+select, input[type="text"] {
+  font: inherit; font-size: 1rem; color: var(--ink);
+  padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fff;
+  width: 100%;
+}
+
+.btn {
+  font: inherit; font-weight: 800; cursor: pointer; border: 0;
+  padding: 12px 18px; border-radius: 12px;
+  background: var(--grass); color: #fff; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: transform 0.08s ease, filter 0.15s ease;
+}
+.btn:hover { filter: brightness(1.12); }
+.btn:active { transform: scale(0.97); }
+.btn-fire { background: var(--fire); }
+.btn-ghost { background: transparent; color: var(--grass); border: 2px solid var(--grass); }
+.btn-small { padding: 8px 12px; font-size: 0.88rem; }
+
+.output {
+  margin: 16px 0 0;
+  padding: 18px 20px;
+  border-left: 6px solid var(--gold);
+  border-radius: 12px;
+  background: #fffbea;
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+.output.pop { animation: pop 0.35s ease; }
+@keyframes pop { 0% { transform: scale(0.96); opacity: 0.4; } 100% { transform: scale(1); opacity: 1; } }
+
+.share-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.share-row:empty { display: none; }
+
+/* Bottle-o-meter gauge */
+.gauge {
+  margin-top: 18px; height: 26px; border-radius: 999px; overflow: hidden;
+  background: #e9efe9; border: 1px solid var(--line);
+}
+.gauge-fill {
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, #2fbf71, var(--gold), var(--fire));
+  transition: width 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gauge-reading { margin: 10px 0 0; font-weight: 800; font-size: 1.1rem; }
+
+/* Quiz */
+.q { border: 0; padding: 0; margin: 0 0 16px; }
+.q legend { font-weight: 800; margin-bottom: 8px; }
+.q label {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 12px; margin-bottom: 6px; border-radius: 10px; border: 1px solid var(--line); cursor: pointer;
+}
+.q label:has(input:checked) { border-color: var(--grass); background: #eef7f1; }
+.q input { margin-top: 4px; accent-color: var(--grass); }
+
+/* Fan card */
+canvas {
+  display: block; width: min(100%, 360px); height: auto; margin: 16px auto 0;
+  border-radius: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.rules ul { margin: 8px 0 0; padding-left: 20px; }
+.rules li { margin-bottom: 6px; }
+
+.foot { padding: 8px 0 40px; text-align: center; color: var(--muted); font-size: 0.85rem; }
+
+/* Toast and emoji rain */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 120px);
+  background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px;
+  font-weight: 600; transition: transform 0.25s ease; z-index: 20; max-width: calc(100% - 32px);
+}
+.toast.show { transform: translate(-50%, 0); }
+
+.rain {
+  position: fixed; top: -40px; font-size: 28px; pointer-events: none; z-index: 10;
+  animation: fall linear forwards;
+}
+@keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rain { display: none; }
+  .output.pop { animation: none; }
+  .gauge-fill { transition: none; }
+}
