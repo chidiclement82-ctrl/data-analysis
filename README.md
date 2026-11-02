@@ -6,6 +6,8 @@ Live address, once GitHub Pages is switched on: **https://ogarider.name.ng/**
 
 > **Also in this repository:** [`live-cartoon/`](live-cartoon/README.md), an AI cartoon co-host for TikTok LIVE that answers your chat and your guests' questions out loud.
 
+> **Voice Reader:** [`voice/`](voice/README.md), a text-to-speech website: paste text, pick a voice, press play. Built to go on its own domain.
+
 > **Banter FC:** [`banter/`](banter/README.md), a fun football banter page at `https://ogarider.name.ng/banter/`, with a roast machine, an excuse generator, a bottle-o-meter, a glory hunter test and downloadable fan cards.
 
 ## Put it online (one-time setup)
