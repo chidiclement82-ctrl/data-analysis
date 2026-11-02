@@ -1,6 +1,6 @@
 // GET /api/voices — your cloned voices (also used to check the password).
 // DELETE /api/voices?id=... — delete one of them.
-import { ELEVEN, guard, json, elevenHeaders, elevenError, VOICE_ID } from "../lib/eleven.mjs";
+import { ELEVEN, guard, json, elevenHeaders, elevenError, VOICE_ID } from "../shared/eleven.mjs";
 
 export default async (req) => {
   const denied = await guard(req);

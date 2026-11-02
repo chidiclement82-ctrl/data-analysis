@@ -1,6 +1,6 @@
 // POST /api/clone — body: WAV audio (made in the browser from your video).
 // Headers: x-voice-name, x-consent: yes. Returns { id, name }.
-import { ELEVEN, guard, json, elevenHeaders, elevenError } from "../lib/eleven.mjs";
+import { ELEVEN, guard, json, elevenHeaders, elevenError } from "../shared/eleven.mjs";
 
 const MAX_BYTES = 5.5 * 1024 * 1024;
 

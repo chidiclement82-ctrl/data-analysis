@@ -1,6 +1,6 @@
 // POST /api/speak — { voiceId, text } → { audio (base64 mp3), starts: [seconds per character] }
 // The start times let the page highlight each word as your voice reads it.
-import { ELEVEN, MODEL, guard, json, elevenHeaders, elevenError, VOICE_ID } from "../lib/eleven.mjs";
+import { ELEVEN, MODEL, guard, json, elevenHeaders, elevenError, VOICE_ID } from "../shared/eleven.mjs";
 
 const MAX_TEXT = 2500;
 
