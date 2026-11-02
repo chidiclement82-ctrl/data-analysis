@@ -57,17 +57,24 @@
 
     <section class="card settings" aria-label="Voice settings">
       <h2>Voice</h2>
+      <div class="modes" id="modes" role="radiogroup" aria-label="Which voice" hidden>
+        <button type="button" role="radio" data-mode="device" aria-checked="true">📱 Device voices</button>
+        <button type="button" role="radio" data-mode="mine" aria-checked="false">🎙 My voice</button>
+      </div>
       <div class="grid">
-        <label>Language
+        <label class="device-only">Language
           <select id="langSelect"></select>
         </label>
-        <label>Voice
+        <label class="device-only">Voice
           <select id="voiceSelect"></select>
+        </label>
+        <label class="mine-only">My voice
+          <select id="myVoiceSelect"></select>
         </label>
         <label>Speed <output id="rateOut">1×</output>
           <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
         </label>
-        <label>Pitch <output id="pitchOut">1</output>
+        <label class="device-only">Pitch <output id="pitchOut">1</output>
           <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
         </label>
         <label>Volume <output id="volumeOut">100%</output>
@@ -77,9 +84,49 @@
       </div>
       <div class="toolbar">
         <button type="button" class="ghost" id="testBtn">🔊 Test this voice</button>
+        <button type="button" class="ghost mine-only" id="downloadBtn">⬇ Download MP3</button>
         <button type="button" class="ghost" id="shareBtn">🔗 Copy share link</button>
         <button type="button" class="ghost" id="resetBtn">↺ Reset settings</button>
       </div>
+    </section>
+
+    <section class="card mine" id="mineCard" aria-label="Your own voice" hidden>
+      <h2>🎙 Your own voice</h2>
+
+      <form id="signinForm" class="signin">
+        <p>Only the site owner can make and use cloned voices. Enter the owner password you set in Netlify.</p>
+        <div class="row">
+          <input type="password" id="ownerPass" autocomplete="current-password" placeholder="Owner password" aria-label="Owner password">
+          <button type="submit" class="play small">Sign in</button>
+        </div>
+      </form>
+
+      <div id="mineArea" hidden>
+        <ul class="voices" id="myVoices"></ul>
+
+        <details id="cloneBox">
+          <summary>➕ Clone my voice from a video</summary>
+          <ol class="steps">
+            <li><strong>Add a video or voice note of you talking</strong>, 30 seconds to 90 seconds. Just you, in a quiet room, no music.
+              <div class="toolbar">
+                <label class="ghost file-btn">🎬 Choose video or audio<input type="file" id="sampleFile" accept="video/*,audio/*" hidden></label>
+                <button type="button" class="ghost" id="recBtn">🎙 Record here instead</button>
+              </div>
+              <p class="read-this" id="readThis" hidden>Read this out loud, in your normal voice: “Hello, this is my voice. I'm recording this so Voice Reader can read my writing the way I'd say it myself. I like to speak clearly, at a relaxed pace, with a little bit of feeling. Some days I talk fast, some days slow, but it always sounds like me. One, two, three, four, five. The quick brown fox jumps over the lazy dog.”</p>
+              <div id="sampleReady" hidden>
+                <p class="ok" id="sampleInfo"></p>
+                <audio id="samplePlayer" controls preload="metadata"></audio>
+              </div>
+            </li>
+            <li><label>Name it <input type="text" id="voiceName" maxlength="60" placeholder="e.g. Chidi"></label></li>
+            <li><label class="check"><input type="checkbox" id="consent"> This is my own voice, or I have the speaker's permission to clone it.</label></li>
+          </ol>
+          <button type="button" class="play" id="cloneBtn" disabled>✨ Make my voice</button>
+        </details>
+
+        <p class="small-print">Uses your ElevenLabs account: about 1 credit per character read. <button type="button" class="link" id="signoutBtn">Sign out on this device</button></p>
+      </div>
+      <p class="status" id="mineStatus" role="status"></p>
     </section>
 
     <section class="card tips">
@@ -93,7 +140,7 @@
     </section>
   </main>
 
-  <footer class="wrap foot">Voice Reader · works offline once loaded · nothing is uploaded</footer>
+  <footer class="wrap foot">Voice Reader · device voices work offline and nothing is uploaded · <button type="button" class="link" id="ownerLink">🔒 Owner</button></footer>
 
   <script src="js/voice.js"></script>
 </body>
