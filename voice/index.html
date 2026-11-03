@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice Reader — Paste text, hear it read aloud</title>
+  <meta name="description" content="Type or paste any text and hear it read aloud in the voice, speed and pitch you choose. Free, private, works in your browser.">
+  <meta name="theme-color" content="#0f1020">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Voice Reader — hear any text read aloud">
+  <meta property="og:description" content="Paste text, pick a voice, press play. Nothing is uploaded.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/voice.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap brand">
+      <div class="dome" id="dome" aria-hidden="true">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </div>
+      <div>
+        <h1>Voice Reader</h1>
+        <p class="tag">Paste text. Pick a voice. Press play.</p>
+      </div>
+      <a class="ghost back" id="talkLink" href="talk.html" hidden>💬 Talk</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="notice" id="unsupported" hidden>
+      This browser can't read text aloud. Try the latest Chrome, Edge, Safari or Firefox.
+    </p>
+
+    <section class="card" aria-label="Your text">
+      <div class="toolbar">
+        <button type="button" class="ghost" id="pasteBtn">📋 Paste</button>
+        <label class="ghost file-btn">📄 Open .txt<input type="file" id="fileInput" accept=".txt,text/plain" hidden></label>
+        <button type="button" class="ghost" id="sampleBtn">✨ Sample</button>
+        <button type="button" class="ghost" id="clearBtn">🗑 Clear</button>
+      </div>
+
+      <textarea id="text" spellcheck="true" placeholder="Type or paste anything here: an article, a message, your notes, a story…" aria-label="Text to read aloud"></textarea>
+      <div id="reader" class="reader" hidden aria-live="off"></div>
+
+      <p class="meta" id="meta">0 words</p>
+    </section>
+
+    <section class="card player" aria-label="Player">
+      <div class="controls">
+        <button type="button" class="round" id="backBtn" title="Previous sentence" aria-label="Previous sentence">⏮</button>
+        <button type="button" class="play" id="playBtn" aria-label="Play">▶ Play</button>
+        <button type="button" class="round" id="fwdBtn" title="Next sentence" aria-label="Next sentence">⏭</button>
+        <button type="button" class="round" id="stopBtn" title="Stop" aria-label="Stop">⏹</button>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+      <p class="status" id="status" role="status">Ready</p>
+    </section>
+
+    <section class="card settings" aria-label="Voice settings">
+      <h2>Voice</h2>
+      <div class="modes" id="modes" role="radiogroup" aria-label="Which voice" hidden>
+        <button type="button" role="radio" data-mode="device" aria-checked="true">📱 Device voices</button>
+        <button type="button" role="radio" data-mode="mine" aria-checked="false">🎙 My voice</button>
+      </div>
+      <div class="grid">
+        <label class="device-only">Language
+          <select id="langSelect"></select>
+        </label>
+        <label class="device-only">Voice
+          <select id="voiceSelect"></select>
+        </label>
+        <label class="mine-only">My voice
+          <select id="myVoiceSelect"></select>
+        </label>
+        <label>Speed <output id="rateOut">1×</output>
+          <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+        </label>
+        <label class="device-only">Pitch <output id="pitchOut">1</output>
+          <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+        </label>
+        <label>Volume <output id="volumeOut">100%</output>
+          <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
+        </label>
+        <label class="check"><input type="checkbox" id="follow" checked> Highlight words as they're read</label>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="ghost" id="testBtn">🔊 Test this voice</button>
+        <button type="button" class="ghost mine-only" id="downloadBtn">⬇ Download MP3</button>
+        <button type="button" class="ghost" id="shareBtn">🔗 Copy share link</button>
+        <button type="button" class="ghost" id="resetBtn">↺ Reset settings</button>
+      </div>
+    </section>
+
+    <section class="card mine" id="mineCard" aria-label="Your own voice" hidden>
+      <h2>🎙 Your own voice</h2>
+
+      <form id="signinForm" class="signin">
+        <p>Only the site owner can make and use cloned voices. Enter the owner password you set in Netlify.</p>
+        <div class="row">
+          <input type="password" id="ownerPass" autocomplete="current-password" placeholder="Owner password" aria-label="Owner password">
+          <button type="submit" class="play small">Sign in</button>
+        </div>
+      </form>
+
+      <div id="mineArea" hidden>
+        <ul class="voices" id="myVoices"></ul>
+
+        <details id="cloneBox">
+          <summary>➕ Clone my voice from a video</summary>
+          <ol class="steps">
+            <li><strong>Add a video or voice note of you talking</strong>, 30 seconds to 90 seconds. Just you, in a quiet room, no music.
+              <div class="toolbar">
+                <label class="ghost file-btn">🎬 Choose video or audio<input type="file" id="sampleFile" accept="video/*,audio/*" hidden></label>
+                <button type="button" class="ghost" id="recBtn">🎙 Record here instead</button>
+              </div>
+              <p class="read-this" id="readThis" hidden>Read this out loud, in your normal voice: “Hello, this is my voice. I'm recording this so Voice Reader can read my writing the way I'd say it myself. I like to speak clearly, at a relaxed pace, with a little bit of feeling. Some days I talk fast, some days slow, but it always sounds like me. One, two, three, four, five. The quick brown fox jumps over the lazy dog.”</p>
+              <div id="sampleReady" hidden>
+                <p class="ok" id="sampleInfo"></p>
+                <audio id="samplePlayer" controls preload="metadata"></audio>
+              </div>
+            </li>
+            <li><label>Name it <input type="text" id="voiceName" maxlength="60" placeholder="e.g. Chidi"></label></li>
+            <li><label class="check"><input type="checkbox" id="consent"> This is my own voice, or I have the speaker's permission to clone it.</label></li>
+          </ol>
+          <button type="button" class="play" id="cloneBtn" disabled>✨ Make my voice</button>
+        </details>
+
+        <p class="small-print">Uses your ElevenLabs account: about 1 credit per character read. <button type="button" class="link" id="signoutBtn">Sign out on this device</button></p>
+      </div>
+      <p class="status" id="mineStatus" role="status"></p>
+    </section>
+
+    <section class="card tips">
+      <h2>Good to know</h2>
+      <ul>
+        <li><strong>Private:</strong> your text never leaves your device. The voices come from your phone or computer.</li>
+        <li><strong>More voices:</strong> each device has its own. Edge and Chrome have the most natural ones; on phones, add voices in your system's text-to-speech settings.</li>
+        <li><strong>Shortcuts:</strong> <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> plays or pauses, <kbd>Esc</kbd> stops.</li>
+        <li><strong>While reading:</strong> tap any sentence to jump to it.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="wrap foot">Voice Reader · device voices work offline and nothing is uploaded · <button type="button" class="link" id="ownerLink">🔒 Owner</button></footer>
+
+  <script src="js/voice.js"></script>
+</body>
+</html>

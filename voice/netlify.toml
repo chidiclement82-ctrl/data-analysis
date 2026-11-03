@@ -1,0 +1,21 @@
+# Voice Reader on its own domain. On Netlify, create a new site from this
+# repository and set the base directory to "voice" (see README.md).
+# For "your own voice", also add ELEVENLABS_API_KEY and VOICE_PASSWORD
+# as environment variables.
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  command = ""
+
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "camera=(), microphone=(self), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000"
+    Cache-Control = "no-cache"

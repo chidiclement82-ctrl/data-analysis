@@ -223,3 +223,4 @@ support-chat/data/
 # Netlify local state
 support-chat/.netlify/
 support-chat/node_modules/
+voice/node_modules/

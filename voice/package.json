@@ -1,0 +1,9 @@
+{
+  "name": "voice-reader",
+  "private": true,
+  "type": "module",
+  "description": "Voice Reader: Netlify functions for your own voice and the talk page.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0"
+  }
+}
