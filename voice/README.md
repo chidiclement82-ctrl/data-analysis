@@ -49,21 +49,22 @@ Notes:
 
 `talk.html` lets you **talk out loud** and hear the answers in **your cloned voice**. First you describe the kind of conversation you want, for example a friendly chat, job interview practice, a customer service agent for your business, football banter, language practice, or a storyteller. Then tap the dome and speak.
 
-How it works: your phone turns your speech into text, an AI (Claude, by Anthropic) writes the reply, and ElevenLabs says it in your voice. With **hands-free** on, it listens again after each answer, so it feels like a phone call. Tap the dome while it's talking to cut in.
+How it works: your phone turns your speech into text, an AI writes the reply, and ElevenLabs says it in your voice. With **hands-free** on, it listens again after each answer, so it feels like a phone call. Tap the dome while it's talking to cut in.
 
-### Switch it on (one time)
+### Switch it on (one time, free)
 
 1. Do the "Your own voice" setup above and clone your voice.
-2. Get an Anthropic API key at [platform.claude.com](https://platform.claude.com) (**API Keys → Create key**), and add some credit under **Billing**.
-3. In Netlify add the environment variable `ANTHROPIC_API_KEY` with that key, then redeploy.
+2. Get a **free** Google Gemini key: open [aistudio.google.com/apikey](https://aistudio.google.com/apikey), sign in with your Google account, tap **Create API key**, and copy it. No card or ID is needed.
+3. In Netlify add the environment variable `GEMINI_API_KEY` with that key, then redeploy.
 4. Sign in on the Reader page (🔒 Owner), then tap **💬 Talk** at the top.
+
+**Optional: use Claude instead.** If you add `ANTHROPIC_API_KEY` (from [platform.claude.com](https://platform.claude.com), which needs paid credit), Talk uses Claude Opus 5.5 instead of Gemini. Set `CHAT_MODEL` or `GEMINI_MODEL` to change the model.
 
 Notes:
 - **Talking out loud** works in Chrome, Edge and Safari (phone or computer). In Firefox you can type instead.
 - Pick the language you'll speak in under **I'm speaking** (for example English (Nigeria)) so it understands you better.
-- **Costs:** each answer uses a little Anthropic credit (well under 1 US cent for a short reply) plus ElevenLabs credits for the spoken words (about 1 per character).
+- **Costs:** Gemini's free tier has daily limits that are plenty for personal use. On the free tier, Google may use the conversations to improve its products, so don't say anything private. The spoken answers use your ElevenLabs credits (about 1 per character).
 - The conversation and your setup are saved on that device. **↺ New conversation** clears it.
-- It uses Claude Opus 5.5 at low effort, so replies come back quickly. To use another model, set `CHAT_MODEL` in Netlify.
 
 ## Putting it on its own domain
 

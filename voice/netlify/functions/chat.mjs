@@ -1,10 +1,15 @@
 // POST /api/chat — { setup, messages: [{role, content}] } → { reply }
 // The AI's half of a spoken conversation. The page then reads the reply
 // aloud in your cloned voice with /api/speak.
+//
+// Uses Claude when ANTHROPIC_API_KEY is set, otherwise Google Gemini with a
+// free GEMINI_API_KEY (made at aistudio.google.com with just a Google account).
 import Anthropic from "@anthropic-ai/sdk";
 import { guard, json } from "../shared/eleven.mjs";
 
 const MODEL = process.env.CHAT_MODEL || "claude-opus-5-5";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+const GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/";
 const MAX_TURNS = 40;        // older turns are dropped so requests stay small
 const MAX_SETUP = 4000;
 const MAX_MESSAGE = 4000;
@@ -43,10 +48,10 @@ export default async (req) => {
   if (req.method !== "POST") return json(405, { error: "method" });
   const denied = await guard(req);
   if (denied) return denied;
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.ANTHROPIC_API_KEY && !process.env.GEMINI_API_KEY) {
     return json(503, {
       error: "not_set_up",
-      message: "Talking isn't switched on yet. Add ANTHROPIC_API_KEY in Netlify (see voice/README.md).",
+      message: "Talking isn't switched on yet. Add a free GEMINI_API_KEY (or ANTHROPIC_API_KEY) in Netlify (see voice/README.md).",
     });
   }
 
@@ -55,6 +60,8 @@ export default async (req) => {
   const messages = cleanMessages(body.messages);
   if (!messages) return json(400, { error: "bad_messages", message: "Say something first." });
   const setup = String(body.setup || "").slice(0, MAX_SETUP).trim();
+
+  if (!process.env.ANTHROPIC_API_KEY) return gemini(setup, messages);
 
   client = client || new Anthropic();
   try {
@@ -97,5 +104,54 @@ export default async (req) => {
     throw error;
   }
 };
+
+// Free option: Google Gemini.
+async function gemini(setup, messages) {
+  let res;
+  try {
+    res = await fetch(GEMINI + encodeURIComponent(GEMINI_MODEL) + ":generateContent", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt(setup) }] },
+        contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+        generationConfig: { maxOutputTokens: 4096 },
+      }),
+    });
+  } catch {
+    return json(502, { error: "network", message: "Couldn't reach Google's AI. Try again." });
+  }
+
+  let data = {};
+  try { data = await res.json(); } catch { /* not JSON */ }
+  if (!res.ok) {
+    const status = (data.error && data.error.status) || "";
+    if (res.status === 429 || status === "RESOURCE_EXHAUSTED") {
+      return json(429, { error: "busy", message: "The free AI limit was reached for now. Wait a minute and try again." });
+    }
+    if (res.status === 400 && /API key/i.test((data.error && data.error.message) || "")) {
+      return json(502, { error: "auth", message: "Google didn't accept the key. Check GEMINI_API_KEY in Netlify." });
+    }
+    if (res.status === 403 || res.status === 401) {
+      return json(502, { error: "auth", message: "Google didn't accept the key. Check GEMINI_API_KEY in Netlify." });
+    }
+    return json(502, { error: "api", message: "Google's AI had a problem (" + res.status + "). Try again." });
+  }
+
+  const cand = (data.candidates || [])[0];
+  const reply = ((cand && cand.content && cand.content.parts) || [])
+    .filter((p) => typeof p.text === "string" && !p.thought)
+    .map((p) => p.text)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!reply) {
+    if ((data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason === "SAFETY")) {
+      return json(200, { reply: "Sorry, I can't help with that one. Let's talk about something else.", refused: true });
+    }
+    return json(502, { error: "empty", message: "The AI didn't answer. Try again." });
+  }
+  return json(200, { reply });
+}
 
 export const config = { path: "/api/chat" };
