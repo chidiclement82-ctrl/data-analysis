@@ -209,3 +209,57 @@ audio { width: 100%; }
 .link { background: none; border: 0; padding: 0; color: var(--accent2); text-decoration: underline; cursor: pointer; font-size: inherit; }
 .mine .status { margin-top: 10px; }
 .mine .status:empty { display: none; }
+
+/* Talk page */
+.brand .back { margin-left: auto; text-decoration: none; color: var(--text); white-space: nowrap; }
+.small-dome { width: 56px; height: 32px; padding-bottom: 5px; text-decoration: none; }
+.small-dome .bar { width: 4px; height: 6px; }
+.play.inline { display: inline-block; text-decoration: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.chips button { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: .9rem; cursor: pointer; }
+.chips button:hover, .chips button[aria-pressed="true"] { border-color: var(--accent); background: var(--mark); }
+textarea.setup { min-height: 110px; max-height: 40vh; margin-bottom: 14px; font-size: 1rem; }
+
+.stage { text-align: center; padding: 18px 0 6px; }
+.big-dome {
+  position: relative;
+  width: min(240px, 70vw); aspect-ratio: 2 / 1.15;
+  border: 0; cursor: pointer;
+  border-radius: 999px 999px 18px 18px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 14px 50px rgba(124, 92, 255, .4);
+  display: inline-flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 22px;
+  transition: transform .15s;
+}
+.big-dome:active { transform: scale(.97); }
+.big-dome .bars { display: flex; gap: 7px; align-items: flex-end; height: 50px; }
+.big-dome .bar { width: 9px; height: 12px; border-radius: 5px; background: rgba(15, 16, 32, .75); transform-origin: bottom; }
+.big-dome.listening { background: linear-gradient(135deg, #f43f5e, #fb923c); animation: ring 1.4s ease-out infinite; }
+.big-dome.listening .bar { animation: talk 1.1s ease-in-out infinite; }
+.big-dome.thinking { animation: glow 1.2s ease-in-out infinite; }
+.big-dome.thinking .bar { animation: think 1s ease-in-out infinite; }
+.big-dome.speaking { animation: glow 1.6s ease-in-out infinite; }
+.big-dome.speaking .bar { animation: talk .6s ease-in-out infinite; }
+.big-dome .bar:nth-child(2) { animation-delay: .12s; }
+.big-dome .bar:nth-child(3) { animation-delay: .24s; }
+.big-dome .bar:nth-child(4) { animation-delay: .06s; }
+.big-dome .bar:nth-child(5) { animation-delay: .3s; }
+.big-dome .bar:nth-child(6) { animation-delay: .18s; }
+.big-dome .bar:nth-child(7) { animation-delay: .36s; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, .55); } 100% { box-shadow: 0 0 0 26px rgba(244, 63, 94, 0); } }
+@keyframes think { 0%, 100% { transform: scaleY(1); opacity: .5; } 50% { transform: scaleY(1.6); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .big-dome, .big-dome .bar { animation: none !important; } }
+.talk-state { margin: 14px 0 4px; font-weight: 700; }
+.interim { min-height: 1.5em; margin: 0 16px; color: var(--muted); font-style: italic; }
+
+.convo-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.convo-head h2 { margin: 0; }
+.log { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.log li { max-width: 85%; padding: 10px 14px; border-radius: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+.log li.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border-bottom-right-radius: 4px; }
+.log li.ai { align-self: flex-start; background: var(--bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.log li.ai button { margin-left: 6px; background: none; border: 0; cursor: pointer; font-size: 1rem; padding: 0 2px; }
+.log li.err { align-self: center; background: none; color: #f43f5e; font-size: .9rem; text-align: center; }
+.log li.hint { align-self: center; background: none; color: var(--muted); font-size: .9rem; text-align: center; max-width: 100%; }
+.type-row { display: flex; gap: 8px; }

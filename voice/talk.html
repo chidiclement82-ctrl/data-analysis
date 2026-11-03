@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Talk — Voice Reader</title>
+  <meta name="description" content="Talk out loud and hear the answers in your own cloned voice.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0f1020">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/voice.css">
+</head>
+<body class="talk-page">
+  <header class="top">
+    <div class="wrap brand">
+      <a class="dome small-dome" href="index.html" aria-label="Back to Voice Reader">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </a>
+      <div>
+        <h1>Talk</h1>
+        <p class="tag">Speak to it. It answers in your voice.</p>
+      </div>
+      <a class="ghost back" href="index.html">← Reader</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card" id="gate" hidden>
+      <h2>🔒 Owner only</h2>
+      <p>Talking uses your cloned voice and your AI credits, so only the site owner can use it.</p>
+      <p><a class="play small inline" href="index.html#owner">Sign in on the Reader page</a></p>
+    </section>
+
+    <div id="app" hidden>
+      <section class="card">
+        <h2>What kind of conversation?</h2>
+        <div class="chips" id="presets" aria-label="Ideas"></div>
+        <textarea id="setup" class="setup" maxlength="4000" placeholder="Describe who it should be and what you'll talk about. For example: “You're my business coach. Ask me about my restaurant and help me plan my week.”" aria-label="Conversation setup"></textarea>
+        <div class="grid">
+          <label>Answer in my voice
+            <select id="talkVoice"></select>
+          </label>
+          <label>I'm speaking
+            <select id="recLang"></select>
+          </label>
+          <label class="check"><input type="checkbox" id="handsFree" checked> Hands-free: listen again after each answer</label>
+        </div>
+      </section>
+
+      <section class="stage" aria-label="Talk">
+        <button type="button" class="big-dome" id="talkBtn" aria-label="Tap to talk">
+          <span class="bars" aria-hidden="true"><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></span>
+        </button>
+        <p class="talk-state" id="talkState" role="status">Tap the dome and start talking</p>
+        <p class="interim" id="interim" aria-live="polite"></p>
+      </section>
+
+      <section class="card convo">
+        <div class="convo-head">
+          <h2>Conversation</h2>
+          <button type="button" class="ghost" id="newBtn">↺ New conversation</button>
+        </div>
+        <ol class="log" id="log"></ol>
+        <form class="type-row" id="typeForm">
+          <input type="text" id="typeInput" maxlength="4000" placeholder="…or type a message" aria-label="Type a message">
+          <button type="submit" class="play small">Send</button>
+        </form>
+        <p class="small-print" id="srNote" hidden>This browser can't hear speech. Type instead, or use Chrome, Edge or Safari to talk.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="wrap foot">Replies are written by AI (Claude) and spoken in your cloned voice (ElevenLabs).</footer>
+
+  <script src="js/talk.js"></script>
+</body>
+</html>

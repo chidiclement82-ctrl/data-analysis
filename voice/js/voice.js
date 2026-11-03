@@ -579,6 +579,7 @@
     el.signin.hidden = signed;
     el.mineArea.hidden = !signed;
     if (signed) el.mineCard.hidden = false;
+    $("talkLink").hidden = !signed;
     renderVoices();
     showMode();
   }

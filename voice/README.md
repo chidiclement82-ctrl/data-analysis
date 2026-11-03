@@ -45,6 +45,26 @@ Notes:
 - You can delete a voice any time with 🗑. It's deleted from ElevenLabs too.
 - Only clone your own voice, or a voice you have clear permission to use.
 
+## Talk to it 💬 (conversation in your voice)
+
+`talk.html` lets you **talk out loud** and hear the answers in **your cloned voice**. First you describe the kind of conversation you want, for example a friendly chat, job interview practice, a customer service agent for your business, football banter, language practice, or a storyteller. Then tap the dome and speak.
+
+How it works: your phone turns your speech into text, an AI (Claude, by Anthropic) writes the reply, and ElevenLabs says it in your voice. With **hands-free** on, it listens again after each answer, so it feels like a phone call. Tap the dome while it's talking to cut in.
+
+### Switch it on (one time)
+
+1. Do the "Your own voice" setup above and clone your voice.
+2. Get an Anthropic API key at [platform.claude.com](https://platform.claude.com) (**API Keys → Create key**), and add some credit under **Billing**.
+3. In Netlify add the environment variable `ANTHROPIC_API_KEY` with that key, then redeploy.
+4. Sign in on the Reader page (🔒 Owner), then tap **💬 Talk** at the top.
+
+Notes:
+- **Talking out loud** works in Chrome, Edge and Safari (phone or computer). In Firefox you can type instead.
+- Pick the language you'll speak in under **I'm speaking** (for example English (Nigeria)) so it understands you better.
+- **Costs:** each answer uses a little Anthropic credit (well under 1 US cent for a short reply) plus ElevenLabs credits for the spoken words (about 1 per character).
+- The conversation and your setup are saved on that device. **↺ New conversation** clears it.
+- It uses Claude Opus 5.5 at low effort, so replies come back quickly. To use another model, set `CHAT_MODEL` in Netlify.
+
 ## Putting it on its own domain
 
 This folder is a complete website on its own, so it can live on any domain you buy.
@@ -71,4 +91,5 @@ This doesn't affect the existing Netlify site for the secure chat. That one uses
 - Name, tagline and tips: [`index.html`](index.html)
 - Colours: the `:root` block at the top of [`css/voice.css`](css/voice.css), with a separate light-mode block under it
 - Sample text, link length limit, sentence length and voice sample length: the top of [`js/voice.js`](js/voice.js)
+- Talk page: [`talk.html`](talk.html) and [`js/talk.js`](js/talk.js). The conversation ideas (`PRESETS`) and languages (`LANGS`) are at the top of `talk.js`. The instructions the AI follows are in `systemPrompt` in [`netlify/functions/chat.mjs`](netlify/functions/chat.mjs).
 - The voice cloning backend: [`netlify/functions/`](netlify/functions/). Set `ELEVENLABS_MODEL` in Netlify to use a different ElevenLabs model (the default is `eleven_multilingual_v2`).
