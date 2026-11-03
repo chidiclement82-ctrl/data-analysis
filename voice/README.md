@@ -1,5 +1,7 @@
 # Voice Reader 🔊
 
+Live at **https://voice.ogarider.name.ng** (Netlify project `my-voice-clone-studio`, base directory `voice`).
+
 Type or paste any text and hear it read aloud. You choose the voice, language, speed, pitch and volume. It's plain HTML, CSS and JavaScript with no build step. Device voices cost nothing and need no server: the speech comes from the visitor's own phone or computer, so no text is uploaded. The optional **your own voice** feature uses ElevenLabs (see below).
 
 ## What it does
