@@ -58,7 +58,7 @@ How it works: your phone turns your speech into text, an AI writes the reply, an
 3. In Netlify add the environment variable `GEMINI_API_KEY` with that key, then redeploy.
 4. Sign in on the Reader page (🔒 Owner), then tap **💬 Talk** at the top.
 
-**Optional: use Claude instead.** If you add `ANTHROPIC_API_KEY` (from [platform.claude.com](https://platform.claude.com), which needs paid credit), Talk uses Claude Opus 5.5 instead of Gemini. Set `CHAT_MODEL` or `GEMINI_MODEL` to change the model.
+**Optional: use Claude instead.** If you add `ANTHROPIC_API_KEY` (from [platform.claude.com](https://platform.claude.com), which needs paid credit), Talk uses Claude Opus 5.5 instead of Gemini. Set `CHAT_MODEL` (Claude) or `GEMINI_MODEL` (a comma-separated list of Gemini models, tried in order) to change the model.
 
 Notes:
 - **Talking out loud** works in Chrome, Edge and Safari (phone or computer). In Firefox you can type instead.

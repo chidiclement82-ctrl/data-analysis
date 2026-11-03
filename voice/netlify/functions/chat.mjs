@@ -8,7 +8,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { guard, json } from "../shared/eleven.mjs";
 
 const MODEL = process.env.CHAT_MODEL || "claude-opus-5-5";
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+// Fastest first; if Google says a model is busy, the next one is tried.
+const GEMINI_MODELS = (process.env.GEMINI_MODEL || "gemini-flash-lite-latest,gemini-flash-latest")
+  .split(",").map((m) => m.trim()).filter(Boolean);
+const DEADLINE_MS = 55000; // Netlify stops functions after 60 seconds
 const GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/";
 const MAX_TURNS = 40;        // older turns are dropped so requests stay small
 const MAX_SETUP = 4000;
@@ -107,37 +110,50 @@ export default async (req) => {
 
 // Free option: Google Gemini.
 async function gemini(setup, messages) {
-  let res;
-  try {
-    res = await fetch(GEMINI + encodeURIComponent(GEMINI_MODEL) + ":generateContent", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt(setup) }] },
-        contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
-        generationConfig: { maxOutputTokens: 4096 },
-      }),
-    });
-  } catch {
-    return json(502, { error: "network", message: "Couldn't reach Google's AI. Try again." });
+  const request = JSON.stringify({
+    systemInstruction: { parts: [{ text: systemPrompt(setup) }] },
+    contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+    generationConfig: { maxOutputTokens: 4096 },
+  });
+  const started = Date.now();
+  let last = { status: 502, data: {} };
+
+  for (const model of GEMINI_MODELS) {
+    const left = DEADLINE_MS - (Date.now() - started);
+    if (left < 5000) break;
+    let res, data = {};
+    try {
+      res = await fetch(GEMINI + encodeURIComponent(model) + ":generateContent", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+        body: request,
+        signal: AbortSignal.timeout(Math.min(left, 30000)), // a hung model moves on to the next
+      });
+      try { data = await res.json(); } catch { /* not JSON */ }
+    } catch {
+      last = { status: 504, data: {} };
+      continue; // timed out or network error: try the next model
+    }
+    if (res.ok) return geminiReply(data);
+    last = { status: res.status, data };
+    // Busy or missing model: try the next one. Anything else (bad key…) won't get better.
+    if (![404, 429, 500, 503].includes(res.status)) break;
   }
 
-  let data = {};
-  try { data = await res.json(); } catch { /* not JSON */ }
-  if (!res.ok) {
-    const status = (data.error && data.error.status) || "";
-    if (res.status === 429 || status === "RESOURCE_EXHAUSTED") {
-      return json(429, { error: "busy", message: "The free AI limit was reached for now. Wait a minute and try again." });
-    }
-    if (res.status === 400 && /API key/i.test((data.error && data.error.message) || "")) {
-      return json(502, { error: "auth", message: "Google didn't accept the key. Check GEMINI_API_KEY in Netlify." });
-    }
-    if (res.status === 403 || res.status === 401) {
-      return json(502, { error: "auth", message: "Google didn't accept the key. Check GEMINI_API_KEY in Netlify." });
-    }
-    return json(502, { error: "api", message: "Google's AI had a problem (" + res.status + "). Try again." });
+  const message = (last.data.error && last.data.error.message) || "";
+  if (last.status === 429) {
+    return json(429, { error: "busy", message: "The free AI limit was reached for now. Wait a minute and try again." });
   }
+  if (last.status === 401 || last.status === 403 || (last.status === 400 && /API key/i.test(message))) {
+    return json(502, { error: "auth", message: "Google didn't accept the key. Check GEMINI_API_KEY in Netlify." });
+  }
+  if (last.status === 503 || last.status === 504) {
+    return json(503, { error: "busy", message: "Google's free AI is very busy right now. Try again in a moment." });
+  }
+  return json(502, { error: "api", message: "Google's AI had a problem (" + last.status + "). Try again." });
+}
 
+function geminiReply(data) {
   const cand = (data.candidates || [])[0];
   const reply = ((cand && cand.content && cand.content.parts) || [])
     .filter((p) => typeof p.text === "string" && !p.thought)
